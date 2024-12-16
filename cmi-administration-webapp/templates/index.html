@@ -5,59 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMI Administration</title>
 	<link rel="stylesheet" href="../static/main.css" />
-    <script>
-        // Function to disable all buttons
-        function disableButtons() {
-            const buttons = document.querySelectorAll("button");
+<script>
+        // Disable only buttons within a specific group
+        function disableButtonGroup(btn_groupId) {
+            const buttons = document.querySelectorAll(`#${btn_groupId} button`);
             buttons.forEach(button => button.disabled = true);
         }
 
-        // Function to enable all buttons
-        function enableButtons() {
-            const buttons = document.querySelectorAll("button");
+        // Enable only buttons within a specific group
+        function enableButtonGroup(btn_groupId) {
+            const buttons = document.querySelectorAll(`#${btn_groupId} button`);
             buttons.forEach(button => button.disabled = false);
         }
 
         // Function to run a script with specified arguments
-        async function runScript(action, app, env) {
-            // Disable buttons to prevent multiple clicks
-            disableButtons();
+        function runScript(action, app, env, btn_groupId) {
+            // Disable only the buttons in this group
+            disableButtonGroup(btn_groupId);
 
-            // Show loading message
+            // Get the state of the checkbox
+            const includeRelay = document.getElementById("includeRelay").checked;
+
+            // Prepare the output element
             const outputElement = document.getElementById("output");
-            outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}...`;
+            outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}, IncludeRelay=${includeRelay}...\n`;
 
-            try {
-                const response = await fetch('/run-script', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ action, app, env })
-                });
+            // Create an EventSource for real-time updates
+            const eventSource = new EventSource('/run-script-stream');
 
-                if (response.ok) {
-                    const result = await response.text();
-                    outputElement.textContent = result;
-                } else {
-                    outputElement.textContent = `Error: ${response.statusText}`;
-                }
-            } catch (error) {
-                outputElement.textContent = `Error: ${error.message}`;
-            }
+            // Send the parameters as a POST request
+            fetch('/run-script-stream', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ action, app, env, includeRelay })
+            });
 
-            // Enable buttons after the script finishes
-            enableButtons();
+            // Handle incoming data from the server
+            eventSource.onmessage = (event) => {
+                outputElement.textContent += `${event.data}\n`;
+            };
+
+            eventSource.onerror = () => {
+                outputElement.textContent += "\nConnection closed.";
+                eventSource.close();
+                enableButtonGroup(btn_groupId); // Re-enable the buttons in this group
+            };
         }
     </script>
 </head>
 <body>
-    <h1>Stop CMI Services</h1>
-    <button onclick="runScript('stop', 'cmi', 'test')">CMI TEST</button>
-    <button onclick="runScript('stop', 'cmi', 'prod')">CMI PROD</button>
-    <button onclick="runScript('stop', 'ais', 'test')">AIS TEST</button>
-    <button onclick="runScript('stop', 'ais', 'prod')">AIS PROD</button>
+<div class="container">
+	<h1>CMI Administration für DBA</h1>
+	<div class="container1">
+		<div class="buttons">
+			<h2>Stop CMI Services</h2>
+			
+			<p>
+			<button onclick="runScript('stop', 'cmi', 'test', 'group-stop-cmi-services')">CMI TEST</button>
+			<button onclick="runScript('stop', 'cmi', 'prod', 'group-stop-cmi-services')">CMI PROD</button>
+			</p>
+			<p>
+			<button onclick="runScript('stop', 'ais', 'test', 'group-stop-cmi-services')">AIS TEST</button>
+			<button onclick="runScript('stop', 'ais', 'prod', 'group-stop-cmi-services')">AIS PROD</button>
+			</p>
 
-    <pre id="output">Click a button to see the output here.</pre>
+			<!-- Checkbox -->
+			<div class="form-check mb-3">
+				<input type="checkbox" class="form-check-input" id="includeRelay" checked>
+				<label for="includeRelay" class="form-check-label">inklusive Relay-Server</label>
+			</div>
+		</div>
+		
+		<div class="output">
+			<pre id="output">Click a button to see the output here.</pre>
+		</div>
+	</div>
+</div>
+<!-- Include Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 </body>
 </html>

@@ -1,7 +1,36 @@
 body { 
-	background-color:cyan;
+	background-color: #e0f7fa;
 	font-family: sans-serif;
+	line-height:1;
 }
-#output {
-	background-color: white;
+
+h1 {
+	margin: 20px 20px 40px 20px;
+	padding: 0;
+}
+h2 {
+	margin: 0 0 10px 0;
+	padding: 0;
+}
+.buttons {
+	display: flex;
+	flex-direction: column;
+}
+.output {
+	background-color: #37474F;
+	color: #eceff1;
+	padding: 5px;
+	flex-grow: 2;
+}
+.output #output {
+	margin: 0;
+}
+.container1 {
+	border-bottom: 1px solid #90a4ae;
+	padding-bottom:20px;
+	margin: 20px;
+	display: flex;
+	justify-content: flex-start;
+	align-items: stretch;
+	gap: 10px;
 }
