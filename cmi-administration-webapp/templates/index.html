@@ -4,24 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CMI Administration</title>
+    <!-- Include Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 	<link rel="stylesheet" href="../static/main.css" />
-<script>
+    <script>
         // Disable only buttons within a specific group
-        function disableButtonGroup(btn_groupId) {
-            const buttons = document.querySelectorAll(`#${btn_groupId} button`);
+        function disableButtonGroup(groupId) {
+            const buttons = document.querySelectorAll(`#${groupId} button`);
             buttons.forEach(button => button.disabled = true);
         }
 
         // Enable only buttons within a specific group
-        function enableButtonGroup(btn_groupId) {
-            const buttons = document.querySelectorAll(`#${btn_groupId} button`);
+        function enableButtonGroup(groupId) {
+            const buttons = document.querySelectorAll(`#${groupId} button`);
             buttons.forEach(button => button.disabled = false);
         }
 
         // Function to run a script with specified arguments
-        function runScript(action, app, env, btn_groupId) {
+        function runScript(action, app, env, groupId) {
             // Disable only the buttons in this group
-            disableButtonGroup(btn_groupId);
+            disableButtonGroup(groupId);
 
             // Get the state of the checkbox
             const includeRelay = document.getElementById("includeRelay").checked;
@@ -31,16 +33,7 @@
             outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}, IncludeRelay=${includeRelay}...\n`;
 
             // Create an EventSource for real-time updates
-            const eventSource = new EventSource('/run-script-stream');
-
-            // Send the parameters as a POST request
-            fetch('/run-script-stream', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ action, app, env, includeRelay })
-            });
+            const eventSource = new EventSource(`/run-script-stream?action=${action}&app=${app}&env=${env}&includeRelay=${includeRelay}`);
 
             // Handle incoming data from the server
             eventSource.onmessage = (event) => {
@@ -50,43 +43,45 @@
             eventSource.onerror = () => {
                 outputElement.textContent += "\nConnection closed.";
                 eventSource.close();
-                enableButtonGroup(btn_groupId); // Re-enable the buttons in this group
+                enableButtonGroup(groupId); // Re-enable the buttons in this group
             };
         }
     </script>
 </head>
 <body>
-<div class="container">
-	<h1>CMI Administration für DBA</h1>
-	<div class="container1">
-		<div class="buttons">
-			<h2>Stop CMI Services</h2>
-			
-			<p>
-			<button onclick="runScript('stop', 'cmi', 'test', 'group-stop-cmi-services')">CMI TEST</button>
-			<button onclick="runScript('stop', 'cmi', 'prod', 'group-stop-cmi-services')">CMI PROD</button>
-			</p>
-			<p>
-			<button onclick="runScript('stop', 'ais', 'test', 'group-stop-cmi-services')">AIS TEST</button>
-			<button onclick="runScript('stop', 'ais', 'prod', 'group-stop-cmi-services')">AIS PROD</button>
-			</p>
+<div class="container-fluid">
+    <h1>CMI Administration für DBA</h1>
+    <div class="container1">
+        <div class="buttons">
+            <h2>Stop CMI Services</h2>
+            
+            <div id="group-stop-cmi">
+                <p>
+                    <button class="btn btn-primary" onclick="runScript('stop', 'cmi', 'test', 'group-stop-cmi')">CMI TEST</button>
+                    <button class="btn btn-primary" onclick="runScript('stop', 'cmi', 'prod', 'group-stop-cmi')">CMI PROD</button>
+                </p>
+                <p>
+                    <button class="btn btn-primary" onclick="runScript('stop', 'ais', 'test', 'group-stop-cmi')">AIS TEST</button>
+                    <button class="btn btn-primary" onclick="runScript('stop', 'ais', 'prod', 'group-stop-cmi')">AIS PROD</button>
+                </p>
+            </div>
 
-			<!-- Checkbox -->
-			<div class="form-check mb-3">
-				<input type="checkbox" class="form-check-input" id="includeRelay" checked>
-				<label for="includeRelay" class="form-check-label">inklusive Relay-Server</label>
-			</div>
-		</div>
-		
-		<div class="output">
-			<pre id="output">Click a button to see the output here.</pre>
-		</div>
-	</div>
+            <!-- Checkbox -->
+            <div class="form-check mb-3">
+                <input type="checkbox" class="form-check-input" id="includeRelay" checked>
+                <label for="includeRelay" class="form-check-label">inklusive Relay-Server</label>
+            </div>
+        </div>
+        
+        <div class="output">
+            <pre id="output">Click a button to see the output here.</pre>
+        </div>
+    </div>
 </div>
+
 <!-- Include Bootstrap JS -->
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
 </body>
 </html>

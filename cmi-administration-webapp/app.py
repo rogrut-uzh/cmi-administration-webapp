@@ -15,14 +15,14 @@ def index():
     # Serve the HTML page
     return render_template('index.html')
 
-@app.route('/run-script-stream', methods=['POST'])
+@app.route('/run-script-stream', methods=['GET'])
 def run_script_stream():
-    # Parse JSON payload
-    data = request.get_json()
-    action = data.get('action')
-    app_name = data.get('app')
-    env = data.get('env')
-    include_relay = data.get('includeRelay', True)  # Default to True if not provided        
+    # Retrieve query parameters
+    action = request.args.get('action')
+    app_name = request.args.get('app')
+    env = request.args.get('env')
+    include_relay = request.args.get('includeRelay', 'true') == 'true'
+    
     # Convert includeRelay to PowerShell $true or $false
     include_relay_ps = "$true" if include_relay else "$false"
     
@@ -31,23 +31,27 @@ def run_script_stream():
         'powershell', '-Command',
         f"$password = ConvertTo-SecureString '{password}' -AsPlainText -Force; "
         f"$cred = New-Object System.Management.Automation.PSCredential('{username}', $password); "
-        f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' -Action {action} -App {app_name} -Env {env} -IncludeRelay {include_relay_ps}; exit $LASTEXITCODE }}"
+        f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
+        f"-Action {action} -App {app_name} -Env {env} -IncludeRelay {include_relay_ps}; exit $LASTEXITCODE }}"
     ]
 
     def generate_output():
-        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        while True:
-            output = process.stdout.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                yield f"data: {output.strip()}\n\n"
-            time.sleep(0.5)  # Avoid overwhelming the client
+        try:
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            while True:
+                output = process.stdout.readline()
+                if output == '' and process.poll() is not None:
+                    break
+                if output:
+                    yield f"data: {output.strip()}\n\n"
+                time.sleep(0.1)  # Avoid overwhelming the client
 
-        # Send any remaining errors
-        stderr = process.stderr.read()
-        if stderr:
-            yield f"data: ERROR: {stderr.strip()}\n\n"
+            # Send any remaining errors
+            stderr = process.stderr.read()
+            if stderr:
+                yield f"data: ERROR: {stderr.strip()}\n\n"
+        except Exception as e:
+            yield f"data: ERROR: {str(e)}\n\n"
 
     return Response(generate_output(), content_type='text/event-stream')
 
