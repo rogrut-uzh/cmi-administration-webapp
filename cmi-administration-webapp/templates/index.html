@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CMI Administration</title>
+	<link rel="stylesheet" href="../static/main.css" />
+    <script>
+        // Function to disable all buttons
+        function disableButtons() {
+            const buttons = document.querySelectorAll("button");
+            buttons.forEach(button => button.disabled = true);
+        }
+
+        // Function to enable all buttons
+        function enableButtons() {
+            const buttons = document.querySelectorAll("button");
+            buttons.forEach(button => button.disabled = false);
+        }
+
+        // Function to run a script with specified arguments
+        async function runScript(action, app, env) {
+            // Disable buttons to prevent multiple clicks
+            disableButtons();
+
+            // Show loading message
+            const outputElement = document.getElementById("output");
+            outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}...`;
+
+            try {
+                const response = await fetch('/run-script', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action, app, env })
+                });
+
+                if (response.ok) {
+                    const result = await response.text();
+                    outputElement.textContent = result;
+                } else {
+                    outputElement.textContent = `Error: ${response.statusText}`;
+                }
+            } catch (error) {
+                outputElement.textContent = `Error: ${error.message}`;
+            }
+
+            // Enable buttons after the script finishes
+            enableButtons();
+        }
+    </script>
+</head>
+<body>
+    <h1>Stop CMI Services</h1>
+    <button onclick="runScript('stop', 'cmi', 'test')">CMI TEST</button>
+    <button onclick="runScript('stop', 'cmi', 'prod')">CMI PROD</button>
+    <button onclick="runScript('stop', 'ais', 'test')">AIS TEST</button>
+    <button onclick="runScript('stop', 'ais', 'prod')">AIS PROD</button>
+
+    <pre id="output">Click a button to see the output here.</pre>
+</body>
+</html>
