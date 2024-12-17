@@ -49,37 +49,68 @@
     </script>
 </head>
 <body>
-<div class="container-fluid">
-    <h1>CMI Administration für DBA</h1>
-    <div class="container1">
-        <div class="buttons">
-            <h2>CMI Services</h2>
-            
-            <div id="group-cmi-services">
-                <p>
-                    <button class="btn btn-warning" onclick="runScript('stop', 'cmi', 'test', 'group-cmi-services')">Stop CMI Test</button>
-                    <button class="btn btn-danger" onclick="runScript('stop', 'cmi', 'prod', 'group-cmi-services')">Stop CMI Prod</button>
-                    <button class="btn btn-warning" onclick="runScript('stop', 'ais', 'test', 'group-cmi-services')">Stop AIS Test</button>
-                    <button class="btn btn-danger" onclick="runScript('stop', 'ais', 'prod', 'group-cmi-services')">Stop AIS Prod</button>
-                </p>
-                <p>
-                    <button class="btn btn-primary" onclick="runScript('start', 'cmi', 'test', 'group-cmi-services')">Start CMI Test</button>
-                    <button class="btn btn-primary" onclick="runScript('start', 'cmi', 'prod', 'group-cmi-services')">Start CMI Prod</button>
-                    <button class="btn btn-primary" onclick="runScript('start', 'ais', 'test', 'group-cmi-services')">Start AIS Test</button>
-                    <button class="btn btn-primary" onclick="runScript('start', 'ais', 'prod', 'group-cmi-services')">Start AIS Prod</button>
-                </p>
-            </div>
+    
+<header class="bg-white mb-3 pt-3">
+	<div class="container-fluid">
+		<div class="row align-items-start justify-content-between">
+			<div class="col d-flex flex-nowrap">
+				<h1 class="text-center">CMI Administration</h1>
+			</div>
+			<div class="col d-flex flex-nowrap justify-content-end">
+				<ul class="nav nav-pills justify-content-end">
+				  <li class="nav-item">
+					<a class="nav-link" href="#">Cockpit</a>
+				  </li>
+				  <li class="nav-item">
+					<a class="nav-link active" href="#">CMI Services</a>
+				  </li>
+				  <li class="nav-item">
+					<a class="nav-link" href="#">Gitlab Links</a>
+				  </li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</header>
 
-            <!-- Checkbox -->
-            <div class="form-check mb-3">
-                <input type="checkbox" class="form-check-input" id="includeRelay" checked>
-                <label for="includeRelay" class="form-check-label">inklusive Relay-Server</label>
-            </div>
+<div class="container-fluid">
+    <div class="row align-items-start p-2">
+        <div class="col-4 p-2">
+			<div class="row mb-2 align-items-start">
+				<div class="col">
+					<h2 class="mb-0">CMI Services</h2>
+				</div>
+			</div>
+			<div class="row mb-2 align-items-start">
+				<div class="col d-flex flex-nowrap">
+                    <button class="btn mr-2 btn-sm btn-warning" onclick="runScript('stop', 'cmi', 'test', 'group-cmi-services')">Stop CMI Test</button>
+                    <button class="btn mr-2 btn-sm btn-danger" onclick="runScript('stop', 'cmi', 'prod', 'group-cmi-services')">Stop CMI Prod</button>
+                    <button class="btn mr-2 btn-sm btn-warning" onclick="runScript('stop', 'ais', 'test', 'group-cmi-services')">Stop AIS Test</button>
+                    <button class="btn mr-2 btn-sm btn-danger" onclick="runScript('stop', 'ais', 'prod', 'group-cmi-services')">Stop AIS Prod</button>
+				</div>
+			</div>
+			<div class="row mb-2 align-items-start">
+				<div class="col d-flex flex-nowrap">
+                    <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'cmi', 'test', 'group-cmi-services')">Start CMI Test</button>
+                    <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'cmi', 'prod', 'group-cmi-services')">Start CMI Prod</button>
+                    <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'ais', 'test', 'group-cmi-services')">Start AIS Test</button>
+                    <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'ais', 'prod', 'group-cmi-services')">Start AIS Prod</button>
+				</div>
+			</div>
+			<div class="row mb-2 align-items-start">
+				<div class="col d-flex flex-nowrap">
+					<div class="form-check mb-3">
+						<input type="checkbox" class="form-check-input" id="includeRelay" checked>
+						<label for="includeRelay" class="form-check-label">inklusive Relay-Server</label>
+					</div>
+				</div>
+			</div>
         </div>
         
-        <div class="output">
-            <pre id="output"></pre>
+        <div class="col-8 p-2 output">
+            <pre id="output">.</pre>
         </div>
+		
     </div>
 </div>
 

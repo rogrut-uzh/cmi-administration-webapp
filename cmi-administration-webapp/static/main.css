@@ -1,39 +1,14 @@
 body { 
 	background-color: #efebe9;
 	font-family: sans-serif;
-	line-height:1;
-}
-h1 {
-	margin: 20px 0 40px 0;
-	text-align: center;
-	font-weight:bold;
-	padding: 0;
-}
-h2 {
-	margin: 0 0 10px 0;
-	padding: 0;
 }
 
-.buttons {
-	display: flex;
-	flex-direction: column;
-}
 .output {
 	background-color: #37474F;
 	color: #eceff1;
-	padding: 5px;
-	flex-grow: 2;
 }
 .output pre {
 	color: #eceff1;
 	margin: 0;
 	white-space: pre-line;
-}
-.container1 {
-	border-bottom: 1px solid #90a4ae;
-	padding-bottom:20px;
-	display: flex;
-	justify-content: flex-start;
-	align-items: stretch;
-	gap: 10px;
 }
