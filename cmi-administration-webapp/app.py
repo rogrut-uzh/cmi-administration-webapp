@@ -27,8 +27,9 @@ def run_script_stream():
     include_relay_ps = "$true" if include_relay else "$false"
     
     # Run PowerShell script with arguments
-    command = [
-        'powershell', '-Command',
+    command_stop_start_services = [
+        'pwsh', '-NoProfile', '-Command',
+        f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
         f"$password = ConvertTo-SecureString '{password}' -AsPlainText -Force; "
         f"$cred = New-Object System.Management.Automation.PSCredential('{username}', $password); "
         f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
@@ -37,7 +38,7 @@ def run_script_stream():
 
     def generate_output():
         try:
-            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+            process = subprocess.Popen(command_stop_start_services, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
             while True:
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:

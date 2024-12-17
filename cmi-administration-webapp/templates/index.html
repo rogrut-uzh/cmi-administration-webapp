@@ -53,16 +53,20 @@
     <h1>CMI Administration für DBA</h1>
     <div class="container1">
         <div class="buttons">
-            <h2>Stop CMI Services</h2>
+            <h2>CMI Services</h2>
             
-            <div id="group-stop-cmi">
+            <div id="group-cmi-services">
                 <p>
-                    <button class="btn btn-primary" onclick="runScript('stop', 'cmi', 'test', 'group-stop-cmi')">CMI TEST</button>
-                    <button class="btn btn-primary" onclick="runScript('stop', 'cmi', 'prod', 'group-stop-cmi')">CMI PROD</button>
+                    <button class="btn btn-warning" onclick="runScript('stop', 'cmi', 'test', 'group-cmi-services')">Stop CMI Test</button>
+                    <button class="btn btn-danger" onclick="runScript('stop', 'cmi', 'prod', 'group-cmi-services')">Stop CMI Prod</button>
+                    <button class="btn btn-warning" onclick="runScript('stop', 'ais', 'test', 'group-cmi-services')">Stop AIS Test</button>
+                    <button class="btn btn-danger" onclick="runScript('stop', 'ais', 'prod', 'group-cmi-services')">Stop AIS Prod</button>
                 </p>
                 <p>
-                    <button class="btn btn-primary" onclick="runScript('stop', 'ais', 'test', 'group-stop-cmi')">AIS TEST</button>
-                    <button class="btn btn-primary" onclick="runScript('stop', 'ais', 'prod', 'group-stop-cmi')">AIS PROD</button>
+                    <button class="btn btn-primary" onclick="runScript('start', 'cmi', 'test', 'group-cmi-services')">Start CMI Test</button>
+                    <button class="btn btn-primary" onclick="runScript('start', 'cmi', 'prod', 'group-cmi-services')">Start CMI Prod</button>
+                    <button class="btn btn-primary" onclick="runScript('start', 'ais', 'test', 'group-cmi-services')">Start AIS Test</button>
+                    <button class="btn btn-primary" onclick="runScript('start', 'ais', 'prod', 'group-cmi-services')">Start AIS Prod</button>
                 </p>
             </div>
 
@@ -74,7 +78,7 @@
         </div>
         
         <div class="output">
-            <pre id="output">Click a button to see the output here.</pre>
+            <pre id="output"></pre>
         </div>
     </div>
 </div>

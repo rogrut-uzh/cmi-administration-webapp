@@ -1,5 +1,5 @@
 body { 
-	background-color: #e0f7fa;
+	background-color: #efebe9;
 	font-family: sans-serif;
 	line-height:1;
 }
@@ -24,9 +24,10 @@ h2 {
 	padding: 5px;
 	flex-grow: 2;
 }
-.output #output {
+.output pre {
 	color: #eceff1;
 	margin: 0;
+	white-space: pre-line;
 }
 .container1 {
 	border-bottom: 1px solid #90a4ae;
