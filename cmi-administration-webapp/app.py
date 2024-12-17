@@ -11,6 +11,15 @@ username = os.environ.get("CMI_WEBAPP_USER")
 password = os.environ.get("CMI_WEBAPP_PW")
 
 @app.route('/')
+def cockpit():
+    return render_template('cockpit.html', active_page='cockpit')
+
+@app.route('/services')
+def services():
+    return render_template('services.html', active_page='services')
+
+
+@app.route('/')
 def index():
     # Serve the HTML page
     return render_template('index.html')
