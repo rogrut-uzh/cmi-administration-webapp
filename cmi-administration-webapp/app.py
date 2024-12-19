@@ -1,7 +1,8 @@
-from flask import Flask, render_template, request, Response
+from flask import Flask, render_template, request, Response, jsonify
 import subprocess
 import os
 import time
+import json
 
 # Initialize the Flask application
 app = Flask(__name__)
@@ -18,14 +19,13 @@ def cockpit():
 def services():
     return render_template('services.html', active_page='services')
 
-@app.route('/run-script-stream', methods=['GET'])
-def run_script_stream():
+@app.route('/run-script-services-stream', methods=['GET'])
+def run_script_services_stream():
     # Retrieve query parameters
     action = request.args.get('action')
-    app_name = request.args.get('app')
+    app = request.args.get('app')
     env = request.args.get('env')
     include_relay = request.args.get('includeRelay', 'true') == 'true'
-    
     # Convert includeRelay to PowerShell $true or $false
     include_relay_ps = "$true" if include_relay else "$false"
     
@@ -36,7 +36,7 @@ def run_script_stream():
         f"$password = ConvertTo-SecureString '{password}' -AsPlainText -Force; "
         f"$cred = New-Object System.Management.Automation.PSCredential('{username}', $password); "
         f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
-        f"-Action {action} -App {app_name} -Env {env} -IncludeRelay {include_relay_ps}; exit $LASTEXITCODE }}"
+        f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps}; exit $LASTEXITCODE }}"
     ]
 
     def generate_output():
@@ -58,6 +58,39 @@ def run_script_stream():
             yield f"data: ERROR: {str(e)}\n\n"
 
     return Response(generate_output(), content_type='text/event-stream')
+
+@app.route('/run-script-cockpit-overview', methods=['POST'])
+def run_script_cockpit_overview():
+    try:
+        # Retrieve query parameters
+        data = request.get_json()
+        app = data.get('app')
+        env = data.get('env')
+        
+        command = [
+            'pwsh', '-NoProfile', '-Command',
+            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
+            f"$password = ConvertTo-SecureString '{password}' -AsPlainText -Force; "
+            f"$cred = New-Object System.Management.Automation.PSCredential('{username}', $password); "
+            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
+            f"-App {app} -Env {env} }}"
+        ]
+    
+        # Run the PowerShell script
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            # Attempt to parse PowerShell output as JSON
+            try:
+                output = json.loads(result.stdout)
+                return jsonify({"Status": "Success", "Data": output}), 200
+            except json.JSONDecodeError:
+                return jsonify({"error": "Invalid JSON output from PowerShell script"}), 500
+        else:
+            return jsonify({"error": result.stderr.strip()}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Run the Flask application
 if __name__ == '__main__':

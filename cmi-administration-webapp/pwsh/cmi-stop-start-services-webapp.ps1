@@ -177,14 +177,14 @@ $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
     }
 }
 
+    
 write-host ""
-
+write-host "Found Services:"
 foreach ($e in $WindowsServicesListSorted) {
     write-host $e
 }
 
 if ($WindowsServicesListSorted.length -gt 0) {
-    write-host "Found Services:"
     if ($Action -like "stop") {
         Stop-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
     }

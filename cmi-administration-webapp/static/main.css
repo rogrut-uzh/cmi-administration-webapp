@@ -2,7 +2,10 @@ body {
 	background-color: #efebe9;
 	font-family: sans-serif;
 }
-
+table {
+	font-size: 0.8rem;
+	background-color:mintcream;
+}
 .output {
 	background-color: #37474F;
 	color: #eceff1;

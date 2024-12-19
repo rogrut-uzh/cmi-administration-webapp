@@ -15,20 +15,20 @@
         <!-- Stop Buttons -->
         <div class="row mb-2 align-items-start">
             <div class="col d-flex flex-nowrap">
-                <button class="btn mr-2 btn-sm btn-warning" onclick="runScript('stop', 'cmi', 'test', 'group-cmi-services')">Stop CMI Test</button>
-                <button class="btn mr-2 btn-sm btn-danger" onclick="runScript('stop', 'cmi', 'prod', 'group-cmi-services')">Stop CMI Prod</button>
-                <button class="btn mr-2 btn-sm btn-warning" onclick="runScript('stop', 'ais', 'test', 'group-cmi-services')">Stop AIS Test</button>
-                <button class="btn mr-2 btn-sm btn-danger" onclick="runScript('stop', 'ais', 'prod', 'group-cmi-services')">Stop AIS Prod</button>
+                <button class="btn mr-2 btn-sm btn-warning" onclick="runScriptServices('stop', 'cmi', 'test', 'group-cmi-services')">Stop CMI Test</button>
+                <button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'cmi', 'prod', 'group-cmi-services')">Stop CMI Prod</button>
+                <button class="btn mr-2 btn-sm btn-warning" onclick="runScriptServices('stop', 'ais', 'test', 'group-cmi-services')">Stop AIS Test</button>
+                <button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'ais', 'prod', 'group-cmi-services')">Stop AIS Prod</button>
             </div>
         </div>
 
         <!-- Start Buttons -->
         <div class="row mb-2 align-items-start">
             <div class="col d-flex flex-nowrap">
-                <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'cmi', 'test', 'group-cmi-services')">Start CMI Test</button>
-                <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'cmi', 'prod', 'group-cmi-services')">Start CMI Prod</button>
-                <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'ais', 'test', 'group-cmi-services')">Start AIS Test</button>
-                <button class="btn mr-2 btn-sm btn-primary" onclick="runScript('start', 'ais', 'prod', 'group-cmi-services')">Start AIS Prod</button>
+                <button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'cmi', 'test', 'group-cmi-services')">Start CMI Test</button>
+                <button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'cmi', 'prod', 'group-cmi-services')">Start CMI Prod</button>
+                <button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'ais', 'test', 'group-cmi-services')">Start AIS Test</button>
+                <button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'ais', 'prod', 'group-cmi-services')">Start AIS Prod</button>
             </div>
         </div>
 
@@ -52,20 +52,8 @@
 
 <!-- JavaScript -->
 <script>
-    // Disable only buttons within a specific group
-    function disableButtonGroup(groupId) {
-        const buttons = document.querySelectorAll(`#${groupId} button`);
-        buttons.forEach(button => button.disabled = true);
-    }
-
-    // Enable only buttons within a specific group
-    function enableButtonGroup(groupId) {
-        const buttons = document.querySelectorAll(`#${groupId} button`);
-        buttons.forEach(button => button.disabled = false);
-    }
-
     // Function to run a script with specified arguments
-    function runScript(action, app, env, groupId) {
+    function runScriptServices(action, app, env, groupId) {
         // Disable only the buttons in this group
         disableButtonGroup(groupId);
 
@@ -77,7 +65,7 @@
         outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}, IncludeRelay=${includeRelay}...\n`;
 
         // Create an EventSource for real-time updates
-        const eventSource = new EventSource(`/run-script-stream?action=${action}&app=${app}&env=${env}&includeRelay=${includeRelay}`);
+        const eventSource = new EventSource(`/run-script-services-stream?action=${action}&app=${app}&env=${env}&includeRelay=${includeRelay}`);
 
         // Handle incoming data from the server
         eventSource.onmessage = (event) => {
@@ -90,6 +78,18 @@
             eventSource.close();
             enableButtonGroup(groupId); // Re-enable the buttons in this group
         };
+    }
+	
+    // Disable only buttons within a specific group
+    function disableButtonGroup(groupId) {
+        const buttons = document.querySelectorAll(`#${groupId} button`);
+        buttons.forEach(button => button.disabled = true);
+    }
+
+    // Enable only buttons within a specific group
+    function enableButtonGroup(groupId) {
+        const buttons = document.querySelectorAll(`#${groupId} button`);
+        buttons.forEach(button => button.disabled = false);
     }
 </script>
 {% endblock %}

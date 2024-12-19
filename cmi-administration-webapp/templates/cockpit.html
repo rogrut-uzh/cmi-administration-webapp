@@ -3,10 +3,158 @@
 {% block title %}Cockpit{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col">
-        <h2>Welcome to the Cockpit</h2>
-        <p>This is the main page with some placeholder text for now.</p>
-    </div>
+<div class="row align-items-start p-2">
+    <!-- Left Column: Buttons and Actions -->
+    <div class="col p-2">
+	<h3>Overview</h3>
+	<div id="tableRaw"></div>
+	<h3>CMI (Prod)</h3>
+	<table id="dataTableCmiProd" class="table table-striped"></table>
+	<h3>AIS (Prod)</h3>
+	<table id="dataTableAisProd" class="table table-striped"></table>
+	<h3>CMI (Test)</h3>
+	<table id="dataTableCmiTest" class="table table-striped"></table>
+	<h3>AIS (Test)</h3>
+	<table id="dataTableAisTest" class="table table-striped"></table>
+	
 </div>
+
+<!-- JavaScript -->
+<script>
+	document.addEventListener("DOMContentLoaded", function(event) {
+		runScriptCockpitOverview('cmi', 'prod');
+		runScriptCockpitOverview('ais', 'prod');
+		runScriptCockpitOverview('cmi', 'test');
+		runScriptCockpitOverview('ais', 'test');
+	});
+	
+	function populateTable(data, app, env) {
+		const tdclass = "py-1";
+		
+		var table;
+		
+		if (app == "cmi") {
+			if (env == "prod") {
+				table = document.querySelector("#dataTableCmiProd");
+			} else {
+				table = document.querySelector("#dataTableCmiTest");
+			}
+		} else {
+			if (env == "prod") {
+				table = document.querySelector("#dataTableAisProd");
+			} else {
+				table = document.querySelector("#dataTableAisTest");
+			}
+		}
+		
+		const tableHead = document.createElement("thead");
+		table.appendChild(tableHead);
+		
+		const tableBody = document.createElement("tbody");
+		table.appendChild(tableBody);
+		
+		
+		const tableHeadTr = document.createElement("tr");
+		tableHead.appendChild(tableHeadTr);
+		
+		const nameCellHeader = document.createElement("th");
+		nameCellHeader.classList.add(tdclass);
+		nameCellHeader.textContent = "Name";
+		tableHeadTr.appendChild(nameCellHeader);
+		
+		const versionCellHeader = document.createElement("th");
+		versionCellHeader.classList.add(tdclass);
+		versionCellHeader.textContent = "Release";
+		tableHeadTr.appendChild(versionCellHeader);
+		
+		const licenseCellHeader = document.createElement("th");
+		licenseCellHeader.classList.add(tdclass);
+		licenseCellHeader.textContent = "License Server";
+		tableHeadTr.appendChild(licenseCellHeader);
+		
+		const mobileCellHeader = document.createElement("th");
+		mobileCellHeader.classList.add(tdclass);
+		mobileCellHeader.textContent = "Mobile Client";
+		tableHeadTr.appendChild(mobileCellHeader);
+		
+
+		// Loop through JSON data and create rows
+		data.forEach(item => {
+			const row = document.createElement("tr");
+
+			// Create cells for each column
+			//const environmentCell = document.createElement("td");
+			//environmentCell.classList.add(tdclass);
+			//environmentCell.textContent = env || "";
+			//row.appendChild(environmentCell);
+			//
+			//const appTypeCell = document.createElement("td");
+			//appTypeCell.classList.add(tdclass);
+			//appTypeCell.textContent = app || "";
+			//row.appendChild(appTypeCell);
+
+			const nameCell = document.createElement("td");
+			nameCell.classList.add(tdclass);
+			nameCell.textContent = item.namefull || "";
+			row.appendChild(nameCell);
+
+			const versionCell = document.createElement("td");
+			versionCell.classList.add(tdclass);
+			versionCell.textContent = item.app.releaseversion || "";
+			row.appendChild(versionCell);
+
+			const licenseCell = document.createElement("td");
+			licenseCell.classList.add(tdclass);
+			licenseCell.textContent = item.licenseserver ? "Yes" : "No";
+			row.appendChild(licenseCell);
+
+			const mobileCell = document.createElement("td");
+			mobileCell.classList.add(tdclass);
+			const link = document.createElement("a");
+			link.href = item.mobilefirst;
+			link.textContent = item.mobilefirst;
+			link.target = "_blank";
+			mobileCell.appendChild(link);
+			row.appendChild(mobileCell);
+
+			// Append row to the table body
+			tableBody.appendChild(row);
+		});
+	}
+	
+    // Function to run a script with specified arguments
+    async function runScriptCockpitOverview(app, env) {
+        // Prepare the output element
+        const tableRaw = document.getElementById("tableRaw");
+        tableRaw.textContent = `Running script with: App=${app}, Env=${env}...\n`;
+
+		try {
+			const response = await fetch('/run-script-cockpit-overview', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ app, env })
+			});
+
+			if (response.ok) {
+				const result = await response.json();
+
+				// ----- Access the response data for debugging -----
+				//const status = result.Status || "Unknown";
+				//const data = result.Data || [];
+				//tableRaw.textContent += `Status: ${status}\nData:\n${JSON.stringify(data, null, 2)}`;
+				
+				tableRaw.textContent = "";
+                populateTable(result.Data || [], app, env);
+			} else {
+				const error = await response.json();
+				tableRaw.textContent += `Error: ${error.error}`;
+			}
+		} catch (error) {
+			tableRaw.textContent += `Error: ${error.message}`;
+		}
+	}
+	
+</script>
 {% endblock %}
