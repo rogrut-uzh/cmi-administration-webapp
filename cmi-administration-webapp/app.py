@@ -18,12 +18,6 @@ def cockpit():
 def services():
     return render_template('services.html', active_page='services')
 
-
-@app.route('/')
-def index():
-    # Serve the HTML page
-    return render_template('index.html')
-
 @app.route('/run-script-stream', methods=['GET'])
 def run_script_stream():
     # Retrieve query parameters

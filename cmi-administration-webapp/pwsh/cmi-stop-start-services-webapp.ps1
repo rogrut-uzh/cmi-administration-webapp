@@ -58,19 +58,6 @@ if ($Env -like "test") {
 }
 
 #Functions
-function Get-CMI-Config-Data {
-    param (
-        # Mandatory parameter
-        [Parameter(Mandatory = $true)]
-        [string]$Environment
-    )
-    $Url = "${ApiUrl}/${Environment}"
-    $RawJson = (Invoke-WebRequest -Uri $Url -Method Get).Content
-    #ParsedJson = ($RawJson | ConvertFrom-Json) | ConvertTo-Json -Depth 10 -Compress:$false # nur zu testzwecken für die schöne ausgabe am terminal
-    $ParsedJson = $RawJson | ConvertFrom-Json
-    return $ParsedJson
-}
-
 function Stop-ServicesRemote {
     param (
         [string[]]$Services,    # Liste der Dienste
@@ -148,27 +135,36 @@ function Start-ServicesRemote {
     Invoke-Command -ComputerName $RemoteHost -ScriptBlock $Sb -ArgumentList $Services, $Delay
 }
 
+function Get-CMI-Config-Data {
+    param (
+        [string]$App,
+        [string]$Env
+    )
+    $Url = "${ApiUrl}/${App}/${Env}"
+	write-host "Calling $Url"
+    $RawJson = (Invoke-WebRequest -Uri $Url -Method Get).Content
+    #$ParsedJson = ($RawJson | ConvertFrom-Json) | ConvertTo-Json -Depth 10 -Compress:$false # nur zu testzwecken für die schöne ausgabe am terminal
+    $ParsedJson = $RawJson | ConvertFrom-Json
+    return $ParsedJson
+}
 
 
 
 
+$elements = Get-CMI-Config-Data -App $App -Env $Env
 
-$elements = Get-CMI-Config-Data -Environment $Env
 if (($elements | Measure-Object).count -lt 1) {
     write-host "nothing found."
     exit 1
+} else {
+	Write-Host "Answer received. Getting the names of the corresponding services..."
 }
 
 foreach ($ele in $elements) {
-    $eleName = $ele.PSObject.Properties.Name
-    if ($eleName -notlike "unknown") {
-        if ($IncludeRelay -and $ele.$eleName.app.servicenamerelay -like "*${App}*") {
-            $WindowsServicesList += $ele.$eleName.app.servicenamerelay
-        }
-        if ($ele.$eleName.app.servicename -like "*${App}*") {
-            $WindowsServicesList += $ele.$eleName.app.servicename
-        }
-    }
+	if ($IncludeRelay) {
+		$WindowsServicesList += $ele.app.servicenamerelay
+	}
+	$WindowsServicesList += $ele.app.servicename
 }
 
 $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
@@ -180,10 +176,15 @@ $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
         2 # All others come last
     }
 }
+
+write-host ""
+
 foreach ($e in $WindowsServicesListSorted) {
     write-host $e
 }
+
 if ($WindowsServicesListSorted.length -gt 0) {
+    write-host "Found Services:"
     if ($Action -like "stop") {
         Stop-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
     }
