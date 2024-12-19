@@ -4,13 +4,21 @@ import xml.etree.ElementTree as ET
 app = Flask(__name__)
 xml_data_path = 'D:\gitlab\cmi-config\cmi-config-v2.xml'  # Update the path to your XML file
 api_port = 5001
-
 def load_xml_data(file_path):
     def parse_element(element):
         """Recursively parse an XML element into a dictionary."""
         if len(element) == 0:  # No children, return text or None
             return element.text.strip() if element.text else None
-        return {child.tag: parse_element(child) for child in element}
+        parsed_data = {}
+        for child in element:
+            # Handle multiple nodes with the same tag
+            if child.tag not in parsed_data:
+                parsed_data[child.tag] = parse_element(child)
+            else:
+                if not isinstance(parsed_data[child.tag], list):
+                    parsed_data[child.tag] = [parsed_data[child.tag]]
+                parsed_data[child.tag].append(parse_element(child))
+        return parsed_data
 
     tree = ET.parse(file_path)
     root = tree.getroot()
@@ -87,6 +95,7 @@ def get_section_environment_data(section, environment):
 
 if __name__ == '__main__':
     app.run(port=api_port)
+
 
 
 
