@@ -2,91 +2,92 @@ from flask import Flask, jsonify, request
 import xml.etree.ElementTree as ET
 
 app = Flask(__name__)
-xml_data_path = r'D:\gitlab\cmi-config\cmi-config.xml'
+xml_data_path = 'D:\gitlab\cmi-config\cmi-config-v2.xml'  # Update the path to your XML file
 api_port = 5001
 
 def load_xml_data(file_path):
+    def parse_element(element):
+        """Recursively parse an XML element into a dictionary."""
+        if len(element) == 0:  # No children, return text or None
+            return element.text.strip() if element.text else None
+        return {child.tag: parse_element(child) for child in element}
+
     tree = ET.parse(file_path)
     root = tree.getroot()
-    data = []
-    for mandant in root.findall('mandant'):
-        mandant_data = {'id': mandant.get('id')}
-        for env in ['prod', 'test']:
-            env_data = mandant.find(env)
-            if env_data is not None:
-                env_info = {}
-                for child in env_data:
-                    if child.tag == 'namefull':
-                        env_info['namefull'] = child.text.strip() if child.text else None
-                    elif child.tag == 'app':
-                        releaseversion = child.find('releaseversion')
-                        host = child.find('host')
-                        env_info['app/releaseversion'] = releaseversion.text.strip() if releaseversion is not None else None
-                        env_info['app/host'] = host.text.strip() if host is not None else ''
-                    elif child.tag == 'database':
-                        host = child.find('host')
-                        env_info['database/host'] = host.text.strip() if host is not None else None
-                mandant_data[env] = env_info
-        data.append(mandant_data)
+    data = {}
+
+    for section in ['cmi', 'ais']:
+        section_data = []
+        section_root = root.find(section)
+        if section_root is not None:
+            for env in ['prod', 'test']:
+                env_data = section_root.find(env)
+                if env_data is not None:
+                    for mandant in env_data.findall('mandant'):
+                        mandant_data = {
+                            'environment': env,  # Add environment info
+                        }
+                        # Dynamically parse all children of <mandant>
+                        mandant_data.update({child.tag: parse_element(child) for child in mandant})
+                        section_data.append(mandant_data)
+        data[section] = section_data
     return data
 
-def filter_data(data, filters, environment=None):
-    results = []
+def filter_data(data, filters):
+    filtered = []
     for mandant in data:
-        if environment and environment not in mandant:
-            continue
-        env_data = mandant.get(environment, {}) if environment else {}
         match = True
         for key, value in filters.items():
-            if key == 'app_host':
-                app_host = env_data.get('app/host', '')
-                if value.lower() not in app_host.lower():  # Case-insensitive partial match
+            # Flatten keys for filtering (e.g., 'app/releaseversion')
+            keys = key.split('/')
+            target = mandant
+            for k in keys:
+                if isinstance(target, dict) and k in target:
+                    target = target[k]
+                else:
                     match = False
-            elif key == 'namefull':
-                namefull = env_data.get('namefull', '')
-                if value.lower() not in namefull.lower():  # Case-insensitive partial match
-                    match = False
+                    break
+            if match and value.lower() not in str(target).lower():
+                match = False
         if match:
-            results.append(env_data)
-    return results
+            filtered.append(mandant)
+    return filtered
 
-@app.route('/api/data/app/releaseversion', methods=['GET'])
-def get_app_releaseversion():
-    env = request.args.get('env')
-    app_host = request.args.get('app_host')
+@app.route('/api/data', methods=['GET'])
+def get_all_data():
     data = load_xml_data(xml_data_path)
-    filters = {}
-    if app_host:
-        filters['app_host'] = app_host
-
-    # Filter data
-    environments = ['prod', 'test'] if not env else [env]
-    response = []
-    for mandant in data:
-        for environment in environments:
-            env_data = mandant.get(environment, {})
-            if env_data and filter_data([mandant], filters, environment=environment):
-                response.append({
-                    'namefull': env_data.get('namefull', 'N/A'),
-                    'app/releaseversion': env_data.get('app/releaseversion', 'N/A')
-                })
+    filters = request.args.to_dict()
+    response = data['cmi'] + data['ais']
+    if filters:
+        response = filter_data(response, filters)
     return jsonify(response), 200
 
-@app.route('/api/data/database/host', methods=['GET'])
-def get_database_host():
-    env = request.args.get('env')
-    namefull = request.args.get('namefull')
+@app.route('/api/data/<section>', methods=['GET'])
+def get_section_data(section):
     data = load_xml_data(xml_data_path)
-    filters = {'namefull': namefull} if namefull else {}
-    filtered = filter_data(data, filters, environment=env)
-    response = [{
-        'namefull': item.get('namefull', 'N/A'),
-        'database/host': item.get('database/host', 'N/A')
-    } for item in filtered]
+    if section not in data:
+        return jsonify({'error': f'Section "{section}" not found.'}), 404
+    filters = request.args.to_dict()
+    response = data[section]
+    if filters:
+        response = filter_data(response, filters)
+    return jsonify(response), 200
+
+@app.route('/api/data/<section>/<environment>', methods=['GET'])
+def get_section_environment_data(section, environment):
+    data = load_xml_data(xml_data_path)
+    if section not in data:
+        return jsonify({'error': f'Section "{section}" not found.'}), 404
+    environment_data = [mandant for mandant in data[section] if mandant.get('environment') == environment]
+    filters = request.args.to_dict()
+    response = environment_data
+    if filters:
+        response = filter_data(environment_data, filters)
     return jsonify(response), 200
 
 if __name__ == '__main__':
     app.run(port=api_port)
+
 
 
 #from flask import Flask, jsonify, request
