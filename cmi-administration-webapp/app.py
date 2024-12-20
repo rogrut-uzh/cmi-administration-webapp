@@ -8,14 +8,44 @@ import json
 app = Flask(__name__)
 
 # Retrieve environment variables
-username = os.environ.get("CMI_WEBAPP_USER")
-password = os.environ.get("CMI_WEBAPP_PW")
+u = os.environ.get("CMI_WEBAPP_USER")
+p = os.environ.get("CMI_WEBAPP_PW")
+
+# Function to verify the username and password
+def check_auth(a, b):
+    """Validate if a username/password combination is valid."""
+    basicauthuser = os.environ.get("CMI_WEBAPP_BASICAUTH_USER")
+    basicauthpassword = os.environ.get("CMI_WEBAPP_BASICAUTH_PW")
+    return a == basicauthuser and b == basicauthpassword
+    #return a == "a" and b == "b"
+
+# Function to send a 401 Unauthorized response
+def authenticate():
+    """Send a 401 response that enables basic auth."""
+    return Response(
+        'Could not verify your access level.\n'
+        'You have to login with proper credentials.', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+# Decorator to require authentication
+from functools import wraps
+
+def requires_auth(f):
+    @wraps(f)  # Ensure the function keeps its name and docstring
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
 
 @app.route('/')
+@requires_auth
 def cockpit():
     return render_template('cockpit.html', active_page='cockpit')
 
 @app.route('/services')
+@requires_auth
 def services():
     return render_template('services.html', active_page='services')
 
@@ -33,8 +63,8 @@ def run_script_services_stream():
     command_stop_start_services = [
         'pwsh', '-NoProfile', '-Command',
         f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
-        f"$password = ConvertTo-SecureString '{password}' -AsPlainText -Force; "
-        f"$cred = New-Object System.Management.Automation.PSCredential('{username}', $password); "
+        f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
+        f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
         f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
         f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps}; exit $LASTEXITCODE }}"
     ]
@@ -70,8 +100,8 @@ def run_script_cockpit_overview():
         command = [
             'pwsh', '-NoProfile', '-Command',
             f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
-            f"$password = ConvertTo-SecureString '{password}' -AsPlainText -Force; "
-            f"$cred = New-Object System.Management.Automation.PSCredential('{username}', $password); "
+            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
+            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
             f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
             f"-App {app} -Env {env} }}"
         ]

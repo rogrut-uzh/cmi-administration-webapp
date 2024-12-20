@@ -1,9 +1,25 @@
+################################
+# * CMI Configuration REST API #
+################################
+# 
+# PREREQUISITES
+#     - install python3 (make available to all windows users)
+#     - and packages: pip install Flask xmltodict (as administrator so that it's available to all users)
+#     - The XML file with the CMI configuration must be present and accessible. Modify the path if nescessary.
+#     - change api_port if you want to run it on a different port than 5001.
+# 
+# AUTHOR
+#     Roger Rutishauser - DBA, October-December 2024
+#
 from flask import Flask, jsonify, request
 import xml.etree.ElementTree as ET
-
 app = Flask(__name__)
-xml_data_path = 'D:\gitlab\cmi-config\cmi-config-v2.xml'  # Update the path to your XML file
+
+################### change if nescessary ###############
+xml_data_path = 'D:\gitlab\cmi-config\cmi-config-v2.xml'
 api_port = 5001
+########################################################
+
 def load_xml_data(file_path):
     def parse_element(element):
         """Recursively parse an XML element into a dictionary."""
@@ -99,20 +115,3 @@ if __name__ == '__main__':
 
 
 
-#from flask import Flask, jsonify, request
-#import xml.etree.ElementTree as ET
-#from collections import defaultdict
-# 
-# ******************************
-# * CMI Configuration REST API *
-# ******************************
-# 
-# PREREQUISITES
-#     - install python3 (make available to all windows users)
-#     - and packages: pip install Flask xmltodict (as administrator so that it's available to all users)
-#     - The XML file with the CMI configuration must be present and accessible. Modify the path if nescessary.
-#     - change api_port if you want to run it on a different port than 5001.
-# 
-# AUTHOR
-#     Roger Rutishauser - DBA, October 2024
-#
