@@ -1,14 +1,16 @@
-body { 
-	background-color: #efebe9;
-	font-family: sans-serif;
-}
+body { background-color: #f1f5f7; }
 table {
 	font-size: 0.8rem;
-	background-color:mintcream;
+	background-color: #ffffff;
 }
 h3 {
-	border-bottom:1px solid black;
+	border-bottom:1px solid #000000;
 	font-size:1.2rem;
+}
+.kustom-navbar {
+	min-height: 4rem;
+	background-color: #253a44;
+	box-shadow: 0 .5rem 1rem rgba(0,0,0,.05),inset 0 -1px 0 rgba(0,0,0,.1);
 }
 .output {
 	background-color: #37474F;

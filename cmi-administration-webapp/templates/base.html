@@ -9,37 +9,34 @@
     <link rel="stylesheet" href="../static/main.css" />
 </head>
 <body>
+	<header class="navbar navbar-expand navbar-dark flex-column flex-md-row kustom-navbar">
+	
+				<div class="navbar-brand mr-0 mr-md-2">
+					<h1 class="text-center">CMI Admin</h1>
+				</div>
 
-<header class="bg-white mb-3 pt-3">
-    <div class="container-fluid">
-        <div class="row align-items-start justify-content-between">
-            <div class="col d-flex flex-nowrap">
-                <h1 class="text-center">CMI Admin</h1>
-            </div>
-            <div class="col d-flex flex-nowrap justify-content-end">
-                <ul class="nav nav-pills justify-content-end">
-                  <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'cockpit' %}active{% endif %}" href="/">Cockpit</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="/services">CMI Services</a>
-                  </li>
-                  <li class="nav-item">
-                    <a class="nav-link" href="#">Gitlab Links</a>
-                  </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</header>
+					<ul class="navbar-nav ml-md-auto nav-pills">
+					  <li class="nav-item">
+						<a class="nav-link {% if active_page == 'cockpit' %}active{% endif %}" href="/">Cockpit</a>
+					  </li>
+					  <li class="nav-item">
+						<a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="/services">CMI Services</a>
+					  </li>
+					  <li class="nav-item">
+						<a class="nav-link" href="#">Gitlab Links</a>
+					  </li>
+					</ul>
+					
+				
+	</header>
 
-<div class="container-fluid">
-    {% block content %}
-    {% endblock %}
-</div>
+	<div class="container-fluid">
+		{% block content %}
+		{% endblock %}
+	</div>
 
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
