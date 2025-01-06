@@ -139,7 +139,7 @@ def get_log_files():
             f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
             f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
             f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
-            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\download-cmi-log-files.ps1' "
+            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1' "
             f"-Date {log_date} -Env {env} }}"
         ]
 
