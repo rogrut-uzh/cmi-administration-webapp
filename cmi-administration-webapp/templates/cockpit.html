@@ -18,11 +18,19 @@
 		  </div>
 		  <div class="col-sm-6">
 			<div class="card">
-			  <div class="card-body">
-				<h2 class="card-title">xxxxxx</h2>
-				<p class="card-text">yyyyyyyyyy</p>
-				<a href="#" class="btn btn-primary">Go somewhere</a>
-			  </div>
+                <div class="card-body">
+                    <h2 class="card-title">Log-Files CMI App</h2>
+                    <p class="card-text">Download all log files of a given date. Enter the date in the format yyyymmdd:</p>
+                    <input type="text" id="input-log-date" name="input-log-date" class="form-control mb-2"/>
+                    <fieldset id="log-env">
+                        <input type="radio" id="env-test" name="log-env" value="test" checked>
+                        <label for="env-test">Test</label>
+                        <input type="radio" id="env-prod" name="log-env" value="prod">
+                        <label for="env-prod">Prod</label>
+                    </fieldset>
+                    <button class="btn btn-primary" id="get-log-files-btn">Get Log Files</button>
+                    <span class="get-date-result"></span>
+                </div>
 			</div>
 		  </div>
 		</div>
@@ -267,5 +275,41 @@
 		}
 	}
 	
+</script>
+
+<script>
+    document.getElementById("get-log-files-btn").addEventListener("click", async function() {
+        // Reset the result span
+        const resultSpan = document.querySelector(".get-date-result");
+        resultSpan.textContent = "";
+
+        // Get the entered date and selected environment
+        const logDate = document.getElementById("input-log-date").value.trim();
+        const env = document.querySelector('input[name="log-env"]:checked').value;
+
+        if (!logDate) {
+            resultSpan.textContent = "Please enter a valid date.";
+            return;
+        }
+
+        // Call the Flask endpoint
+        try {
+            const response = await fetch("/get-log-files", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ log_date: logDate, env: env }),
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                resultSpan.textContent = "Done";
+            } else {
+                const error = await response.json();
+                resultSpan.textContent = `Error: ${error.error}`;
+            }
+        } catch (error) {
+            resultSpan.textContent = `Error: ${error.message}`;
+        }
+    });
 </script>
 {% endblock %}

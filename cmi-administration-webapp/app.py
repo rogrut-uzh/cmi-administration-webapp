@@ -122,6 +122,38 @@ def run_script_cockpit_overview():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/get-log-files', methods=['POST'])
+def get_log_files():
+    try:
+        # Retrieve data from the POST request
+        data = request.get_json()
+        log_date = data.get('log_date')
+        env = data.get('env')
+
+        if not log_date or not env:
+            return jsonify({"error": "Missing required parameters: log_date or env"}), 400
+
+        # Construct the PowerShell command
+        command = [
+            'pwsh', '-NoProfile', '-Command',
+            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
+            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
+            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
+            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\download-cmi-log-files.ps1' "
+            f"-Date {log_date} -Env {env} }}"
+        ]
+
+        # Run the PowerShell script
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            return jsonify({"message": "Log files downloaded successfully!"}), 200
+        else:
+            return jsonify({"error": result.stderr.strip()}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Run the Flask application
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
