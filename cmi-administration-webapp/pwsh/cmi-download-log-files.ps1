@@ -11,6 +11,7 @@ param (
     [string]$Date,
     [string]$Env
 )
+write-host "kkk"
 $ApiUrl = "http://localhost:5001/api/data"
 $targetDirectory = "D:\cmi-log-files"
 $filesFound = $false  # Initialize flag to check if files are found
@@ -39,61 +40,55 @@ foreach ($ele in $elements) {
     $logPath = "${logPath}\Trace"
     $shortName = $ele.nameshort
     $apphost = $ele.app.host
-
-	Write-Host "Processing logs on host: $apphost, path: $logPath"
+Write-Host "Processing logs on host: $apphost, path: $logPath"
 
     # Use PowerShell Remoting to fetch log files from the remote host
     $remoteCommand = {
         param ($logPath, $date, $shortName)
-		
-        # Get log files matching the date
-        $files = Get-ChildItem -Path $logPath -Filter "*$date*.log" -ErrorAction SilentlyContinue
-        if (!$files) {
-            return $null  # Return null if no files are found
-        }
 
-        # Return file metadata for transfer
-        $files | ForEach-Object {
-            [PSCustomObject]@{
-                FullName = $_.FullName
-                NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
+        # Get log files matching the date
+        $f = Get-ChildItem -Path $logPath -Filter "*$date*.log" -ErrorAction SilentlyContinue
+
+        if ($f) {
+            # Return file metadata for transfer
+            $f | ForEach-Object {
+                [PSCustomObject]@{
+                    FullName = $_.FullName
+                    NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
+                }
             }
+        } else {
+            # Explicitly return $null if no files are found
+            return $null
         }
     }
 
-    try {
-        # Invoke the remote command and retrieve file details
-        $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
+    # Invoke the remote command and retrieve file details
+    $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
 
-        if ($files) {
-            $filesFound = $true  # Mark as true if files are found
-			
-			foreach ($file in $files) {
-				# Define the local destination
-				$destination = Join-Path -Path $targetDirectory -ChildPath $file.NewName
-				
-				Write-Host "Copying $($file.FullName) from $apphost to $destination"
+    if ($files -and $files.Count -gt 0) {
+        $filesFound = $true  # Mark as true if files are found
 
-				# Copy file from the remote host to the local machine
-				Copy-Item -FromSession (New-PSSession -ComputerName $apphost) -Path $file.FullName -Destination $destination
-			}
-			
-        } else {
-            Write-Host "No files found for date '$Date'"
+        foreach ($file in $files) {
+            # Define the local destination
+            $destination = Join-Path -Path $targetDirectory -ChildPath $file.NewName
+
+            Write-Host "Copying $($file.FullName) from $apphost to $destination"
+
+            # Copy file from the remote host to the local machine
+            Copy-Item -FromSession (New-PSSession -ComputerName $apphost) -Path $file.FullName -Destination $destination
         }
-    } catch {
-        Write-Error "Failed to process logs for $apphost. Error: $_"
+    } else {
+        Write-Host "No files found for date '$Date' on host $apphost"
     }
 }
+
 # Check if no files were found
 if ($filesFound) {
-	Write-Host "Log files downloaded successfully."
-
-	# open windows explorer
-	Start-Process explorer.exe -ArgumentList $targetDirectory
-
-	exit 0
+    Write-Host "Log files downloaded successfully."
+    Start-Process explorer.exe -ArgumentList $targetDirectory
+    exit 0
 } else {
-    Write-Host "No files found for the specified date '$Date' in any mandant."
-    exit 1
+    Write-Error "No files found for the specified date '$Date' in any mandant."
+    exit 2
 }

@@ -135,23 +135,21 @@ def get_log_files():
 
         # Construct the PowerShell command
         command = [
-            'pwsh', '-NoProfile', '-Command',
-            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
-            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
-            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
-            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1' "
-            f"-Date {log_date} -Env {env} }}"
+            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1',
+            '-Date', {log_date}, '-Env', {env}
         ]
 
         # Run the PowerShell script
         result = subprocess.run(command, capture_output=True, text=True)
-
         if result.returncode == 0:
-            return jsonify({"message": "Log files downloaded successfully!"}), 200
+            return jsonify({"message": result.stdout.strip()}), 200
         else:
-            return jsonify({"error": result.stderr.strip()}), 500
-
+            # Prefer stderr for error messages
+            error_message = result.stderr.strip() or "An unknown error occurred."
+            return jsonify({"error": error_message}), 500
+            
     except Exception as e:
+        error_message = result.stderr.strip() or "An unknown error occurred."
         return jsonify({"error": str(e)}), 500
 
 # Run the Flask application
