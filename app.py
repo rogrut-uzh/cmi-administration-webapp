@@ -65,7 +65,7 @@ def run_script_services_stream():
     # using -command instead of -file, because with -file all parameters are treated as strings, but -IncludeRelay must be boolean.
     command = [
         'pwsh', '-NoProfile', '-Command',
-        f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
+        f"& {{ . 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
         f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps} }}"
     ]
 
@@ -102,12 +102,12 @@ def run_script_cockpit_overview():
 #            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
 #            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
 #            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
-#            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
+#            f"& {{ . 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
 #            f"-App {app} -Env {env} }}"
 #        ]
     
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
+            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
             '-App', f"{app}",
             '-Env', f"{env}"
         ]
@@ -140,7 +140,7 @@ def get_log_files():
 
         # Construct the PowerShell command
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1',
+            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1',
             '-Date', f"{log_date}",
             '-Env', f"{env}"
         ]
