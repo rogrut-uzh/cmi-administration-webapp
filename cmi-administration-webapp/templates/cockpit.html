@@ -21,15 +21,25 @@
                 <div class="card-body">
                     <h2 class="card-title">Logs</h2>
                     <p class="card-text">Download the log files of each CMI mandant to <strong>D:\cmi-log-files\</strong>.</p>
-					<p>Enter the date in the format yyyymmdd: <input type="text" id="input-log-date" name="input-log-date" class="form-control-inline" style="width: 100px;" /></p>
-                    <p><fieldset id="log-env">
+					<p>
+						<label for="input-log-date">Enter the date in the format <code>yyyymmdd</code>:</label> 
+						<input type="text" 
+							id="input-log-date" 
+							name="input-log-date" 
+							class="form-control-inline" 
+							style="width: 100px;" />
+					</p>
+                    <p>
+					<fieldset id="log-env">
+						Environment: 
                         <input type="radio" id="env-test" name="log-env" value="test" checked>
                         <label for="env-test">Test</label>
                         <input type="radio" id="env-prod" name="log-env" value="prod">
                         <label for="env-prod">Prod</label>
-                    </fieldset></p>
-                    <button class="btn btn-primary" id="get-log-files-btn">Download</button>
-                    <span class="get-date-result"></span>
+                    </fieldset>
+					</p>
+                    <button class="btn btn-primary btn-sm" id="get-log-files-btn">Download</button>
+                    <span style="padding-left:10px;" class="get-date-result"></span>
                 </div>
 			</div>
 		  </div>

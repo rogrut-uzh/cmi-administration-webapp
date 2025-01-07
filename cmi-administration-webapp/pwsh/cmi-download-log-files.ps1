@@ -11,46 +11,50 @@ param (
     [string]$Date,
     [string]$Env
 )
-write-host "kkk"
+
 $ApiUrl = "http://localhost:5001/api/data"
 $targetDirectory = "D:\cmi-log-files"
 $filesFound = $false  # Initialize flag to check if files are found
 
 function Get-CMI-Config-Data {
     param (
-        [string]$Env
+        [string]$Env,
+        [string]$App
     )
-    $Url = "${ApiUrl}/cmi/${Env}"
-    Write-Host "Calling $Url"
+    $Url = "${ApiUrl}/${App}/${Env}"
     $RawJson = (Invoke-WebRequest -Uri $Url -Method Get).Content
     $ParsedJson = $RawJson | ConvertFrom-Json
     return $ParsedJson
 }
 
-# Fetch configuration data
-$elements = Get-CMI-Config-Data -Env $Env
+# Validate parameters
+if (-not $Date -or -not $Env) {
+    Write-Error "Both -Date and -Env parameters are required."
+    exit 1
+}
 
 # Ensure the target directory exists, and create if nescessary
 if (-not (Test-Path -Path $targetDirectory)) {
     New-Item -ItemType Directory -Path $targetDirectory
 }
 
+# Fetch configuration data
+$elements = Get-CMI-Config-Data -Env $Env -App "cmi"
+$elements += Get-CMI-Config-Data -Env $Env -App "ais"
+
 foreach ($ele in $elements) {
-	$logPath = $ele.app.installpath
-    $logPath = "${logPath}\Trace"
+    $logPath = $ele.app.installpath
+	$logPath = "${logPath}\Trace"
     $shortName = $ele.nameshort
     $apphost = $ele.app.host
-Write-Host "Processing logs on host: $apphost, path: $logPath"
+    Write-Host "Processing logs on host: $apphost, path: $logPath" *> $null
 
     # Use PowerShell Remoting to fetch log files from the remote host
     $remoteCommand = {
         param ($logPath, $date, $shortName)
-
-        # Get log files matching the date
         $f = Get-ChildItem -Path $logPath -Filter "*$date*.log" -ErrorAction SilentlyContinue
 
         if ($f) {
-            # Return file metadata for transfer
             $f | ForEach-Object {
                 [PSCustomObject]@{
                     FullName = $_.FullName
@@ -58,8 +62,7 @@ Write-Host "Processing logs on host: $apphost, path: $logPath"
                 }
             }
         } else {
-            # Explicitly return $null if no files are found
-            return $null
+            return @()  # Return empty array if no files are found
         }
     }
 
@@ -68,24 +71,25 @@ Write-Host "Processing logs on host: $apphost, path: $logPath"
 
     if ($files -and $files.Count -gt 0) {
         $filesFound = $true  # Mark as true if files are found
-
-        foreach ($file in $files) {
-            # Define the local destination
-            $destination = Join-Path -Path $targetDirectory -ChildPath $file.NewName
-
-            Write-Host "Copying $($file.FullName) from $apphost to $destination"
-
-            # Copy file from the remote host to the local machine
-            Copy-Item -FromSession (New-PSSession -ComputerName $apphost) -Path $file.FullName -Destination $destination
+        $sess = New-PSSession -ComputerName $apphost
+        if ($sess) {
+            foreach ($file in $files) {
+                $destination = Join-Path -Path $targetDirectory -ChildPath $file.NewName
+                Write-Host "Copying $($file.FullName) from $apphost to $destination" *> $null
+                Copy-Item -FromSession $sess -Path $file.FullName -Destination $destination
+            }
+            Remove-PSSession -Session $sess
+        } else {
+            Write-Error "Failed to establish a session with $apphost"
         }
     } else {
-        Write-Host "No files found for date '$Date' on host $apphost"
+        Write-Host "No files found for date '$Date' on host $apphost" # using write-host because it's something to display in the console but not in python.
     }
 }
 
-# Check if no files were found
+# Check if files were found
 if ($filesFound) {
-    Write-Host "Log files downloaded successfully."
+    Write-Output "Log files downloaded successfully." # using write-output because that's a message delivered to python
     Start-Process explorer.exe -ArgumentList $targetDirectory
     exit 0
 } else {

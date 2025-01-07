@@ -1,16 +1,21 @@
 from flask import Flask, render_template, request, Response, jsonify
+from functools import wraps
 import subprocess
 import os
 import time
 import json
+#import logging
+#logging.basicConfig(filename='app_debug.log', level=logging.DEBUG)
 
 # Initialize the Flask application
 app = Flask(__name__)
 
 # Retrieve environment variables
-u = os.environ.get("CMI_WEBAPP_USER")
-p = os.environ.get("CMI_WEBAPP_PW")
+#u = os.environ.get("CMI_WEBAPP_USER")
+#p = os.environ.get("CMI_WEBAPP_PW")
 
+
+# HTTP BASIC AUTHENTICATION
 # Function to verify the username and password
 def check_auth(a, b):
     """Validate if a username/password combination is valid."""
@@ -27,9 +32,6 @@ def authenticate():
         'You have to login with proper credentials.', 401,
         {'WWW-Authenticate': 'Basic realm="Login Required"'})
 
-# Decorator to require authentication
-from functools import wraps
-
 def requires_auth(f):
     @wraps(f)  # Ensure the function keeps its name and docstring
     def decorated(*args, **kwargs):
@@ -38,6 +40,7 @@ def requires_auth(f):
             return authenticate()
         return f(*args, **kwargs)
     return decorated
+
 
 @app.route('/')
 @requires_auth
@@ -56,22 +59,19 @@ def run_script_services_stream():
     app = request.args.get('app')
     env = request.args.get('env')
     include_relay = request.args.get('includeRelay', 'true') == 'true'
-    # Convert includeRelay to PowerShell $true or $false
     include_relay_ps = "$true" if include_relay else "$false"
     
     # Run PowerShell script with arguments
-    command_stop_start_services = [
+    # using -command instead of -file, because with -file all parameters are treated as strings, but -IncludeRelay must be boolean.
+    command = [
         'pwsh', '-NoProfile', '-Command',
-        f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
-        f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
-        f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
         f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
-        f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps}; exit $LASTEXITCODE }}"
+        f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps} }}"
     ]
 
     def generate_output():
         try:
-            process = subprocess.Popen(command_stop_start_services, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
+            process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
             while True:
                 output = process.stdout.readline()
                 if output == '' and process.poll() is not None:
@@ -97,15 +97,20 @@ def run_script_cockpit_overview():
         app = data.get('app')
         env = data.get('env')
         
-        command = [
-            'pwsh', '-NoProfile', '-Command',
-            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
-            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
-            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
-            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
-            f"-App {app} -Env {env} }}"
-        ]
+#        command = [
+#            'pwsh', '-NoProfile', '-Command',
+#            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
+#            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
+#            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
+#            f"& {{ . 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
+#            f"-App {app} -Env {env} }}"
+#        ]
     
+        command = [
+            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
+            '-App', f"{app}",
+            '-Env', f"{env}"
+        ]
         # Run the PowerShell script
         result = subprocess.run(command, capture_output=True, text=True)
 
@@ -136,22 +141,29 @@ def get_log_files():
         # Construct the PowerShell command
         command = [
             'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\zidbacons02\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1',
-            '-Date', {log_date}, '-Env', {env}
+            '-Date', f"{log_date}",
+            '-Env', f"{env}"
         ]
 
         # Run the PowerShell script
         result = subprocess.run(command, capture_output=True, text=True)
+        
+        #debug_info = {
+        #    "return_code": result.returncode,
+        #    "stdout": result.stdout.strip(),
+        #    "stderr": result.stderr.strip(),
+        #}
+        
+        # Return debug information along with the normal response
         if result.returncode == 0:
             return jsonify({"message": result.stdout.strip()}), 200
+            #return jsonify({"message": result.stdout.strip(), "debug": debug_info}), 200
         else:
-            # Prefer stderr for error messages
-            error_message = result.stderr.strip() or "An unknown error occurred."
-            return jsonify({"error": error_message}), 500
-            
+            return jsonify({"error": result.stderr.strip()}), 500
+            #return jsonify({"error": result.stderr.strip(), "debug": debug_info}), 500
     except Exception as e:
-        error_message = result.stderr.strip() or "An unknown error occurred."
         return jsonify({"error": str(e)}), 500
 
 # Run the Flask application
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=False) # <------- change debug mode if nescessary -----------

@@ -10,7 +10,7 @@
 #
 # Argumente:
 # -Action:          "start" oder "stop" des Services
-# -App:             "cmi" für CMI oder "ais" für die Archivinformationssysteme (inkl. Benutzungsverwaltung"
+# -App:             "cmi" für CMI oder "ais" für die Archivinformationssysteme 
 # -Env:             "prod" für Produktiv-Umgebung, "test" für Testumgebung
 # -IncludeRelay:    true/false. Ob auch die Relay-Server berücksichtigt werden sollen. Default: true
 #
@@ -73,12 +73,12 @@ function Stop-ServicesRemote {
 
         foreach ($service in $Services) {
             Write-Output ""
-            Write-Output "Versuche den Service $service zu stoppen..."
+		Write-Output "Trying to stop the service ${service}..."
             $output = net stop "$service" 2>&1
             if ($output -match "service was stopped successfully") {
-                Write-Output "Service $service erfolgreich gestoppt."
+			Write-Output "${service} stopped."
             } else {
-                Write-Output "Stoppen fehlgeschlagen: $service. Error: $output"
+                Write-Output "Stopping service ${service} failed. Error: $output"
             }
             Start-Sleep -Seconds $Delay
         }
@@ -90,9 +90,9 @@ function Stop-ServicesRemote {
 
 function Start-ServicesRemote {
     param (
-        [string[]]$Services,    # Liste der Dienste
-        [string]$RemoteHost,    # Remote-Hostname oder IP-Adresse
-        [int]$Delay = 2         # Verzögerung zwischen Stop-Versuchen
+        [string[]]$Services,    # List of services
+        [string]$RemoteHost,    # Remote-Hostname or IP-Adress
+        [int]$Delay = 2         # delay between stop tries
     )
     
     $Sb = {
@@ -105,10 +105,10 @@ function Start-ServicesRemote {
             write-host ""
             $serviceObj = Get-Service -Name $service -ErrorAction SilentlyContinue
             if ($serviceObj -and $serviceObj.Status -ne 'Running') {
-                Write-Output "Service starten: $service"
+                Write-Output "Trying to start the service ${service}..."
                 $output = net start "$service" 2>&1  # Capture output and errors
                 if ($output -match "service was started successfully") {
-                    Write-Output "Befehl für Starten des Service $service wurde ausgeführt. Warte bis er gestartet wurde..." 
+                    Write-Output "Waiting..." 
                     $isRunning = $false
                     while (-not $isRunning) {
                         Start-Sleep -Seconds 1 
@@ -116,16 +116,16 @@ function Start-ServicesRemote {
                         $serviceStatus = Get-Service -Name "$service" -ErrorAction SilentlyContinue
                         if ($serviceStatus.Status -eq 'Running') {
                             $isRunning = $true
-                            Write-Output "Service $service wurde jetzt gestartet."
+                            Write-Output "${service} started."
                         } else {
-                            Write-Output "Service $service startet immernoch..."
+                            Write-Output "${service} still starting up..."
                         }
                     }
                 } else { 
-                    Write-Output "Starten fehlgeschlagen: $service. Error: $output" 
+                    Write-Output "Starting service ${service} failed. Error: $output" 
                 }
             } else {
-                 Write-Output "Service $service läuft bereits." 
+                 Write-Output "Service ${service} already running." 
             }
             Start-Sleep -Seconds $Delay
         }
@@ -141,7 +141,7 @@ function Get-CMI-Config-Data {
         [string]$Env
     )
     $Url = "${ApiUrl}/${App}/${Env}"
-	write-host "Calling $Url"
+	write-Output "Calling $Url"
     $RawJson = (Invoke-WebRequest -Uri $Url -Method Get).Content
     #$ParsedJson = ($RawJson | ConvertFrom-Json) | ConvertTo-Json -Depth 10 -Compress:$false # nur zu testzwecken für die schöne ausgabe am terminal
     $ParsedJson = $RawJson | ConvertFrom-Json
@@ -157,7 +157,7 @@ if (($elements | Measure-Object).count -lt 1) {
     write-host "nothing found."
     exit 1
 } else {
-	Write-Host "Answer received. Getting the names of the corresponding services..."
+	Write-Output "Answer received. Getting the names of the corresponding services..."
 }
 
 foreach ($ele in $elements) {
@@ -177,11 +177,11 @@ $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
     }
 }
 
-    
-write-host ""
-write-host "Found Services:"
+
+write-Output ""
+write-Output "Found Services:"
 foreach ($e in $WindowsServicesListSorted) {
-    write-host $e
+    write-Output $e
 }
 
 if ($WindowsServicesListSorted.length -gt 0) {
@@ -192,7 +192,7 @@ if ($WindowsServicesListSorted.length -gt 0) {
         Start-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
     }
 } else {
-    write-host "no services found."
+    write-Output "no services found."
     exit 1
 }
 
