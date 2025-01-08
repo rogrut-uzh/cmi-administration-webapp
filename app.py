@@ -1,9 +1,12 @@
-from flask import Flask, render_template, request, Response, jsonify
+from flask import Flask, render_template, request, Response, jsonify, send_file
 from functools import wraps
+from io import BytesIO
+import zipfile
 import subprocess
 import os
 import time
 import json
+import base64
 #import logging
 #logging.basicConfig(filename='app_debug.log', level=logging.DEBUG)
 
@@ -127,13 +130,11 @@ def run_script_cockpit_overview():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-log-files', methods=['POST'])
+@app.route('/get-log-files', methods=['GET'])
 def get_log_files():
     try:
-        # Retrieve data from the POST request
-        data = request.get_json()
-        log_date = data.get('log_date')
-        env = data.get('env')
+        log_date = request.args.get("log_date")
+        env = request.args.get("env")
 
         if not log_date or not env:
             return jsonify({"error": "Missing required parameters: log_date or env"}), 400
@@ -144,26 +145,37 @@ def get_log_files():
             '-Date', f"{log_date}",
             '-Env', f"{env}"
         ]
-
         # Run the PowerShell script
         result = subprocess.run(command, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        return jsonify({"error": f"PowerShell script failed: {e.stderr}"}), 500
         
-        #debug_info = {
-        #    "return_code": result.returncode,
-        #    "stdout": result.stdout.strip(),
-        #    "stderr": result.stderr.strip(),
-        #}
-        
-        # Return debug information along with the normal response
-        if result.returncode == 0:
-            return jsonify({"message": result.stdout.strip()}), 200
-            #return jsonify({"message": result.stdout.strip(), "debug": debug_info}), 200
-        else:
-            return jsonify({"error": result.stderr.strip()}), 500
-            #return jsonify({"error": result.stderr.strip(), "debug": debug_info}), 500
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    # Parse the JSON output from PowerShell
+    try:
+        files = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        return jsonify({"error": "Failed to decode JSON output from PowerShell script."}), 500
 
+    if not files:
+        return jsonify({"error": "No files found for the specified date and environment."}), 404
+
+    # Create a ZIP file in memory
+    zip_buffer = BytesIO()
+    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for file in files:
+            file_name = file["FileName"]
+            file_content = base64.b64decode(file["Content"])
+            zip_file.writestr(file_name, file_content)
+
+    zip_buffer.seek(0)  # Reset buffer pointer
+
+    # Return the ZIP file as a downloadable response
+    return send_file(
+        zip_buffer,
+        as_attachment=True,
+        download_name=f"logs_{log_date}_{env}.zip",
+        mimetype="application/zip"
+    )
 # Run the Flask application
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=False) # <------- change debug mode if nescessary -----------
