@@ -13,7 +13,8 @@ param (
 )
 
 $ApiUrl = "http://localhost:5001/api/data"
-$allFiles = @()  # Initialize an array to store file metadata and content
+$targetDirectory = "D:\cmi-log-files"
+$filesFound = $false  # Initialize flag to check if files are found
 
 function Get-CMI-Config-Data {
     param (
@@ -67,25 +68,31 @@ foreach ($ele in $elements) {
 
     # Invoke the remote command and retrieve file details
     $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
-	
-    if ($files -and $files.Count -gt 0) {
-        foreach ($file in $files) {
-            $fileBytes = Invoke-Command -ComputerName $apphost -ScriptBlock {
-                param ($filePath)
-                Get-Content -Path $filePath -Encoding Byte
-            } -ArgumentList $file.FullName
 
-            $encodedContent = [Convert]::ToBase64String($fileBytes)
-            $allFiles += [PSCustomObject]@{
-                FileName = $file.NewName
-                Content  = $encodedContent
+    if ($files -and $files.Count -gt 0) {
+        $filesFound = $true  # Mark as true if files are found
+        $sess = New-PSSession -ComputerName $apphost
+        if ($sess) {
+            foreach ($file in $files) {
+                $destination = Join-Path -Path $targetDirectory -ChildPath $file.NewName
+                Write-Host "Copying $($file.FullName) from $apphost to $destination" *> $null
+                Copy-Item -FromSession $sess -Path $file.FullName -Destination $destination
             }
+            Remove-PSSession -Session $sess
+        } else {
+            Write-Error "Failed to establish a session with $apphost"
         }
     } else {
-        Write-Host "No files found for date '$Date' on host $apphost" *> $null
+        Write-Host "No files found for date '$Date' on host $apphost" # using write-host because it's something to display in the console but not in python.
     }
 }
 
-# Output the results as JSON to the Python app
-Write-Output ($allFiles | ConvertTo-Json -Depth 10)
-exit 0
+# Check if files were found
+if ($filesFound) {
+    Write-Output "Log files downloaded successfully." # using write-output because that's a message delivered to python
+    Start-Process explorer.exe -ArgumentList $targetDirectory
+    exit 0
+} else {
+    Write-Error "No files found for the specified date '$Date' in any mandant."
+    exit 2
+}
