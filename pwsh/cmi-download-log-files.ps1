@@ -13,8 +13,7 @@ param (
 )
 
 $ApiUrl = "http://localhost:5001/api/data"
-$targetDirectory = "D:\cmi-log-files"
-$filesFound = $false  # Initialize flag to check if files are found
+$allFiles = @()  # Initialize an array to store file metadata and content
 
 function Get-CMI-Config-Data {
     param (
@@ -33,21 +32,40 @@ if (-not $Date -or -not $Env) {
     exit 1
 }
 
-# Ensure the target directory exists, and create if nescessary
-if (-not (Test-Path -Path $targetDirectory)) {
-    New-Item -ItemType Directory -Path $targetDirectory
-}
 
 # Fetch configuration data
 $elements = Get-CMI-Config-Data -Env $Env -App "cmi"
 $elements += Get-CMI-Config-Data -Env $Env -App "ais"
 
+
+
+
+#$filepath = "C:\Program Files\CMI AG\CMI Test\BM 22.0.10\Trace\Server-20241229.log"
+#$destination = "d:\test\file.txt"
+#$apphost = "ziaxiomatap02"
+#
+#$sess = New-PSSession -ComputerName $apphost
+#if ($sess) {
+#    Copy-Item -FromSession $sess -Path $filepath -Destination $destination
+#    Remove-PSSession -Session $sess
+#    # Read the file content locally
+#    $result = Get-Content -Path $destination -AsByteStream
+#    Write-Host "File content length: $($result.Length)"
+#} else {
+#    Write-Error "Failed to establish a session with $apphost"
+#}
+#exit 0
+
+
+
+
+
 foreach ($ele in $elements) {
     $logPath = $ele.app.installpath
-	$logPath = "${logPath}\Trace"
+    $logPath = "${logPath}\Trace"
     $shortName = $ele.nameshort
     $apphost = $ele.app.host
-    Write-Host "Processing logs on host: $apphost, path: $logPath" *> $null
+    Write-Host "Processing logs on host: $apphost, path: $logPath"
 
     # Use PowerShell Remoting to fetch log files from the remote host
     $remoteCommand = {
@@ -70,29 +88,63 @@ foreach ($ele in $elements) {
     $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
 
     if ($files -and $files.Count -gt 0) {
-        $filesFound = $true  # Mark as true if files are found
-        $sess = New-PSSession -ComputerName $apphost
-        if ($sess) {
+        try {
             foreach ($file in $files) {
-                $destination = Join-Path -Path $targetDirectory -ChildPath $file.NewName
-                Write-Host "Copying $($file.FullName) from $apphost to $destination" *> $null
-                Copy-Item -FromSession $sess -Path $file.FullName -Destination $destination
+                Write-Host "Processing file: $($file.FullName) on host $apphost"
+
+                # Use Get-Content -AsByteStream to read the file content
+#$fileBytes = Invoke-Command -ComputerName $apphost -ScriptBlock {
+#    param ($filePath)
+#    if (Test-Path -Path $filePath) {
+#        & 'pwsh.exe' -Command {
+#            [System.IO.File]::ReadAllBytes($filePath)
+#        }
+#    } else {
+#        throw "File not found: $filePath"
+#    }
+#} -ArgumentList $file.FullName
+
+
+$fileBytes = Invoke-Command -ComputerName $apphost -ScriptBlock {
+    param ($filePath)
+    if (Test-Path -Path $filePath) {
+        Write-Host "File exists: $filePath"
+
+        # Use PowerShell Core with explicit argument for the file path
+        & 'pwsh.exe' -Command "& { Get-Content -Path '$filePath' -AsByteStream }"
+        
+    } else {
+        throw "File not found: $filePath"
+    }
+} -ArgumentList $file.FullName
+				
+				
+				
+
+                if ($fileBytes) {
+                    # Convert the binary content to Base64
+                    $encodedContent = [Convert]::ToBase64String($fileBytes)
+                    $allFiles += [PSCustomObject]@{
+                        FileName = $file.NewName
+                        Content  = $encodedContent
+                    }
+                } else {
+                    Write-Error "Failed to read file content for: $($file.FullName)"
+                }
             }
-            Remove-PSSession -Session $sess
-        } else {
-            Write-Error "Failed to establish a session with $apphost"
+        } catch {
+            Write-Output "files foreach failed: $_"
+            exit 1
         }
     } else {
-        Write-Host "No files found for date '$Date' on host $apphost" # using write-host because it's something to display in the console but not in python.
+        Write-Output "No files found for date '$Date' on host $apphost"
+        exit 2
     }
 }
 
-# Check if files were found
-if ($filesFound) {
-    Write-Output "Log files downloaded successfully." # using write-output because that's a message delivered to python
-    Start-Process explorer.exe -ArgumentList $targetDirectory
-    exit 0
-} else {
-    Write-Error "No files found for the specified date '$Date' in any mandant."
-    exit 2
-}
+# Output the results as JSON to the Python app
+Write-Output ($allFiles | ConvertTo-Json -Depth 10)
+
+exit 0
+
+
