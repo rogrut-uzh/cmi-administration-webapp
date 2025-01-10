@@ -143,17 +143,21 @@ def get_log_files():
         # Construct the PowerShell command
         command = [
             'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1',
-            '-Date', f"{log_date}",
-            '-Env', f"{env}"
+            '-Date', log_date,
+            '-Env', env
         ]
+
         # Run the PowerShell script
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(command, capture_output=True, text=True, check=True)
+        
+        raw_output = result.stdout
+
     except subprocess.CalledProcessError as e:
         return jsonify({"error": f"PowerShell script failed: {e.stderr}"}), 500
-        
+
     # Parse the JSON output from PowerShell
     try:
-        files = json.loads(result.stdout)
+        files = json.loads(raw_output)
     except json.JSONDecodeError:
         return jsonify({"error": "Failed to decode JSON output from PowerShell script."}), 500
 
@@ -164,7 +168,7 @@ def get_log_files():
     zip_buffer = BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for file in files:
-            file_name = file["FileName"]
+            file_name = file["NewName"]
             file_content = base64.b64decode(file["Content"])
             zip_file.writestr(file_name, file_content)
 
@@ -177,6 +181,7 @@ def get_log_files():
         download_name=f"logs_{log_date}_{env}.zip",
         mimetype="application/zip"
     )
+
 # Run the Flask application
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=False) # <------- change debug mode if nescessary -----------
+    app.run(host='0.0.0.0', port=5000, debug=True) # <------- change debug mode if nescessary -----------
