@@ -316,11 +316,6 @@ document.getElementById("get-log-files-btn").addEventListener("click", async fun
             method: "GET",
         });
 
-		alert(response.ok);
-
-
-		
-		
         if (response.ok) {
             const blob = await response.blob();
             const downloadUrl = URL.createObjectURL(blob);

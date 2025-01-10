@@ -6,9 +6,13 @@ param (
     [string]$Env
 )
 
-$ErrorActionPreference = "Stop"  # Stop on errors
-$VerbosePreference = "SilentlyContinue"  # Suppress verbose logs
 
+# make sure only the json is being outputted otherwise the python flask app will not recognize the response as json and will fail
+
+
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$ErrorActionPreference = "Stop"
+$VerbosePreference = "SilentlyContinue"
 $ApiUrl = "http://localhost:5001/api/data"
 $allFiles = @()  # Initialize an array to store file metadata and content
 
@@ -33,19 +37,15 @@ if (-not $Date -or -not $Env) {
 $elements = Get-CMI-Config-Data -Env $Env -App "cmi"
 $elements += Get-CMI-Config-Data -Env $Env -App "ais"
 
-
 foreach ($ele in $elements) {
     $logPath = $ele.app.installpath
     $logPath = "${logPath}\Trace"
     $shortName = $ele.nameshort
     $apphost = $ele.app.host
-    Write-Host "Processing logs on host: $apphost, path: $logPath"
 
-
-# Define the remote script block
     $remoteCommand = {
         param ($logPath, $date, $shortName)
-        Write-Host "Checking path: $logPath"
+        #Write-Host "Checking path: $logPath"
         if (Test-Path -Path $logPath) {
             $files = Get-ChildItem -Path "$logPath" -Filter "*$date*.log" -ErrorAction SilentlyContinue
             if ($files) {
@@ -57,24 +57,18 @@ foreach ($ele in $elements) {
                     }
                 }
             } else {
-                Write-Warning "No files found in path $logPath for date $date"
+                # No files found in path $logPath for date $date
                 return @()
             }
         } else {
-            Write-Warning "Path does not exist: $logPath"
+            # Path does not exist: $logPath
             return @()
         }
     }
-	
-	
-	
-	
-	
-# Invoke the remote command
+    
+    # Invoke the remote command
     try {
         $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
-		$files
-		exit 0
     } catch {
         Write-Error "Failed to execute remote command on ${apphost}: $_"
         continue
@@ -82,18 +76,41 @@ foreach ($ele in $elements) {
 
     # Process the returned files
     if ($files -and $files.Count -gt 0) {
-		$allFiles += $files
-    } else {
-        Write-Warning "No files found for date '$Date' on host $apphost"
-    }
+        $allFiles += $files
+    } 
 }
 
-# Output the results as JSON
-try {
-    $jsonOutput = $allFiles | ConvertTo-Json -Depth 10
-    Write-Output $jsonOutput
-    exit 0
-} catch {
-    Write-Error "JSON conversion failed: $_"
-    exit 1
+
+if (-not ($allFiles.Count -eq 0)) {
+	try {
+		$jsonOutput = $allFiles | ConvertTo-Json -Depth 10 -Compress
+		# Convert JSON to bytes
+		$bytes = [System.Text.Encoding]::UTF8.GetBytes($jsonOutput)
+
+		# Create a memory stream for compressed data
+		$memoryStream = [System.IO.MemoryStream]::new()
+
+		# Use GZipStream for compression
+		$gzipStream = [System.IO.Compression.GZipStream]::new($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
+		$gzipStream.Write($bytes, 0, $bytes.Length)
+		$gzipStream.Close()
+
+		# Get the compressed data
+		$compressedData = $memoryStream.ToArray()
+
+		# Convert compressed data to Base64
+		$base64Output = [Convert]::ToBase64String($compressedData)
+
+		# Ensure proper Base64 padding
+		$paddedBase64Output = $base64Output.PadRight((([math]::Ceiling($base64Output.Length / 4)) * 4), '=')
+
+		Write-Output $paddedBase64Output
+		exit 0
+	} catch {
+		Write-Output "Failed to compress or encode JSON: $_"
+		exit 1
+	}
+} else {
+	Write-Error "No file found"
+	exit 2
 }

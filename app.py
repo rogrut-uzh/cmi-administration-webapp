@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, Response, jsonify, send_file
-from flask_cors import CORS
 from functools import wraps
-from io import BytesIO
+import io
+import gzip
 import zipfile
 import subprocess
 import os
@@ -13,7 +13,7 @@ import base64
 
 # Initialize the Flask application
 app = Flask(__name__)
-CORS(app)
+
 # Retrieve environment variables
 #u = os.environ.get("CMI_WEBAPP_USER")
 #p = os.environ.get("CMI_WEBAPP_PW")
@@ -149,23 +149,27 @@ def get_log_files():
 
         # Run the PowerShell script
         result = subprocess.run(command, capture_output=True, text=True, check=True)
-        
-        raw_output = result.stdout
+        print("Raw PowerShell Output:", result.stdout)  # Log the output for debugging
+
+        # Decode and decompress the PowerShell output
+        compressed_json = base64.b64decode(result.stdout.strip())
+        decompressed_json = gzip.decompress(compressed_json).decode('utf-8')
+
+        # Parse the JSON
+        files = json.loads(decompressed_json)
 
     except subprocess.CalledProcessError as e:
+        print("PowerShell Error Output:", e.stderr)  # Log error output
         return jsonify({"error": f"PowerShell script failed: {e.stderr}"}), 500
-
-    # Parse the JSON output from PowerShell
-    try:
-        files = json.loads(raw_output)
-    except json.JSONDecodeError:
-        return jsonify({"error": "Failed to decode JSON output from PowerShell script."}), 500
+    except Exception as e:
+        print("Decompression/Decoding Error:", str(e))  # Log detailed error
+        return jsonify({"error": f"Failed to process JSON: {str(e)}"}), 500
 
     if not files:
         return jsonify({"error": "No files found for the specified date and environment."}), 404
 
     # Create a ZIP file in memory
-    zip_buffer = BytesIO()
+    zip_buffer = io.BytesIO()
     with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for file in files:
             file_name = file["NewName"]
@@ -181,7 +185,6 @@ def get_log_files():
         download_name=f"logs_{log_date}_{env}.zip",
         mimetype="application/zip"
     )
-
 # Run the Flask application
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) # <------- change debug mode if nescessary -----------
