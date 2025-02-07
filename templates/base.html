@@ -9,25 +9,24 @@
     <link rel="stylesheet" href="../static/main.css" />
 </head>
 <body>
-	<header class="navbar navbar-expand navbar-dark flex-column flex-md-row kustom-navbar">
+	<header class="navbar navbar-expand navbar-dark flex-column flex-md-row kustom-navbar sticky-top">
 	
-				<div class="navbar-brand mr-0 mr-md-2">
-					<h1 class="text-center">CMI Admin</h1>
-				</div>
+        <div class="navbar-brand mr-0 mr-md-2">
+            <h1 class="text-center">CMI Admin</h1>
+        </div>
 
-					<ul class="navbar-nav ml-md-auto nav-pills">
-					  <li class="nav-item">
-						<a class="nav-link {% if active_page == 'cockpit' %}active{% endif %}" href="/">Cockpit</a>
-					  </li>
-					  <li class="nav-item">
-						<a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="/services">CMI Services</a>
-					  </li>
-					  <li class="nav-item">
-						<a class="nav-link" href="#">Gitlab Links</a>
-					  </li>
-					</ul>
-					
-				
+        <ul class="navbar-nav ml-md-auto nav-pills">
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'cockpit' %}active{% endif %}" href="/">Cockpit</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'fulloverview' %}active{% endif %}" href="/fulloverview">Full Overview</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="/services">CMI Services</a>
+          </li>
+        </ul>
+        
 	</header>
 
 	<div class="container-fluid">
@@ -38,5 +37,6 @@
 	<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.4.4/dist/umd/popper.min.js"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
 </body>
 </html>

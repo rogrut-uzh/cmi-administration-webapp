@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block title %}fulloverview{% endblock %}
+
+{% block content %}
+
+<div class="row align-items-start p-2">
+    <div class="col p-2">
+
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+		
+			<div id="tableRaw"></div>
+			
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">CMI (Prod)</h2>
+					<div class="table-responsive table-responsive-heightlimit"><table id="dataTableCmiProd" class="table table-striped table-bordered"></table></div>
+				</div>
+			</div>
+		  </div>
+		</div>
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">AIS (Prod)</h2>
+					<div class="table-responsive table-responsive-heightlimit"><table id="dataTableAisProd" class="table table-striped table-bordered"></table></div>
+				</div>
+			</div>
+			</div>
+		</div>
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">CMI (Test)</h2>
+					<div class="table-responsive table-responsive-heightlimit"><table id="dataTableCmiTest" class="table table-striped table-bordered"></table></div>
+				</div>
+			</div>
+		  </div>
+		</div>
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">AIS (Test)</h2>
+					<div class="table-responsive table-responsive-heightlimit"><table id="dataTableAisTest" class="table table-striped table-bordered"></table></div>
+				</div>
+			</div>
+		  </div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/fulloverview.js') }}"></script>
+
+{% endblock %}
