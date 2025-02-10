@@ -6,18 +6,23 @@ document.addEventListener("DOMContentLoaded", function(event) {
 });
 
 function getSubLevels(u) {
-    var r = "";
     if (u) { // only if u is not undefined (= there are urls)
-        for (var i = 0; i < u.length; i++) {
-            r += "<br/>";
-            r += u[i];
+        if (typeof u === "string") {
+            return u;
+        } else {
+            var r = "";
+                for (var i = 0; i < u.length; i++) {
+                    r += "<br/>";
+                    r += u[i];
+                }
+            return r;
         }
     }
-    return r;
 }
 
 function populateTable(data, app, env) {
     const tdclass = "py-1";
+    const tdurlminwidth = "url-minwidth";
     
     var table;
     
@@ -77,18 +82,80 @@ function populateTable(data, app, env) {
     
     const serviceuserCellHeader = document.createElement("th");
     serviceuserCellHeader.classList.add(tdclass);
+    serviceuserCellHeader.classList.add(tdurlminwidth);
     serviceuserCellHeader.textContent = "Service User";
     tableHeadTr.appendChild(serviceuserCellHeader);
     
     const servicenamerelayCellHeader = document.createElement("th");
     servicenamerelayCellHeader.classList.add(tdclass);
+    servicenamerelayCellHeader.classList.add(tdurlminwidth);
     servicenamerelayCellHeader.textContent = "Service Name Relay";
     tableHeadTr.appendChild(servicenamerelayCellHeader);
     
     const serviceuserrelayCellHeader = document.createElement("th");
     serviceuserrelayCellHeader.classList.add(tdclass);
+    serviceuserrelayCellHeader.classList.add(tdurlminwidth);
     serviceuserrelayCellHeader.textContent = "Service User Relay";
     tableHeadTr.appendChild(serviceuserrelayCellHeader);
+    
+    const licenseCellHeader = document.createElement("th");
+    licenseCellHeader.classList.add(tdclass);
+    licenseCellHeader.classList.add(tdurlminwidth);
+    licenseCellHeader.textContent = "License Server/Port";
+    tableHeadTr.appendChild(licenseCellHeader);
+    
+    const mobileCellHeader = document.createElement("th");
+    mobileCellHeader.classList.add(tdclass);
+    mobileCellHeader.classList.add(tdurlminwidth);
+    mobileCellHeader.textContent = "Mobile Client";
+    tableHeadTr.appendChild(mobileCellHeader);
+    
+    const mobileAppsCellHeader = document.createElement("th");
+    mobileAppsCellHeader.classList.add(tdclass);
+    mobileAppsCellHeader.classList.add(tdurlminwidth);
+    mobileAppsCellHeader.textContent = "Mobile Apps";
+    tableHeadTr.appendChild(mobileAppsCellHeader);
+    
+    const ueberweisungCellHeader = document.createElement("th");
+    ueberweisungCellHeader.classList.add(tdclass);
+    ueberweisungCellHeader.classList.add(tdurlminwidth);
+    ueberweisungCellHeader.textContent = "Ueberweisungen";
+    tableHeadTr.appendChild(ueberweisungCellHeader);
+    
+    const muegiCellHeader = document.createElement("th");
+    muegiCellHeader.classList.add(tdclass);
+    muegiCellHeader.classList.add(tdurlminwidth);
+    muegiCellHeader.textContent = "Mügi";
+    tableHeadTr.appendChild(muegiCellHeader);
+    
+    const objloaderCellHeader = document.createElement("th");
+    objloaderCellHeader.classList.add(tdclass);
+    objloaderCellHeader.classList.add(tdurlminwidth);
+    objloaderCellHeader.textContent = "Objekt Loader";
+    tableHeadTr.appendChild(objloaderCellHeader);
+    
+    const webconsoleCellHeader = document.createElement("th");
+    webconsoleCellHeader.classList.add(tdclass);
+    webconsoleCellHeader.textContent = "Webconsole";
+    tableHeadTr.appendChild(webconsoleCellHeader);
+    
+    const owinCellHeader = document.createElement("th");
+    owinCellHeader.classList.add(tdclass);
+    owinCellHeader.classList.add(tdurlminwidth);
+    owinCellHeader.textContent = "Owin Server";
+    tableHeadTr.appendChild(owinCellHeader);
+    
+    const stsCellHeader = document.createElement("th");
+    stsCellHeader.classList.add(tdclass);
+    stsCellHeader.classList.add(tdurlminwidth);
+    stsCellHeader.textContent = "STS3";
+    tableHeadTr.appendChild(stsCellHeader);
+    
+    const jobsCellHeader = document.createElement("th");
+    jobsCellHeader.classList.add(tdclass);
+    jobsCellHeader.classList.add(tdurlminwidth);
+    jobsCellHeader.textContent = "Jobs";
+    tableHeadTr.appendChild(jobsCellHeader);
     
     const dbhostCellHeader = document.createElement("th");
     dbhostCellHeader.classList.add(tdclass);
@@ -99,46 +166,6 @@ function populateTable(data, app, env) {
     dbnameCellHeader.classList.add(tdclass);
     dbnameCellHeader.textContent = "DB Name";
     tableHeadTr.appendChild(dbnameCellHeader);
-    
-    const licenseCellHeader = document.createElement("th");
-    licenseCellHeader.classList.add(tdclass);
-    licenseCellHeader.textContent = "License Server";
-    tableHeadTr.appendChild(licenseCellHeader);
-    
-    const licenseportCellHeader = document.createElement("th");
-    licenseportCellHeader.classList.add(tdclass);
-    licenseportCellHeader.textContent = "License Server Port";
-    tableHeadTr.appendChild(licenseportCellHeader);
-    
-    const mobileCellHeader = document.createElement("th");
-    mobileCellHeader.classList.add(tdclass);
-    mobileCellHeader.textContent = "Mobile Client";
-    tableHeadTr.appendChild(mobileCellHeader);
-    
-    const mobileAppsCellHeader = document.createElement("th");
-    mobileAppsCellHeader.classList.add(tdclass);
-    mobileAppsCellHeader.textContent = "Mobile Apps";
-    tableHeadTr.appendChild(mobileAppsCellHeader);
-    
-    const ueberweisungCellHeader = document.createElement("th");
-    ueberweisungCellHeader.classList.add(tdclass);
-    ueberweisungCellHeader.textContent = "Ueberweisungen";
-    tableHeadTr.appendChild(ueberweisungCellHeader);
-    
-    const objloaderCellHeader = document.createElement("th");
-    objloaderCellHeader.classList.add(tdclass);
-    objloaderCellHeader.textContent = "Objekt Loader";
-    tableHeadTr.appendChild(objloaderCellHeader);
-    
-    const webconsoleCellHeader = document.createElement("th");
-    webconsoleCellHeader.classList.add(tdclass);
-    webconsoleCellHeader.textContent = "Webconsole";
-    tableHeadTr.appendChild(webconsoleCellHeader);
-    
-    const jobsCellHeader = document.createElement("th");
-    jobsCellHeader.classList.add(tdclass);
-    jobsCellHeader.textContent = "Jobs";
-    tableHeadTr.appendChild(jobsCellHeader);
 
     // Loop through JSON data and create rows
     data.forEach(item => {
@@ -191,29 +218,13 @@ function populateTable(data, app, env) {
         serviceuserrelayCell.textContent = item.app.serviceuserrelay || "";
         row.appendChild(serviceuserrelayCell);
 
-        const dbhostCell = document.createElement("td");
-        dbhostCell.classList.add(tdclass);
-        dbhostCell.textContent = item.database.host || "";
-        row.appendChild(dbhostCell);
-
-        const dbnameCell = document.createElement("td");
-        dbnameCell.classList.add(tdclass);
-        dbnameCell.textContent = item.database.name || "";
-        row.appendChild(dbnameCell);
-
         if (item.licenseserver === undefined) {
             row.appendChild(document.createElement("td"));
-			row.appendChild(document.createElement("td"));
         } else {
             const licenseCell = document.createElement("td");
             licenseCell.classList.add(tdclass);
-            licenseCell.textContent = item.licenseserver.server || "";
+            licenseCell.textContent = item.licenseserver.server+":"+item.licenseserver.port;
             row.appendChild(licenseCell);
-
-            const licenseportCell = document.createElement("td");
-            licenseportCell.classList.add(tdclass);
-            licenseportCell.textContent = item.licenseserver.port || "";
-            row.appendChild(licenseportCell);
         }
 
         if (item.mobilefirst === undefined) {
@@ -221,6 +232,7 @@ function populateTable(data, app, env) {
 		} else {
 			const mobilefirstCell = document.createElement("td");
 			mobilefirstCell.classList.add(tdclass);
+            mobilefirstCell.classList.add(tdurlminwidth);
 			let link = document.createElement("a");
 			link.href = item.mobilefirst;
 			link.textContent = item.mobilefirst;
@@ -234,6 +246,7 @@ function populateTable(data, app, env) {
         } else {
             const mobileCell = document.createElement("td");
             mobileCell.classList.add(tdclass);
+            mobileCell.classList.add(tdurlminwidth);
             if (item.mobile.sitzungsvorbereitung !== undefined) {
 			    let link = document.createElement("a");
 			    link.href = item.mobile.sitzungsvorbereitung;
@@ -266,9 +279,20 @@ function populateTable(data, app, env) {
 		} else {
             const ueberweisungCell = document.createElement("td");
             ueberweisungCell.classList.add(tdclass);
+            ueberweisungCell.classList.add(tdurlminwidth);
             ueberweisungCell.innerHTML = "Port: "+item.ueberweisung.port || "";
             ueberweisungCell.innerHTML += getSubLevels(item.ueberweisung.url) || "";
             row.appendChild(ueberweisungCell);
+        }
+
+        if (item.muegi === undefined) {
+            row.appendChild(document.createElement("td"));
+		} else {
+            const muegiCell = document.createElement("td");
+            muegiCell.classList.add(tdclass);
+            muegiCell.classList.add(tdurlminwidth);
+            muegiCell.innerHTML = getSubLevels(item.muegi.url) || "";
+            row.appendChild(muegiCell);
         }
 
         if (item.objektloader === undefined) {
@@ -276,6 +300,7 @@ function populateTable(data, app, env) {
 		} else {
             const objloaderCell = document.createElement("td");
             objloaderCell.classList.add(tdclass);
+            objloaderCell.classList.add(tdurlminwidth);
             objloaderCell.innerHTML = "Port: "+item.objektloader.port || "";
             row.appendChild(objloaderCell);
         }
@@ -288,9 +313,33 @@ function populateTable(data, app, env) {
             webconsoleCell.innerHTML = "Port: "+item.webconsole.port || "";
             row.appendChild(webconsoleCell);
         }
-        
+
+        if (item.owinserver === undefined) {
+            row.appendChild(document.createElement("td"));
+		} else {
+            const owinCell = document.createElement("td");
+            owinCell.classList.add(tdclass);
+            owinCell.classList.add(tdurlminwidth);
+            owinCell.innerHTML = "Mandant: "+item.owinserver.mand+"<br/>";
+            owinCell.innerHTML += "Port private: "+item.owinserver.port.private+"<br/>";
+            owinCell.innerHTML += "Port public: "+item.owinserver.port.public;
+            row.appendChild(owinCell);
+        }
+
+        if (item.sts === undefined) {
+            row.appendChild(document.createElement("td"));
+		} else {
+            const stsCell = document.createElement("td");
+            stsCell.classList.add(tdclass);
+            stsCell.classList.add(tdurlminwidth);
+            stsCell.innerHTML = "DesktopClient: "+item.sts.desktopclient+"<br/>";
+            stsCell.innerHTML += "Entra App: "+item.sts.ea;
+            row.appendChild(stsCell);
+        }
+
         const jobsCell = document.createElement("td");
         jobsCell.classList.add(tdclass);
+        jobsCell.classList.add(tdurlminwidth);
         if (item.jobs) {
             if (item.jobs.adrsync) {
                 jobsCell.innerHTML += "<b>Adr. Sync: </b>"+item.jobs.adrsync+"<br/>" || "";
@@ -303,6 +352,18 @@ function populateTable(data, app, env) {
             }
         }
         row.appendChild(jobsCell);
+
+        const dbhostCell = document.createElement("td");
+        dbhostCell.classList.add(tdclass);
+        dbhostCell.textContent = item.database.host || "";
+        row.appendChild(dbhostCell);
+
+        const dbnameCell = document.createElement("td");
+        dbnameCell.classList.add(tdclass);
+        dbnameCell.textContent = item.database.name || "";
+        row.appendChild(dbnameCell);
+
+
 
         // Append row to the table body
         tableBody.appendChild(row);

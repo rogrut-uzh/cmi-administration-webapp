@@ -26,3 +26,7 @@ h3 {
     overflow-y: auto; 
     overflow-x: auto;
 }
+th.url-minwidth,
+td.url-minwidth {
+    white-space: nowrap;
+}
