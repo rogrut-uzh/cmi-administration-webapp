@@ -241,37 +241,17 @@ function populateTable(data, app, env) {
 			row.appendChild(mobilefirstCell);
 		}
 
-        if (item.mobile === undefined) {
+
+        if (item.owinserver === undefined) {
             row.appendChild(document.createElement("td"));
-        } else {
+		} else {
             const mobileCell = document.createElement("td");
             mobileCell.classList.add(tdclass);
             mobileCell.classList.add(tdurlminwidth);
-            if (item.mobile.sitzungsvorbereitung !== undefined) {
-			    let link = document.createElement("a");
-			    link.href = item.mobile.sitzungsvorbereitung;
-			    link.textContent = item.mobile.sitzungsvorbereitung;
-			    link.target = "_blank";
-                mobileCell.appendChild(link);
-                mobileCell.appendChild(document.createElement("br")); 
-            }
-            if (item.mobile.zusammenarbeitdritte !== undefined) {
-			    let link = document.createElement("a");
-			    link.href = item.mobile.zusammenarbeitdritte;
-			    link.textContent = item.mobile.zusammenarbeitdritte;
-			    link.target = "_blank";
-                mobileCell.appendChild(link);
-                mobileCell.appendChild(document.createElement("br")); 
-            }
-            if (item.mobile.dossierbrowser !== undefined) {
-			    let link = document.createElement("a");
-			    link.href = item.mobile.dossierbrowser;
-			    link.textContent = item.mobile.dossierbrowser;
-			    link.target = "_blank";
-                mobileCell.appendChild(link);
-                mobileCell.appendChild(document.createElement("br")); 
-            }
-			row.appendChild(mobileCell);
+            mobileCell.innerHTML = "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/"+item.owinserver.mand+"<br/>";
+            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/dossierbrowser/"+item.owinserver.mand+"<br/>";
+            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/"+item.owinserver.mand;
+            row.appendChild(owinCell);
         }
 
         if (item.ueberweisung === undefined) {
