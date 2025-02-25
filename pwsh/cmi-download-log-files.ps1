@@ -26,6 +26,20 @@ function Get-CMI-Config-Data {
     $ParsedJson = $RawJson | ConvertFrom-Json
     return $ParsedJson
 }
+function Get-FileBytes {
+    param(
+        [string]$Path
+    )
+    $fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try {
+        $bytes = New-Object byte[] $fs.Length
+        $fs.Read($bytes, 0, $bytes.Length) | Out-Null
+    }
+    finally {
+        $fs.Close()
+    }
+    return $bytes
+}
 
 # Validate parameters
 if (-not $Date -or -not $Env) {
@@ -43,29 +57,57 @@ foreach ($ele in $elements) {
     $shortName = $ele.nameshort
     $apphost = $ele.app.host
 
-    $remoteCommand = {
-        param ($logPath, $date, $shortName)
-        #Write-Host "Checking path: $logPath"
-        if (Test-Path -Path $logPath) {
-            $files = Get-ChildItem -Path "$logPath" -Filter "*$date*.log" -ErrorAction SilentlyContinue
-            if ($files) {
-                $files | ForEach-Object {
-                    [PSCustomObject]@{
-                        FullName = $_.FullName
-                        NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
-                        Content  = [Convert]::ToBase64String([System.IO.File]::ReadAllBytes($_.FullName))
-                    }
-                }
-            } else {
-                # No files found in path $logPath for date $date
-                return @()
-            }
-        } else {
-            # Path does not exist: $logPath
-            return @()
-        }
-    }
-    
+	$remoteCommand = {
+		param ($logPath, $date, $shortName)
+		#$VerbosePreference = 'Continue'
+		#Write-Verbose "Überprüfe Pfad: $logPath"
+
+		function Get-FileBytes {
+			param(
+				[string]$Path
+			)
+			$fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+			try {
+				$bytes = New-Object byte[] $fs.Length
+				$fs.Read($bytes, 0, $bytes.Length) | Out-Null
+			}
+			finally {
+				$fs.Close()
+			}
+			return $bytes
+		}
+		
+		if (Test-Path -Path $logPath) {
+			$files = Get-ChildItem -Path "$logPath" -Filter "*$date*.log" -ErrorAction SilentlyContinue
+			#Write-Verbose "Gefundene Dateien: $($files.Count)"
+			if ($files) {
+				$files | ForEach-Object {
+					#Write-Verbose "Verarbeite Datei: $($_.FullName)"
+					try {
+						$fileBytes = Get-FileBytes -Path $_.FullName
+						#Write-Verbose "Datei erfolgreich gelesen: $($_.FullName)"
+						[PSCustomObject]@{
+							FullName = $_.FullName
+							NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
+							Content  = [Convert]::ToBase64String($fileBytes)
+						}
+					}
+					catch {
+						#Write-Verbose "Konnte Datei nicht lesen: $($_.FullName) - $_"
+						return $null
+					}
+				} | Where-Object { $_ -ne $null }
+			} else {
+				#Write-Verbose "Keine Dateien gefunden im Pfad $logPath für Datum $date"
+				return @()
+			}
+		} else {
+			Write-Verbose "Pfad existiert nicht: $logPath"
+			return @()
+		}
+	}
+
+
     # Invoke the remote command
     try {
         $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
