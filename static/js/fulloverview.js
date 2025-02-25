@@ -242,7 +242,7 @@ function populateTable(data, app, env) {
 		}
 
 
-        if (item.owinserver === undefined) {
+        if (item.owinserver === undefined || (item.nameshort).includes('AIS')) {
             row.appendChild(document.createElement("td"));
 		} else {
             const mobileCell = document.createElement("td");
