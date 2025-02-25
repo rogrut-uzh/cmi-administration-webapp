@@ -251,7 +251,7 @@ function populateTable(data, app, env) {
             mobileCell.innerHTML = "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/"+item.owinserver.mand+"<br/>";
             mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/dossierbrowser/"+item.owinserver.mand+"<br/>";
             mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/"+item.owinserver.mand;
-            row.appendChild(owinCell);
+            row.appendChild(mobileCell);
         }
 
         if (item.ueberweisung === undefined) {
