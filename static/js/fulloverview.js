@@ -75,6 +75,11 @@ function populateTable(data, app, env) {
     installpathCellHeader.textContent = "Install path";
     tableHeadTr.appendChild(installpathCellHeader);
     
+    const installpathRelayCellHeader = document.createElement("th");
+    installpathRelayCellHeader.classList.add(tdclass);
+    installpathRelayCellHeader.textContent = "Relay install path";
+    tableHeadTr.appendChild(installpathRelayCellHeader);
+    
     const servicenameCellHeader = document.createElement("th");
     servicenameCellHeader.classList.add(tdclass);
     servicenameCellHeader.textContent = "Service Name";
@@ -197,6 +202,11 @@ function populateTable(data, app, env) {
         installpathCell.classList.add(tdclass);
         installpathCell.textContent = item.app.installpath || "";
         row.appendChild(installpathCell);
+
+        const installpathRelayCell = document.createElement("td");
+        installpathRelayCell.classList.add(tdclass);
+        installpathRelayCell.textContent = item.app.installpathrelay || "";
+        row.appendChild(installpathRelayCell);
 
         const servicenameCell = document.createElement("td");
         servicenameCell.classList.add(tdclass);
