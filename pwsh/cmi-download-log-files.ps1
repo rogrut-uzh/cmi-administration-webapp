@@ -14,7 +14,7 @@ param (
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "SilentlyContinue"
 $ApiUrl = "http://localhost:5001/api/data"
-$allFiles = @()  # Initialize an array to store file metadata and content
+$allLogFiles = @()  # Initialize an array to store file metadata and content
 
 function Get-CMI-Config-Data {
     param (
@@ -26,20 +26,7 @@ function Get-CMI-Config-Data {
     $ParsedJson = $RawJson | ConvertFrom-Json
     return $ParsedJson
 }
-function Get-FileBytes {
-    param(
-        [string]$Path
-    )
-    $fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
-    try {
-        $bytes = New-Object byte[] $fs.Length
-        $fs.Read($bytes, 0, $bytes.Length) | Out-Null
-    }
-    finally {
-        $fs.Close()
-    }
-    return $bytes
-}
+
 
 # Validate parameters
 if (-not $Date -or -not $Env) {
@@ -48,14 +35,22 @@ if (-not $Date -or -not $Env) {
 }
 
 # Fetch configuration data
-$elements = Get-CMI-Config-Data -Env $Env -App "cmi"
-$elements += Get-CMI-Config-Data -Env $Env -App "ais"
+$mandanten = Get-CMI-Config-Data -Env $Env -App "cmi"
+$mandanten += Get-CMI-Config-Data -Env $Env -App "ais"
 
-foreach ($ele in $elements) {
-    $logPath = $ele.app.installpath
-    $logPath = "${logPath}\Trace"
-    $shortName = $ele.nameshort
-    $apphost = $ele.app.host
+foreach ($mandant in $mandanten) {
+    # data needed for app log files:
+    $logPathApp = $mandant.app.installpath
+    $logPathApp = "${logPathApp}\Trace"
+    
+    # data needed for relay log files:
+    $logPathRelay = $mandant.app.installpathrelay
+    $logPathRelay = "${logPathRelay}\logs"
+	
+	$arrLogPaths = @($logPathApp, $logPathRelay)
+    
+    $shortName = $mandant.nameshort
+    $apphost = $mandant.app.host
 
 	$remoteCommand = {
 		param ($logPath, $date, $shortName)
@@ -77,55 +72,60 @@ foreach ($ele in $elements) {
 			return $bytes
 		}
 		
+        
 		if (Test-Path -Path $logPath) {
 			$files = Get-ChildItem -Path "$logPath" -Filter "*$date*.log" -ErrorAction SilentlyContinue
-			#Write-Verbose "Gefundene Dateien: $($files.Count)"
-			if ($files) {
-				$files | ForEach-Object {
-					#Write-Verbose "Verarbeite Datei: $($_.FullName)"
-					try {
-						$fileBytes = Get-FileBytes -Path $_.FullName
-						#Write-Verbose "Datei erfolgreich gelesen: $($_.FullName)"
-						[PSCustomObject]@{
-							FullName = $_.FullName
-							NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
-							Content  = [Convert]::ToBase64String($fileBytes)
-						}
-					}
-					catch {
-						#Write-Verbose "Konnte Datei nicht lesen: $($_.FullName) - $_"
-						return $null
-					}
-				} | Where-Object { $_ -ne $null }
-			} else {
-				#Write-Verbose "Keine Dateien gefunden im Pfad $logPath für Datum $date"
-				return @()
-			}
-		} else {
-			Write-Verbose "Pfad existiert nicht: $logPath"
-			return @()
-		}
+        }
+        #Write-Verbose "Gefundene Dateien: $($files.Count)"
+        if ($files) {
+            $files | ForEach-Object {
+                #Write-Verbose "Verarbeite Datei: $($_.FullName)"
+                try {
+                    $fileBytes = Get-FileBytes -Path $_.FullName
+                    if ($_.FullName -like "*Relay*") {
+                        [PSCustomObject]@{
+                            FullName = $_.FullName
+                            NewName  = "{0}_{1}_{2}{3}" -f "Relay", $_.BaseName, $shortName, $_.Extension
+                            Content  = [Convert]::ToBase64String($fileBytes)
+                        }
+                    } else {
+                        [PSCustomObject]@{
+                            FullName = $_.FullName
+                            NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
+                            Content  = [Convert]::ToBase64String($fileBytes)
+                        }
+                    }
+                }
+                catch {
+                    #Write-Verbose "Konnte Datei nicht lesen: $($_.FullName) - $_"
+                    return $null
+                }
+            } | Where-Object { $_ -ne $null }
+        } else {
+            #Write-Verbose "Keine Dateien gefunden im Pfad $logPath für Datum $date"
+            return @()
+        }
 	}
 
 
     # Invoke the remote command
-    try {
-        $files = Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $logPath, $Date, $shortName
-    } catch {
-        Write-Error "Failed to execute remote command on ${apphost}: $_"
-        continue
-    }
+	foreach ($lp in $arrLogPaths) {
+		try {
+			$allLogFiles += Invoke-Command -ComputerName $apphost -ScriptBlock $remoteCommand -ArgumentList $lp, $Date, $shortName
 
-    # Process the returned files
-    if ($files -and $files.Count -gt 0) {
-        $allFiles += $files
-    } 
+		} catch {
+			Write-Error "Failed to execute remote command on ${apphost}: $_"
+			continue
+		}
+	}
+    
 }
 
 
-if (-not ($allFiles.Count -eq 0)) {
+
+if (-not ($allLogFiles.Count -eq 0)) {
 	try {
-		$jsonOutput = $allFiles | ConvertTo-Json -Depth 10 -Compress
+		$jsonOutput = $allLogFiles | ConvertTo-Json -Depth 10 -Compress
 		# Convert JSON to bytes
 		$bytes = [System.Text.Encoding]::UTF8.GetBytes($jsonOutput)
 
