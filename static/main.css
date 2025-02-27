@@ -26,6 +26,13 @@ h3 {
     overflow-y: auto; 
     overflow-x: auto;
 }
+.table-responsive-heightlimit thead th {
+  position: sticky;
+  top: 0;
+  background-color: #aaa; 
+  color: white;
+  z-index: 2;
+}
 th.url-minwidth,
 td.url-minwidth {
     white-space: nowrap;

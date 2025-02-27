@@ -251,8 +251,7 @@ function populateTable(data, app, env) {
 			row.appendChild(mobilefirstCell);
 		}
 
-
-        if (item.owinserver === undefined || (item.nameshort).includes('AIS')) {
+        if (item.owinserver === undefined || item.owinserver.mand === "local" || ((item.nameshort).includes('AIS') && item.nameshort !== "AISBenutzung")) {
             row.appendChild(document.createElement("td"));
 		} else {
             const mobileCell = document.createElement("td");
