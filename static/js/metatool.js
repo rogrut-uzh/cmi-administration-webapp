@@ -5,21 +5,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     runScriptMetatoolList('ais', 'test');
 });
 
-function getSubLevels(u) {
-    if (u) { // only if u is not undefined (= there are urls)
-        if (typeof u === "string") {
-            return u;
-        } else {
-            var r = "";
-                for (var i = 0; i < u.length; i++) {
-                    r += "<br/>";
-                    r += u[i];
-                }
-            return r;
-        }
-    }
-}
-
 function populateTable(data, app, env) {
     const tdclass = "py-1";
     const tdurlminwidth = "url-minwidth";
@@ -46,6 +31,7 @@ function populateTable(data, app, env) {
 
     // Loop through JSON data and create rows
     data.forEach(item => {
+if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
         const row = document.createElement("tr");
 
         const nameCell = document.createElement("th");
@@ -54,18 +40,40 @@ function populateTable(data, app, env) {
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
-        const metatoolFilePathServer = document.createElement("td");
-        metatoolFilePathServer.classList.add(tdclass);
-        metatoolFilePathServer.textContent = item.app.installpath ? `${item.app.installpath}/Server/MetaTool.ini` : "";
-        row.appendChild(metatoolFilePathServer);
+        // Beispiel für den "Server" Link
+        const metatoolFilePathServerCell = document.createElement("td");
+        metatoolFilePathServerCell.classList.add(tdclass);
+        if (item.app.installpath) {
+          // Erstelle ein Anchor-Element statt nur Text
+          const serverLink = document.createElement("a");
+          serverLink.href = "#";
+          // Doppelte Backslashes, da der Backslash ein Escape-Zeichen ist
+          const filePath = `${item.app.installpath}\\Server\\MetaTool.ini`;
+          serverLink.textContent = filePath;
+          // Speichere Dateipfad und Servername als Data-Attribute
+          serverLink.dataset.file = filePath;
+          serverLink.dataset.server = item.app.host; // Servername kommt hier aus item.app.host
+          metatoolFilePathServerCell.appendChild(serverLink);
+        }
+        row.appendChild(metatoolFilePathServerCell);
 
-        const metatoolFilePathClient = document.createElement("td");
-        metatoolFilePathClient.classList.add(tdclass);
-        metatoolFilePathClient.textContent = item.app.installpath ? `${item.app.installpath}/Client/MetaTool.ini` : "";
-        row.appendChild(metatoolFilePathClient);
+        // Beispiel für den "Client" Link
+        const metatoolFilePathClientCell = document.createElement("td");
+        metatoolFilePathClientCell.classList.add(tdclass);
+        if (item.app.installpath) {
+          const clientLink = document.createElement("a");
+          clientLink.href = "#";
+          const filePath = `${item.app.installpath}\\Client\\MetaTool.ini`;
+          clientLink.textContent = filePath;
+          clientLink.dataset.file = filePath;
+          clientLink.dataset.server = item.app.host<;
+          metatoolFilePathClientCell.appendChild(clientLink);
+        }
+        row.appendChild(metatoolFilePathClientCell);
 
         // Append row to the table body
         tableBody.appendChild(row);
+}
     });
 }
 
@@ -102,3 +110,57 @@ async function runScriptMetatoolList(app, env) {
         tableRaw.textContent += `Error: ${error.message}`;
     }
 }
+
+
+document.addEventListener('DOMContentLoaded', function() {
+  const preContent = document.getElementById('metatool-content');
+  let currentFile = '';
+  let currentServer = '';
+
+  // Event Delegation: Fange Klicks auf alle <a>-Elemente in deiner Tabelle ab
+  document.querySelector('table').addEventListener('click', function(e) {
+    if (e.target.tagName.toLowerCase() === 'a') {
+      e.preventDefault();
+      currentFile = e.target.dataset.file;
+      currentServer = e.target.dataset.server;
+      // Lade den Inhalt der Datei vom Remote-Server über den Flask-Endpunkt, der per PowerShell updatet/liest
+      fetch(`/get-file?file=${encodeURIComponent(currentFile)}&server=${encodeURIComponent(currentServer)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            preContent.textContent = `Error: ${data.error}`;
+          } else {
+            preContent.textContent = data.content;
+          }
+        })
+        .catch(error => preContent.textContent = `Fetch error: ${error}`);
+    }
+  });
+
+  // SAVE-Button: sende den bearbeiteten Inhalt und die aktuellen Daten an den Remote-Update-Endpunkt
+  document.getElementById('saveBtn').addEventListener('click', function() {
+    if (!currentFile || !currentServer) {
+      alert("Kein Dateipfad oder Server ausgewählt!");
+      return;
+    }
+    const newContent = preContent.textContent;
+    fetch('/update-metatool', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        server: currentServer,
+        file: currentFile,
+        content: newContent
+      })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.error) {
+        alert("Fehler beim Speichern: " + data.error);
+      } else {
+        alert("Datei erfolgreich gespeichert!");
+      }
+    })
+    .catch(error => alert("Fetch error: " + error));
+  });
+});

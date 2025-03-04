@@ -251,6 +251,45 @@ def run_script_metatool():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+@app.route('/update-metatool', methods=['POST'])
+@requires_auth
+def update_remote_file():
+    data = request.get_json()
+    server = data.get("server")  # z. B. item.app.host
+    file_path = data.get("file")
+    content = data.get("content")
+
+    if not server or not file_path or content is None:
+        return jsonify({"error": "Missing required parameters."}), 400
+
+    ps_command = (
+        f"Invoke-Command -ComputerName {server} -ScriptBlock {{ "
+        f"Set-Content -Path '{file_path}' -Value @'\n{content}\n'@ -Encoding UTF8 }}"
+    )
+
+    command = ['pwsh', '-NoProfile', '-Command', ps_command]
+    
+    try:
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode == 0:
+            return jsonify({"Status": "Success"}), 200
+        else:
+            return jsonify({"error": result.stderr.strip()}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/get-file', methods=['GET'])
+@requires_auth
+def get_file():
+    file_path = request.args.get("file")
+    # Hier solltest du sicherstellen, dass nur erlaubte Pfade geladen werden!
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        return jsonify({"content": content})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 # Run the Flask application
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True) # <------- change debug mode if nescessary -----------
