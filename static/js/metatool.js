@@ -117,29 +117,28 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentFile = '';
   let currentServer = '';
 
-    document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('table').forEach(table => {
-        table.addEventListener('click', function(e) {
-          if (e.target.tagName.toLowerCase() === 'a') {
-            e.preventDefault();
-            console.log("Link clicked:", e.target);
-              currentFile = e.target.dataset.file;
-              currentServer = e.target.dataset.server;
-              // Lade den Inhalt der Datei vom Remote-Server über den Flask-Endpunkt, der per PowerShell updatet/liest
-              fetch(`/get-file?file=${encodeURIComponent(currentFile)}&server=${encodeURIComponent(currentServer)}`)
-                .then(response => response.json())
-                .then(data => {
-                  if (data.error) {
-                    preContent.textContent = `Error: ${data.error}`;
-                  } else {
-                    preContent.textContent = data.content;
-                  }
-                })
-                .catch(error => preContent.textContent = `Fetch error: ${error}`);
-          }
-        });
-      });
+  // Alle Tabellen überwachen
+  document.querySelectorAll('table').forEach(table => {
+    table.addEventListener('click', function(e) {
+      if (e.target.tagName.toLowerCase() === 'a') {
+        e.preventDefault();
+        console.log("Link clicked:", e.target);
+        currentFile = e.target.dataset.file;
+        currentServer = e.target.dataset.server;
+        // Lade den Inhalt der Datei vom Remote-Server über den Flask-Endpunkt
+        fetch(`/get-file?file=${encodeURIComponent(currentFile)}&server=${encodeURIComponent(currentServer)}`)
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              preContent.textContent = `Error: ${data.error}`;
+            } else {
+              preContent.textContent = data.content;
+            }
+          })
+          .catch(error => preContent.textContent = `Fetch error: ${error}`);
+      }
     });
+  });
 
   // SAVE-Button: sende den bearbeiteten Inhalt und die aktuellen Daten an den Remote-Update-Endpunkt
   document.getElementById('saveBtn').addEventListener('click', function() {
@@ -168,3 +167,4 @@ document.addEventListener('DOMContentLoaded', function() {
     .catch(error => alert("Fetch error: " + error));
   });
 });
+
