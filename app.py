@@ -282,13 +282,25 @@ def update_remote_file():
 @requires_auth
 def get_file():
     file_path = request.args.get("file")
-    # Hier solltest du sicherstellen, dass nur erlaubte Pfade geladen werden!
+    server = request.args.get("server")
+    if not file_path or not server:
+        return jsonify({"error": "Missing required parameters: file and server."}), 400
+
+    # PowerShell-Befehl: Ruft den Dateiinhalte (als Rohstring) vom Remote-Server ab.
+    ps_command = (
+        f"Invoke-Command -ComputerName {server} -ScriptBlock {{ "
+        f"Get-Content -Path '{file_path}' -Raw }}"
+    )
+    command = ['pwsh', '-NoProfile', '-Command', ps_command]
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            content = f.read()
-        return jsonify({"content": content})
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode == 0:
+            return jsonify({"content": result.stdout})
+        else:
+            return jsonify({"error": result.stderr.strip()}), 500
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 # Run the Flask application
 if __name__ == '__main__':
