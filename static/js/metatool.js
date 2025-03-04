@@ -50,19 +50,19 @@ function populateTable(data, app, env) {
 
         const nameCell = document.createElement("th");
         nameCell.classList.add(tdclass);
-        nameCell.textContent = item.namefull || "";
+        nameCell.textContent = item.nameshort || "";
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
-        const hostCell = document.createElement("td");
-        hostCell.classList.add(tdclass);
-        hostCell.textContent = item.app.host || "";
-        row.appendChild(hostCell);
+        const metatoolFilePathServer = document.createElement("td");
+        metatoolFilePathServer.classList.add(tdclass);
+        metatoolFilePathServer.textContent = item.app.installpath ? `${item.app.installpath}/Server/MetaTool.ini` : "";
+        row.appendChild(metatoolFilePathServer);
 
-        const installpathCell = document.createElement("td");
-        installpathCell.classList.add(tdclass);
-        installpathCell.textContent = item.app.installpath || "";
-        row.appendChild(installpathCell);
+        const metatoolFilePathClient = document.createElement("td");
+        metatoolFilePathClient.classList.add(tdclass);
+        metatoolFilePathClient.textContent = item.app.installpath ? `${item.app.installpath}/Client/MetaTool.ini` : "";
+        row.appendChild(metatoolFilePathClient);
 
         // Append row to the table body
         tableBody.appendChild(row);
