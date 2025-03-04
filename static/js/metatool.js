@@ -31,7 +31,7 @@ function populateTable(data, app, env) {
 
     // Loop through JSON data and create rows
     data.forEach(item => {
-if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
+//if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
         const row = document.createElement("tr");
 
         const nameCell = document.createElement("th");
@@ -40,7 +40,6 @@ if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
-        // Beispiel für den "Server" Link
         const metatoolFilePathServerCell = document.createElement("td");
         metatoolFilePathServerCell.classList.add(tdclass);
         if (item.app.installpath) {
@@ -49,7 +48,7 @@ if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
           serverLink.href = "#";
           // Doppelte Backslashes, da der Backslash ein Escape-Zeichen ist
           const filePath = `${item.app.installpath}\\Server\\MetaTool.ini`;
-          serverLink.textContent = filePath;
+          serverLink.textContent = "MetaTool.ini SERVER";
           // Speichere Dateipfad und Servername als Data-Attribute
           serverLink.dataset.file = filePath;
           serverLink.dataset.server = item.app.host; // Servername kommt hier aus item.app.host
@@ -57,14 +56,13 @@ if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
         }
         row.appendChild(metatoolFilePathServerCell);
 
-        // Beispiel für den "Client" Link
         const metatoolFilePathClientCell = document.createElement("td");
         metatoolFilePathClientCell.classList.add(tdclass);
         if (item.app.installpath) {
           const clientLink = document.createElement("a");
           clientLink.href = "#";
           const filePath = `${item.app.installpath}\\Client\\MetaTool.ini`;
-          clientLink.textContent = filePath;
+          clientLink.textContent = "MetaTool.ini CLIENT";
           clientLink.dataset.file = filePath;
           clientLink.dataset.server = item.app.host;
           metatoolFilePathClientCell.appendChild(clientLink);
@@ -73,7 +71,7 @@ if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
 
         // Append row to the table body
         tableBody.appendChild(row);
-}
+//}
     });
 }
 
@@ -143,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // SAVE-Button: sende den bearbeiteten Inhalt und die aktuellen Daten an den Remote-Update-Endpunkt
   document.getElementById('saveBtn').addEventListener('click', function() {
     if (!currentFile || !currentServer) {
-      alert("Kein Dateipfad oder Server ausgewählt!");
+      alert("Kein Dateipfad oder Server ausgewählt.");
       return;
     }
     const newContent = preContent.textContent;
@@ -161,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data.error) {
         alert("Fehler beim Speichern: " + data.error);
       } else {
-        alert("Datei erfolgreich gespeichert!");
+        alert("Datei erfolgreich gespeichert.");
       }
     })
     .catch(error => alert("Fetch error: " + error));
