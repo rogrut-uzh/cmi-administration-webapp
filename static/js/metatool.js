@@ -36,7 +36,7 @@ function populateTable(data, app, env) {
 
         const nameCell = document.createElement("th");
         nameCell.classList.add(tdclass);
-        nameCell.textContent = item.nameshort || "";
+        nameCell.textContent = item.namefull || "";
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
