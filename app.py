@@ -62,7 +62,7 @@ def services():
 
 @app.route('/metatool')
 @requires_auth
-def services():
+def metatool():
     return render_template('metatool.html', active_page='metatool')
 
 @app.route('/run-script-cockpit-overview', methods=['POST'])
