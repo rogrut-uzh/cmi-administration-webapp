@@ -66,7 +66,7 @@ if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
           const filePath = `${item.app.installpath}\\Client\\MetaTool.ini`;
           clientLink.textContent = filePath;
           clientLink.dataset.file = filePath;
-          clientLink.dataset.server = item.app.host<;
+          clientLink.dataset.server = item.app.host;
           metatoolFilePathClientCell.appendChild(clientLink);
         }
         row.appendChild(metatoolFilePathClientCell);
