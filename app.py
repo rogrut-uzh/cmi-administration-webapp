@@ -60,6 +60,11 @@ def fulloverview():
 def services():
     return render_template('services.html', active_page='services')
 
+@app.route('/metatool')
+@requires_auth
+def services():
+    return render_template('metatool.html', active_page='metatool')
+
 @app.route('/run-script-cockpit-overview', methods=['POST'])
 def run_script_cockpit_overview():
     try:
@@ -217,6 +222,34 @@ def run_script_services_stream():
             yield f"data: ERROR: {str(e)}\n\n"
 
     return Response(generate_output(), content_type='text/event-stream')
+
+@app.route('/run-script-metatool', methods=['POST'])
+def run_script_metatool():
+    try:
+        # Retrieve query parameters
+        data = request.get_json()
+        app = data.get('app')
+        env = data.get('env')
+        command = [
+            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
+            '-App', f"{app}",
+            '-Env', f"{env}"
+        ]
+        # Run the PowerShell script
+        result = subprocess.run(command, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            # Attempt to parse PowerShell output as JSON
+            try:
+                output = json.loads(result.stdout)
+                return jsonify({"Status": "Success", "Data": output}), 200
+            except json.JSONDecodeError:
+                return jsonify({"error": "Invalid JSON output from PowerShell script"}), 500
+        else:
+            return jsonify({"error": result.stderr.strip()}), 500
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # Run the Flask application
 if __name__ == '__main__':

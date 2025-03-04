@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}CMI MetaTool.ini{% endblock %}
+
+{% block content %}
+<div class="row align-items-start p-2">
+
+    <!-- Left Column: Buttons and Actions -->
+    <div class="col-4 p-2">
+        <div class="row mb-2 align-items-start">
+            <div class="col">
+                <h2 class="mb-0">CMI MetaTool.ini</h2>
+            </div>
+        </div>
+
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+		
+			<div id="tableRaw"></div>
+			
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">CMI (Prod)</h2>
+					<div class="table-responsive table-responsive-heightlimit">
+                        <table id="dataTableCmiProd" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+                    </div>
+				</div>
+			</div>
+		  </div>
+		</div>
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">AIS (Prod)</h2>
+					<div class="table-responsive table-responsive-heightlimit">
+                        <table id="dataTableAisProd" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+                    </div>
+				</div>
+			</div>
+			</div>
+		</div>
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">CMI (Test)</h2>
+					<div class="table-responsive table-responsive-heightlimit">
+                        <table id="dataTableCmiTest" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+                    </div>
+				</div>
+			</div>
+		  </div>
+		</div>
+        <div class="row mb-2 align-items-start">
+		  <div class="col">
+			<div class="card">
+				<div class="card-body">
+					<h2 class="card-title">AIS (Test)</h2>
+					<div class="table-responsive table-responsive-heightlimit">
+                        <table id="dataTableAisTest" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+                    </div>
+				</div>
+			</div>
+		  </div>
+        </div>
+        
+    </div>
+
+    <!-- Right Column: content/edit -->
+    <div class="col-8 p-2 output">
+        <pre id="metatool-content"></pre>
+    </div>
+
+</div>
+
+<script src="{{ url_for('static', filename='js/metatool.js') }}"></script>
+
+{% endblock %}
