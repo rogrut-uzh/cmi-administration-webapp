@@ -105,10 +105,12 @@ $filesList = Get-ChildItem -Path $tempPath -Recurse -File | ForEach-Object {
 # Erstelle ein JSON-Objekt mit den Dateien
 $jsonObject = @{ Files = $filesList } | ConvertTo-Json -Compress
 
-# Komprimiere das JSON mittels gzip
+# Komprimiere das JSON mittels gzip mit Encoding ohne BOM
 $ms = New-Object System.IO.MemoryStream
+# Verwende UTF8-Encoding ohne BOM:
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
 $gzipStream = New-Object System.IO.Compression.GzipStream($ms, [System.IO.Compression.CompressionMode]::Compress)
-$writer = New-Object System.IO.StreamWriter($gzipStream, [System.Text.Encoding]::UTF8)
+$writer = New-Object System.IO.StreamWriter($gzipStream, $utf8NoBom)
 $writer.Write($jsonObject)
 $writer.Close()
 $gzipStream.Close()
