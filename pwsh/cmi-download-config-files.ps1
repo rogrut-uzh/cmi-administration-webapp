@@ -5,6 +5,7 @@
 
 # make sure only the json is being outputted otherwise the python flask app will not recognize the response as json and will fail
 
+
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $env:NO_PROXY = "127.0.0.1,localhost"
 $env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
@@ -21,6 +22,7 @@ if (-Not (Test-Path $tempPath)) {
 function Get-CMI-Config-Data {
     $ApiUrl = "http://127.0.0.1:5001/api/data"
     $RawJson = (Invoke-WebRequest -Uri $ApiUrl -Method Get -UseBasicParsing -ErrorAction Stop).Content
+
     $ParsedJson = $RawJson | ConvertFrom-Json
     return $ParsedJson
 }
@@ -32,21 +34,15 @@ foreach ($mandant in $mandanten) {
         $mandant.app.host, 
         $mandant.app.installpath, 
         (Split-Path -Path $mandant.app.installpath -Leaf),
-        @(
-            "$($mandant.app.installpath)\Client\MetaTool.ini",
-            "$($mandant.app.installpath)\Server\MetaTool.ini",
-            "$($mandant.app.installpath)\Server\install_service.bat",
-            "$($mandant.app.installpath)\Server\uninstall_service.bat"
-        )
+        @("$($mandant.app.installpath)\Client\MetaTool.ini","$($mandant.app.installpath)\Server\MetaTool.ini","$($mandant.app.installpath)\Server\install_service.bat","$($mandant.app.installpath)\Server\uninstall_service.bat")
     )
 }
-
 for ($i = 0; $i -lt $useful.Count; $i++) {
     # Extrahiere die Gruppen-Elemente
     $computer      = $useful[$i][0]
     $installPath   = $useful[$i][1]
     $leafName      = $useful[$i][2]
-    $arrFilePaths  = $useful[$i][3]
+    $arrFilePaths     = $useful[$i][3]
     
     # Umgebungszuordnung: "test" falls im Installationspfad " Test" vorkommt, sonst "prod"
     if ($installPath -match " Test") {
@@ -77,12 +73,14 @@ for ($i = 0; $i -lt $useful.Count; $i++) {
          # Bestimme den Dateinamen und den vollen Zielpfad
          $fileName = Split-Path -Path $file -Leaf
          $destinationPath = Join-Path -Path $destinationFolder -ChildPath $fileName
-         
+         $file
          # Kopiere die Datei vom Remote-Rechner
          try {
              Copy-Item -FromSession $session -Path $file -Destination $destinationPath -ErrorAction $ErrorActionPreference
+             #Write-Host "Kopiert: $file von $computer nach $destinationPath"
          } catch {
-             # Bei Fehlern wird hier stillschweigend fortgefahren.
+             #Write-Warning ("Fehler beim Kopieren von {0} von {1}: {2}" -f $file, $computer, $_)
+
          }
     }
     
@@ -90,37 +88,32 @@ for ($i = 0; $i -lt $useful.Count; $i++) {
     Remove-PSSession $session
 }
 
-# Statt ein ZIP zu erstellen, bauen wir ein JSON-Objekt, das alle Dateien (mit relativem Pfad) enthält.
-$filesList = Get-ChildItem -Path $tempPath -Recurse -File | ForEach-Object {
-    # Ermittle den relativen Pfad relativ zu $tempPath
-    $relativePath = $_.FullName.Substring($tempPath.Length + 1)
-    $contentBytes = [System.IO.File]::ReadAllBytes($_.FullName)
-    $contentBase64 = [Convert]::ToBase64String($contentBytes)
-    [PSCustomObject]@{
-       NewName = $relativePath
-       Content = $contentBase64
-    }
+# Erstelle das ZIP-Archiv aus dem Basisordner
+$zipPath = "C:\temp\MandantenFiles.zip"
+if (Test-Path $zipPath) {
+    Remove-Item $zipPath -Force
 }
+Compress-Archive -Path "$tempPath\*" -DestinationPath $zipPath
 
-# Erstelle ein JSON-Objekt mit den Dateien
-$jsonObject = @{ Files = $filesList } | ConvertTo-Json -Compress
+Write-Host "ZIP-Archiv erstellt: $zipPath"
 
-# Komprimiere das JSON mittels gzip mit Encoding ohne BOM
-$ms = New-Object System.IO.MemoryStream
-# Verwende UTF8-Encoding ohne BOM:
-$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-$gzipStream = New-Object System.IO.Compression.GzipStream($ms, [System.IO.Compression.CompressionMode]::Compress)
-$writer = New-Object System.IO.StreamWriter($gzipStream, $utf8NoBom)
-$writer.Write($jsonObject)
-$writer.Close()
-$gzipStream.Close()
-$compressedBytes = $ms.ToArray()
-$ms.Close()
+# ZIP-Datei einlesen und in Base64 kodieren
+$bytes = [System.IO.File]::ReadAllBytes($zipPath)
+$base64Output = [Convert]::ToBase64String($bytes)
 
-# Base64-kodieren des komprimierten JSON
-$base64Output = [Convert]::ToBase64String($compressedBytes)
-Write-Output $base64Output
+# Falls nötig, sicherstellen, dass der Base64-String korrekt gepadded ist (normalerweise ist das bereits der Fall)
+$paddedBase64Output = $base64Output
+
+# Ausgabe des Base64-codierten ZIP-Inhalts
+
+$paddedBase64Output = $base64Output.PadRight((([math]::Ceiling($base64Output.Length / 4)) * 4), '=')
+
+
+
+Write-Output $paddedBase64Output
 exit 0
+
+
 
 
 
