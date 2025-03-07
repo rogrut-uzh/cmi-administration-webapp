@@ -5,58 +5,85 @@
 {% block content %}
 <div class="row align-items-start p-2">
     <div class="col p-2">
-	
+
 		<div class="row mb-2 align-items-start">
-		  <div class="col-sm-6">
-			<div class="card">
-			  <div class="card-body">
-<h2 class="card-title">Monitoring</h2>
-<p class="card-text">Links to the Nagios page. Login with UZH shortname and password.</p>
-App:&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomapap03" target="_blank" class="badge badge-primary">ziaxiomapap03</a>&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomapap04" target="_blank" class="badge badge-primary">ziaxiomapap04</a>&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomatap02" target="_blank" class="badge badge-primary">ziaxiomatap02</a><br/>Database:&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomapsql02" target="_blank" class="badge badge-primary">ziaxiomapsql02</a>&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomatsql02" target="_blank" class="badge badge-primary">ziaxiomatsql02</a>
-			  </div>
-			</div>
-		  </div>
-		  <div class="col-sm-6">
-			<div class="card">
-                <div class="card-body">
-                    <h2 class="card-title">Logs</h2>
-                    <p class="card-text">Download the log files of each CMI mandant.</p>
-					<p>
-						<label for="input-log-date">Enter the date in the format <code>yyyymmdd</code>:</label> 
-						<input type="text" 
-							id="input-log-date" 
-							name="input-log-date" 
-							class="form-control-inline" 
-							style="width: 100px;" />
-					</p>
-                    <p>
-					<fieldset id="log-env">
-						Environment: 
-                        <input type="radio" id="env-test" name="log-env" value="test" checked>
-                        <label for="env-test">Test</label>
-                        <input type="radio" id="env-prod" name="log-env" value="prod">
-                        <label for="env-prod">Prod</label>
-                    </fieldset>
-					</p>
-                    <button class="btn btn-primary btn-sm" id="get-log-files-btn">Download</button>
-                    <span style="padding-left:10px;" class="get-date-result"></span>
+        
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Monitoring</h2>
+                        <p class="card-text">Links to the Nagios page. Login with UZH shortname and password.</p>
+                        App:&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomapap03" target="_blank" class="badge badge-primary">ziaxiomapap03</a>&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomapap04" target="_blank" class="badge badge-primary">ziaxiomapap04</a>&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomatap02" target="_blank" class="badge badge-primary">ziaxiomatap02</a><br/>Database:&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomapsql02" target="_blank" class="badge badge-primary">ziaxiomapsql02</a>&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style=detail&s0_op=~&s0_type=search&add_default_service_filter=1&s0_value=ho%3Aziaxiomatsql02" target="_blank" class="badge badge-primary">ziaxiomatsql02</a>
+                  </div>
                 </div>
-			</div>
-		  </div>
+            </div>
+              
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Logs</h2>
+                        <p class="card-text">Download the log files of each CMI mandant.</p>
+                        <p>
+                            <label for="input-log-date">Enter the date in the format <code>yyyymmdd</code>:</label> 
+                            <input type="text" 
+                                id="input-log-date" 
+                                name="input-log-date" 
+                                class="form-control-inline" 
+                                style="width: 100px;" />
+                        </p>
+                        <p>
+                            <fieldset id="log-env">
+                                Environment: 
+                                <input type="radio" id="env-test" name="log-env" value="test" checked>
+                                <label for="env-test">Test</label>
+                                <input type="radio" id="env-prod" name="log-env" value="prod">
+                                <label for="env-prod">Prod</label>
+                            </fieldset>
+                        </p>
+                        <button class="btn btn-primary btn-sm" id="get-log-files-btn">Download</button>
+                        <span style="padding-left:10px;" class="get-date-result"></span>
+                    </div>
+                </div>
+            </div>
+              
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Config Files</h2>
+                        <p class="card-text">Download all Client- and Server config files of each CMI mandant (Relay files not included).</p>
+                        <p>
+                            <fieldset id="log-env">
+                                Environment: 
+                                <input type="radio" id="env-test-config" name="log-env-config" value="test" checked>
+                                <label for="env-test-config">Test</label>
+                                <input type="radio" id="env-prod-config" name="log-env-config" value="prod">
+                                <label for="env-prod-config">Prod</label>
+                            </fieldset>
+                        </p>
+                        <button class="btn btn-primary btn-sm" id="get-config-files-btn">Download</button>
+                        <span style="padding-left:10px;" class="get-date-result-config"></span>
+                    </div>
+                </div>
+            </div>
+          
 		</div>
-	
+
+
+
+
+
         <div class="row mb-2 align-items-start">
-		  <div class="col">
-		
-			<div id="tableRaw"></div>
-			
-			<div class="card">
-				<div class="card-body">
-					<h2 class="card-title">CMI GEVER (Prod)</h2>
-					<table id="dataTableCmiProd" class="table table-striped table-bordered"></table>
-				</div>
-			</div>
-		  </div>
+            <div class="col">
+            
+                <div id="tableRaw"></div>
+                
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">CMI GEVER (Prod)</h2>
+                        <table id="dataTableCmiProd" class="table table-striped table-bordered"></table>
+                    </div>
+                </div>
+            </div>
 		</div>
         <div class="row mb-2 align-items-start">
 		  <div class="col">
@@ -69,29 +96,31 @@ App:&nbsp;<a href="https://idnagiosmaster1.uzh.ch/thruk/cgi-bin/status.cgi?style
 			</div>
 		</div>
         <div class="row mb-2 align-items-start">
-		  <div class="col">
-			<div class="card">
-				<div class="card-body">
-					<h2 class="card-title">CMI GEVER (Test)</h2>
-					<table id="dataTableCmiTest" class="table table-striped table-bordered"></table>
-				</div>
-			</div>
-		  </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">CMI GEVER (Test)</h2>
+                        <table id="dataTableCmiTest" class="table table-striped table-bordered"></table>
+                    </div>
+                </div>
+            </div>
 		</div>
         <div class="row mb-2 align-items-start">
-		  <div class="col">
-			<div class="card">
-				<div class="card-body">
-					<h2 class="card-title">CMI AIS (Test)</h2>
-					<table id="dataTableAisTest" class="table table-striped table-bordered"></table>
-				</div>
-			</div>
-		  </div>
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">CMI AIS (Test)</h2>
+                        <table id="dataTableAisTest" class="table table-striped table-bordered"></table>
+                    </div>
+                </div>
+            </div>
         </div>
+
     </div>
 </div>
 
 <script src="{{ url_for('static', filename='js/cockpit_overview.js') }}"></script>
 <script src="{{ url_for('static', filename='js/cockpit_log-download.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cockpit_config-download.js') }}"></script>
 
 {% endblock %}
