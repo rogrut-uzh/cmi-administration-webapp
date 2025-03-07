@@ -1,11 +1,6 @@
-###################
+#################################
 # cmi-download-config-files.ps1 #
-###################
-
-
-# make sure only the json is being outputted otherwise the python flask app will not recognize the response as json and will fail
-
-
+#################################
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $env:NO_PROXY = "127.0.0.1,localhost"
 $env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
@@ -22,27 +17,26 @@ if (-Not (Test-Path $tempPath)) {
 function Get-CMI-Config-Data {
     $ApiUrl = "http://127.0.0.1:5001/api/data"
     $RawJson = (Invoke-WebRequest -Uri $ApiUrl -Method Get -UseBasicParsing -ErrorAction Stop).Content
-
     $ParsedJson = $RawJson | ConvertFrom-Json
     return $ParsedJson
 }
 
 $mandanten = Get-CMI-Config-Data
-$useful = @()
+$mandantenNeededValues = @()
 foreach ($mandant in $mandanten) {
-    $useful += ,@(
+    $mandantenNeededValues += ,@(
         $mandant.app.host, 
         $mandant.app.installpath, 
         (Split-Path -Path $mandant.app.installpath -Leaf),
         @("$($mandant.app.installpath)\Client\MetaTool.ini","$($mandant.app.installpath)\Server\MetaTool.ini","$($mandant.app.installpath)\Server\install_service.bat","$($mandant.app.installpath)\Server\uninstall_service.bat")
     )
 }
-for ($i = 0; $i -lt $useful.Count; $i++) {
+for ($i = 0; $i -lt $mandantenNeededValues.Count; $i++) {
     # Extrahiere die Gruppen-Elemente
-    $computer      = $useful[$i][0]
-    $installPath   = $useful[$i][1]
-    $leafName      = $useful[$i][2]
-    $arrFilePaths     = $useful[$i][3]
+    $computer      = $mandantenNeededValues[$i][0]
+    $installPath   = $mandantenNeededValues[$i][1]
+    $leafName      = $mandantenNeededValues[$i][2]
+    $arrFilePaths  = $mandantenNeededValues[$i][3]
     
     # Umgebungszuordnung: "test" falls im Installationspfad " Test" vorkommt, sonst "prod"
     if ($installPath -match " Test") {
@@ -73,7 +67,6 @@ for ($i = 0; $i -lt $useful.Count; $i++) {
          # Bestimme den Dateinamen und den vollen Zielpfad
          $fileName = Split-Path -Path $file -Leaf
          $destinationPath = Join-Path -Path $destinationFolder -ChildPath $fileName
-         $file
          # Kopiere die Datei vom Remote-Rechner
          try {
              Copy-Item -FromSession $session -Path $file -Destination $destinationPath -ErrorAction $ErrorActionPreference
@@ -95,63 +88,12 @@ if (Test-Path $zipPath) {
 }
 Compress-Archive -Path "$tempPath\*" -DestinationPath $zipPath
 
-Write-Host "ZIP-Archiv erstellt: $zipPath"
+#Write-Host "ZIP-Archiv erstellt: $zipPath"
 
 # ZIP-Datei einlesen und in Base64 kodieren
 $bytes = [System.IO.File]::ReadAllBytes($zipPath)
 $base64Output = [Convert]::ToBase64String($bytes)
 
-# Falls nötig, sicherstellen, dass der Base64-String korrekt gepadded ist (normalerweise ist das bereits der Fall)
-$paddedBase64Output = $base64Output
+Write-Output $base64Output
 
-# Ausgabe des Base64-codierten ZIP-Inhalts
-
-$paddedBase64Output = $base64Output.PadRight((([math]::Ceiling($base64Output.Length / 4)) * 4), '=')
-
-
-
-Write-Output $paddedBase64Output
 exit 0
-
-
-
-
-
-
-
-<#
-if (-not ($allConfigFiles.Count -eq 0)) {
-	try {
-		$jsonOutput = $allConfigFiles | ConvertTo-Json -Depth 10 -Compress
-		# Convert JSON to bytes
-		$bytes = [System.Text.Encoding]::UTF8.GetBytes($jsonOutput)
-
-		# Create a memory stream for compressed data
-		$memoryStream = [System.IO.MemoryStream]::new()
-
-		# Use GZipStream for compression
-		$gzipStream = [System.IO.Compression.GZipStream]::new($memoryStream, [System.IO.Compression.CompressionMode]::Compress)
-		$gzipStream.Write($bytes, 0, $bytes.Length)
-		$gzipStream.Close()
-
-		# Get the compressed data
-		$compressedData = $memoryStream.ToArray()
-
-		# Convert compressed data to Base64
-		$base64Output = [Convert]::ToBase64String($compressedData)
-
-		# Ensure proper Base64 padding
-		$paddedBase64Output = $base64Output.PadRight((([math]::Ceiling($base64Output.Length / 4)) * 4), '=')
-
-		Write-Output $paddedBase64Output
-		exit 0
-	} catch {
-		Write-Output "Failed to compress or encode JSON: $_"
-		exit 1
-	}
-} else {
-	Write-Error "No file found"
-	exit 2
-}
-
-#>

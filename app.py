@@ -157,52 +157,6 @@ def get_log_files():
         download_name=f"logs_{log_date}_{env}.zip",
         mimetype="application/zip"
     )
-#@app.route('/get-config-files', methods=['GET'])
-#def get_config_files():
-#    try:
-#        # Construct the PowerShell command
-#        command = [
-#            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-download-config-files.ps1',
-#        ]
-#
-#        # Run the PowerShell script
-#        result = subprocess.run(command, capture_output=True, text=True, check=True)
-#        print("Raw PowerShell Output:", result.stdout)  # Log the output for debugging
-#
-#        # Decode and decompress the PowerShell output
-#        compressed_json = base64.b64decode(result.stdout.strip())
-#        decompressed_json = gzip.decompress(compressed_json).decode('utf-8')
-#
-#        # Parse the JSON
-#        files = json.loads(decompressed_json)
-#
-#    except subprocess.CalledProcessError as e:
-#        print("PowerShell Error Output:", e.stderr)  # Log error output
-#        return jsonify({"error": f"PowerShell script failed: {e.stderr}"}), 500
-#    except Exception as e:
-#        print("Decompression/Decoding Error:", str(e))  # Log detailed error
-#        return jsonify({"error": f"Failed to process JSON: {str(e)}"}), 500
-#
-#    if not files:
-#        return jsonify({"error": "No files found for the specified environment."}), 404
-#
-#    # Create a ZIP file in memory
-#    zip_buffer = io.BytesIO()
-#    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
-#        for file in files:
-#            file_name = file["NewName"]
-#            file_content = base64.b64decode(file["Content"])
-#            zip_file.writestr(file_name, file_content)
-#
-#    zip_buffer.seek(0)  # Reset buffer pointer
-#
-#    # Return the ZIP file as a downloadable response
-#    return send_file(
-#        zip_buffer,
-#        as_attachment=True,
-#        download_name=f"cmi-config-files_{env}.zip",
-#        mimetype="application/zip"
-#    )
 
 @app.route('/get-config-files', methods=['GET'])
 def get_config_files():
