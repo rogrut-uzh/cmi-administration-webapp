@@ -106,9 +106,6 @@ $paddedBase64Output = $base64Output
 
 # Ausgabe des Base64-codierten ZIP-Inhalts
 Write-Output $paddedBase64Output
-
-
-
 exit 0
 
 
