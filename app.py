@@ -161,15 +161,9 @@ def get_log_files():
 @app.route('/get-config-files', methods=['GET'])
 def get_config_files():
     try:
-        env = request.args.get("env")
-
-        if not env:
-            return jsonify({"error": "Missing required parameters: env"}), 400
-
         # Construct the PowerShell command
         command = [
             'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-download-config-files.ps1',
-            '-Env', env
         ]
 
         # Run the PowerShell script

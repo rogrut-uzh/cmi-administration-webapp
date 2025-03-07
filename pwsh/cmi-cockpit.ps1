@@ -17,6 +17,9 @@ param (
     [string]$Env
 )
 
+$env:NO_PROXY = "127.0.0.1,localhost"
+$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 
 # Variablen
 $ApiUrl = "http://localhost:5001/api/data"

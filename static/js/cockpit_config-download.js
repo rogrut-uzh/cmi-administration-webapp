@@ -12,7 +12,7 @@ document.getElementById("get-config-files-btn").addEventListener("click", async 
 
     // Call the Flask endpoint
     try {
-        const response = await fetch(`/get-config-files?env=${env}`, {
+        const response = await fetch(`/get-config-files`, {
             method: "GET",
         });
 

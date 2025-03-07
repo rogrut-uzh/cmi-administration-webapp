@@ -7,6 +7,9 @@
 
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:NO_PROXY = "127.0.0.1,localhost"
+$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 $ErrorActionPreference = "Stop"
 $VerbosePreference = "SilentlyContinue"
 
@@ -17,8 +20,9 @@ if (-Not (Test-Path $tempPath)) {
 }
 
 function Get-CMI-Config-Data {
-    $ApiUrl = "http://localhost:5001/api/data"
-    $RawJson = (Invoke-WebRequest -Uri $ApiUrl -Method Get -ErrorAction Stop).Content
+    $ApiUrl = "http://127.0.0.1:5001/api/data"
+    $RawJson = (Invoke-WebRequest -Uri $ApiUrl -Method Get -UseBasicParsing -ErrorAction Stop).Content
+
     $ParsedJson = $RawJson | ConvertFrom-Json
     return $ParsedJson
 }
