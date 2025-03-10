@@ -3,58 +3,63 @@
 {% block title %}CMI Services{% endblock %}
 
 {% block content %}
+
 <div class="row align-items-start p-2">
 
-    <!-- Left Column: Buttons and Actions -->
-    <div class="col-4 p-2">
-        <div class="row mb-2 align-items-start">
-            <div class="col">
-                <h2 class="mb-0">CMI Services</h2>
-            </div>
-        </div>
+    <div class="col p-2">
+        <h2 class="mb-0">CMI Services</h2>
         
         <div class="row mb-2 align-items-start">
-            <div class="col d-flex flex-nowrap">
-                <div class="form-check mb-3">
-                    <input type="checkbox" class="form-check-input" id="includeRelay" checked>
-                    <label for="includeRelay" class="form-check-label">including Relay-Server</label>
+        
+            <!-- Left Column: Buttons and Actions -->
+            <div class="col-sm-4">
+                <div class="card">
+                    <div class="card-body">
+                    
+                        <div class="col d-flex flex-nowrap">
+                            <div class="form-check mb-3">
+                                <input type="checkbox" class="form-check-input" id="includeRelay" checked>
+                                <label for="includeRelay" class="form-check-label">including Relay-Server</label>
+                            </div>
+                        </div>
+                        <table class="table table-borderless" style="background: none; width:auto; table-layout:auto;">
+                            <tbody>
+                                <tr>
+                                    <th>CMI GEVER (Prod)</th>
+                                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'cmi', 'prod', 'group-cmi-services')">STOP</button></td>
+                                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'cmi', 'prod', 'group-cmi-services')">START</button></td>
+                                </tr>
+                                <tr>
+                                    <th>CMI AIS (Prod)</th>
+                                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'ais', 'prod', 'group-cmi-services')">STOP</button></td>
+                                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'ais', 'prod', 'group-cmi-services')">START</button></td>
+                                </tr>
+                                <tr>
+                                    <th>CMI Gever (Test)</th>
+                                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'cmi', 'test', 'group-cmi-services')">STOP</button></td>
+                                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'cmi', 'test', 'group-cmi-services')">START</button></td>
+                                </tr>
+                                <tr>
+                                    <th>CMI AIS (Test)</th>
+                                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'ais', 'test', 'group-cmi-services')">STOP</button></td>
+                                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'ais', 'test', 'group-cmi-services')">START</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        
+                    </div>
                 </div>
             </div>
+
+
+            <!-- Right Column: Output -->
+            <div class="col-sm-8 output">
+                <h5>Output</h5>
+                <pre id="output">Click a button to see the output here.</pre>
+            </div>
+
         </div>
-        
-        
-        <table class="table table-borderless" style="background: none; width:auto; table-layout:auto;">
-            <tbody>
-                <tr>
-                    <th>CMI GEVER (Prod)</th>
-                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'cmi', 'prod', 'group-cmi-services')">STOP</button></td>
-                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'cmi', 'prod', 'group-cmi-services')">START</button></td>
-                </tr>
-                <tr>
-                    <th>CMI AIS (Prod)</th>
-                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'ais', 'prod', 'group-cmi-services')">STOP</button></td>
-                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'ais', 'prod', 'group-cmi-services')">START</button></td>
-                </tr>
-                <tr>
-                    <th>CMI Gever (Test)</th>
-                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'cmi', 'test', 'group-cmi-services')">STOP</button></td>
-                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'cmi', 'test', 'group-cmi-services')">START</button></td>
-                </tr>
-                <tr>
-                    <th>CMI AIS (Test)</th>
-                    <td><button class="btn mr-2 btn-sm btn-danger" onclick="runScriptServices('stop', 'ais', 'test', 'group-cmi-services')">STOP</button></td>
-                    <td><button class="btn mr-2 btn-sm btn-primary" onclick="runScriptServices('start', 'ais', 'test', 'group-cmi-services')">START</button></td>
-                </tr>
-            </tbody>
-        </table>
     </div>
-
-    <!-- Right Column: Output -->
-    <div class="col-8 p-2 output">
-        <h5>Output</h5>
-        <pre id="output">Click a button to see the output here.</pre>
-    </div>
-
 </div>
 
 <script src="{{ url_for('static', filename='js/services.js') }}"></script>
