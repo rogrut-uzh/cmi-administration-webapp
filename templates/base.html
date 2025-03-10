@@ -22,8 +22,12 @@
           <li class="nav-item">
             <a class="nav-link {% if active_page == 'fulloverview' %}active{% endif %}" href="/fulloverview">Full Overview</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link {% if active_page == 'services' %}active{% endif %}" href="/services">CMI Services</a>
+          <li class="{% if active_page in ['services', 'services-single'] %}active{% endif %} nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarServicesLink" role="button" data-toggle="navbarServicesDropdown" aria-haspopup="true" aria-expanded="false">CMI Services</a>
+            <div class="dropdown-menu" aria-labelledby="navbarServicesLink">
+              <a class="nav-link" href="/services">Gruppen</a>
+              <a class="nav-link" href="/services-single">Einzeln</a>
+            </div>
           </li>
           <li class="nav-item">
             <a class="nav-link {% if active_page == 'metatool' %}active{% endif %}" href="/metatool">MetaTool</a>
