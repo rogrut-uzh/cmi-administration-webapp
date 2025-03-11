@@ -243,75 +243,107 @@ def run_script_services_stream():
 
     return Response(generate_output(), content_type='text/event-stream')
 
-@app.route('/run-script-services-single-stream')
+@app.route('/services-single')
 def run_script_services_single_stream():
-    # Define API endpoints with labels
+    # Definierte API-Endpunkte mit Labeln
     endpoints = [
         {"label": "CMI Prod", "url": "https://zidbacons02.d.uzh.ch/api/data/cmi/prod"},
         {"label": "AIS Prod", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/prod"},
         {"label": "CMI Test", "url": "https://zidbacons02.d.uzh.ch/api/data/cmi/test"},
         {"label": "AIS Test", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/test"}
     ]
-
-    tables = []
+    
+    # Für jeden Endpunkt wird ein Dict mit Label, URL und einer Liste von Einträgen erstellt
+    endpoints_data = []
     
     for endpoint in endpoints:
         label = endpoint["label"]
         url = endpoint["url"]
+        entries = []
         try:
-            # Fetch JSON data from the API endpoint
             resp = requests.get(url)
             resp.raise_for_status()
             json_data = resp.json()
-            
-            # Extract data from JSON (assuming structure: response.app.<field>)
-            app_info = json_data.get('app', {})
-            namefull         = app_info.get('namefull', 'Unknown')
-            servicename      = app_info.get('servicename', '')
-            servicenamerelay = app_info.get('servicenamerelay', '')
-            host             = app_info.get('host', '')
-            
-            # Run PowerShell script to get the status of the first service
-            ps_script = "pwsh/cmi-stop-start-services-webapp-single.ps1"
-            ps_command_1 = [
-                "pwsh", "-File", ps_script,
-                "-ServiceName", servicename,
-                "-Host", host
-            ]
-            ps_result_1 = subprocess.run(ps_command_1, capture_output=True, text=True)
-            status_service = ps_result_1.stdout.strip() if ps_result_1.returncode == 0 else "Error"
-            
-            # Run PowerShell script to get the status of the relay service
-            ps_command_2 = [
-                "pwsh", "-File", ps_script,
-                "-ServiceNameRelay", servicenamerelay,
-                "-Host", host
-            ]
-            ps_result_2 = subprocess.run(ps_command_2, capture_output=True, text=True)
-            status_relay = ps_result_2.stdout.strip() if ps_result_2.returncode == 0 else "Error"
-            
-            # Create a table entry with the required columns
-            table_data = {
-                "label": label,
-                "endpoint": url,
-                "namefull": namefull,
-                "status_service": status_service,
-                "status_relay": status_relay,
-            }
-            tables.append(table_data)
+            # Annahme: json_data ist eine Liste von Ergebnissen,
+            # wobei jedes Ergebnis ein Dictionary mit key 'result'
+            # und darin 'app' mit den gewünschten Feldern enthält.
+            for item in json_data:
+                app_info = item.get('result', {}).get('app', {})
+                hostname = app_info.get('hostname', 'Unknown')
+                servicename = app_info.get('servicename', '')
+                servicenamerelay = app_info.get('servicenamerelay', '')
+                entries.append({
+                    "hostname": hostname,
+                    "servicename": servicename,
+                    "servicenamerelay": servicenamerelay,
+                    # Die Statuswerte werden später ergänzt
+                    "status_service": None,
+                    "status_relay": None
+                })
         except Exception as e:
-            # In case of an error, record it in the table
-            table_data = {
-                "label": label,
-                "endpoint": url,
-                "namefull": "Error",
+            entries.append({
+                "hostname": "Error",
+                "servicename": "",
+                "servicenamerelay": "",
                 "status_service": str(e),
                 "status_relay": str(e)
-            }
-            tables.append(table_data)
+            })
+        
+        endpoints_data.append({
+            "label": label,
+            "endpoint": url,
+            "entries": entries
+        })
     
-    # Render the template with the list of tables
-    return render_template("services-single.html", tables=tables)
+    # Über alle Endpunkte hinweg: Sammle pro Host alle eindeutigen Service-Namen
+    host_services = {}
+    for endpoint in endpoints_data:
+        for entry in endpoint["entries"]:
+            hostname = entry["hostname"]
+            if hostname == "Error":
+                continue
+            if hostname not in host_services:
+                host_services[hostname] = set()
+            if entry["servicename"]:
+                host_services[hostname].add(entry["servicename"])
+            if entry["servicenamerelay"]:
+                host_services[hostname].add(entry["servicenamerelay"])
+    
+    # Für jeden Host: Mit einem einzigen Powershell-Aufruf den Status abfragen.
+    # Hier wird angenommen, dass das Skript im Unterordner "pwsh" liegt.
+    host_statuses = {}
+    for hostname, services_set in host_services.items():
+        services_str = ",".join(services_set)
+        try:
+            ps_command = [
+                "pwsh", '-NoProfile', "-File", "pwsh/cmi-stop-start-services-webapp-single.ps1",
+                "-Host", hostname,
+                "-Services", services_str
+            ]
+            ps_result = subprocess.run(ps_command, capture_output=True, text=True)
+            if ps_result.returncode == 0:
+                # Annahme: Das Skript gibt ein JSON zurück, z.B. {"ServiceA": "running", "ServiceB": "stopped"}
+                host_status = json.loads(ps_result.stdout.strip())
+            else:
+                host_status = {}
+        except Exception as e:
+            host_status = {}
+        host_statuses[hostname] = host_status
+
+    # Aktualisiere alle Einträge mit den abgefragten Statuswerten
+    for endpoint in endpoints_data:
+        for entry in endpoint["entries"]:
+            hostname = entry["hostname"]
+            if hostname in host_statuses:
+                mapping = host_statuses[hostname]
+                entry["status_service"] = mapping.get(entry["servicename"], "unknown")
+                entry["status_relay"] = mapping.get(entry["servicenamerelay"], "unknown")
+            else:
+                entry["status_service"] = "Error"
+                entry["status_relay"] = "Error"
+    
+    # Übergabe der Daten an das Template
+    return render_template("services-single.html", endpoints_data=endpoints_data)
 
 @app.route('/run-script-metatool', methods=['POST'])
 def run_script_metatool():
