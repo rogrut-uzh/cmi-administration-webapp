@@ -243,6 +243,8 @@ def run_script_services_stream():
 
     return Response(generate_output(), content_type='text/event-stream')
 
+logging.basicConfig(level=logging.DEBUG)
+
 @app.route('/services-single')
 def run_script_services_single_stream():
     # Definierte API-Endpunkte mit Labeln
@@ -253,7 +255,6 @@ def run_script_services_single_stream():
         {"label": "AIS Test", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/test"}
     ]
     
-    # Für jeden Endpunkt wird ein Dict mit Label, URL und einer Liste von Einträgen erstellt
     endpoints_data = []
     
     for endpoint in endpoints:
@@ -261,12 +262,15 @@ def run_script_services_single_stream():
         url = endpoint["url"]
         entries = []
         try:
-            resp = requests.get(url)
+            resp = requests.get(url, timeout=10)
             resp.raise_for_status()
             json_data = resp.json()
-            # Annahme: json_data ist eine Liste von Ergebnissen,
-            # wobei jedes Ergebnis ein Dictionary mit key 'result'
-            # und darin 'app' mit den gewünschten Feldern enthält.
+            logging.debug(f"API Response from {url}: {json_data}")
+            
+            # Falls json_data kein Liste ist, packe es in eine Liste
+            if not isinstance(json_data, list):
+                json_data = [json_data]
+                
             for item in json_data:
                 app_info = item.get('result', {}).get('app', {})
                 hostname = app_info.get('hostname', 'Unknown')
@@ -276,17 +280,17 @@ def run_script_services_single_stream():
                     "hostname": hostname,
                     "servicename": servicename,
                     "servicenamerelay": servicenamerelay,
-                    # Die Statuswerte werden später ergänzt
                     "status_service": None,
                     "status_relay": None
                 })
         except Exception as e:
+            logging.error(f"Fehler beim Abruf von {url}: {e}")
             entries.append({
-                "hostname": "Error",
+                "hostname": f"Error: {e}",
                 "servicename": "",
                 "servicenamerelay": "",
-                "status_service": str(e),
-                "status_relay": str(e)
+                "status_service": f"Error: {e}",
+                "status_relay": f"Error: {e}"
             })
         
         endpoints_data.append({
@@ -295,12 +299,12 @@ def run_script_services_single_stream():
             "entries": entries
         })
     
-    # Über alle Endpunkte hinweg: Sammle pro Host alle eindeutigen Service-Namen
+    # Sammle pro Host alle eindeutigen Service-Namen
     host_services = {}
     for endpoint in endpoints_data:
         for entry in endpoint["entries"]:
             hostname = entry["hostname"]
-            if hostname == "Error":
+            if hostname.startswith("Error"):
                 continue
             if hostname not in host_services:
                 host_services[hostname] = set()
@@ -309,28 +313,30 @@ def run_script_services_single_stream():
             if entry["servicenamerelay"]:
                 host_services[hostname].add(entry["servicenamerelay"])
     
-    # Für jeden Host: Mit einem einzigen Powershell-Aufruf den Status abfragen.
-    # Hier wird angenommen, dass das Skript im Unterordner "pwsh" liegt.
+    # Für jeden Host: Powershell-Skript einmal aufrufen
     host_statuses = {}
     for hostname, services_set in host_services.items():
         services_str = ",".join(services_set)
+        logging.debug(f"Für Host {hostname} werden die Services abgefragt: {services_str}")
         try:
             ps_command = [
-                "pwsh", '-NoProfile', "-File", "pwsh/cmi-stop-start-services-webapp-single.ps1",
-                "-Host", hostname,
+                "pwsh", '-NoProfile', "-File", "D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1",
+                "-Hostname", hostname,
                 "-Services", services_str
             ]
-            ps_result = subprocess.run(ps_command, capture_output=True, text=True)
+            ps_result = subprocess.run(ps_command, capture_output=True, text=True, timeout=30)
+            logging.debug(f"Powershell Rückgabe für {hostname}: stdout: {ps_result.stdout}, stderr: {ps_result.stderr}")
             if ps_result.returncode == 0:
-                # Annahme: Das Skript gibt ein JSON zurück, z.B. {"ServiceA": "running", "ServiceB": "stopped"}
                 host_status = json.loads(ps_result.stdout.strip())
             else:
                 host_status = {}
+                logging.error(f"Powershell Fehlercode {ps_result.returncode} für Host {hostname}")
         except Exception as e:
+            logging.error(f"Powershell Exception für Host {hostname}: {e}")
             host_status = {}
         host_statuses[hostname] = host_status
 
-    # Aktualisiere alle Einträge mit den abgefragten Statuswerten
+    # Aktualisiere alle Einträge mit den Statuswerten
     for endpoint in endpoints_data:
         for entry in endpoint["entries"]:
             hostname = entry["hostname"]
@@ -342,7 +348,6 @@ def run_script_services_single_stream():
                 entry["status_service"] = "Error"
                 entry["status_relay"] = "Error"
     
-    # Übergabe der Daten an das Template
     return render_template("services-single.html", endpoints_data=endpoints_data)
 
 @app.route('/run-script-metatool', methods=['POST'])
