@@ -71,17 +71,7 @@ def run_script_cockpit_overview():
         # Retrieve query parameters
         data = request.get_json()
         app = data.get('app')
-        env = data.get('env')
-        
-#        command = [
-#            'pwsh', '-NoProfile', '-Command',
-#            f"$OutputEncoding = [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new(); "
-#            f"$password = ConvertTo-SecureString '{p}' -AsPlainText -Force; "
-#            f"$cred = New-Object System.Management.Automation.PSCredential('{u}', $password); "
-#            f"& {{ . 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1' "
-#            f"-App {app} -Env {env} }}"
-#        ]
-    
+        env = data.get('env')    
         command = [
             'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
             '-App', f"{app}",
@@ -252,6 +242,76 @@ def run_script_services_stream():
             yield f"data: ERROR: {str(e)}\n\n"
 
     return Response(generate_output(), content_type='text/event-stream')
+
+@app.route('/run-script-services-single-stream')
+def run_script_services_single_stream():
+    # Define API endpoints with labels
+    endpoints = [
+        {"label": "CMI Prod", "url": "https://zidbacons02.d.uzh.ch/api/data/cmi/prod"},
+        {"label": "AIS Prod", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/prod"},
+        {"label": "CMI Test", "url": "https://zidbacons02.d.uzh.ch/api/data/cmi/test"},
+        {"label": "AIS Test", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/test"}
+    ]
+
+    tables = []
+    
+    for endpoint in endpoints:
+        label = endpoint["label"]
+        url = endpoint["url"]
+        try:
+            # Fetch JSON data from the API endpoint
+            resp = requests.get(url)
+            resp.raise_for_status()
+            json_data = resp.json()
+            
+            # Extract data from JSON (assuming structure: response.app.<field>)
+            app_info = json_data.get('app', {})
+            namefull         = app_info.get('namefull', 'Unknown')
+            servicename      = app_info.get('servicename', '')
+            servicenamerelay = app_info.get('servicenamerelay', '')
+            host             = app_info.get('host', '')
+            
+            # Run PowerShell script to get the status of the first service
+            ps_script = "pwsh/cmi-stop-start-services-webapp-single.ps1"
+            ps_command_1 = [
+                "pwsh", "-File", ps_script,
+                "-ServiceName", servicename,
+                "-Host", host
+            ]
+            ps_result_1 = subprocess.run(ps_command_1, capture_output=True, text=True)
+            status_service = ps_result_1.stdout.strip() if ps_result_1.returncode == 0 else "Error"
+            
+            # Run PowerShell script to get the status of the relay service
+            ps_command_2 = [
+                "pwsh", "-File", ps_script,
+                "-ServiceNameRelay", servicenamerelay,
+                "-Host", host
+            ]
+            ps_result_2 = subprocess.run(ps_command_2, capture_output=True, text=True)
+            status_relay = ps_result_2.stdout.strip() if ps_result_2.returncode == 0 else "Error"
+            
+            # Create a table entry with the required columns
+            table_data = {
+                "label": label,
+                "endpoint": url,
+                "namefull": namefull,
+                "status_service": status_service,
+                "status_relay": status_relay,
+            }
+            tables.append(table_data)
+        except Exception as e:
+            # In case of an error, record it in the table
+            table_data = {
+                "label": label,
+                "endpoint": url,
+                "namefull": "Error",
+                "status_service": str(e),
+                "status_relay": str(e)
+            }
+            tables.append(table_data)
+    
+    # Render the template with the list of tables
+    return render_template("services-single.html", tables=tables)
 
 @app.route('/run-script-metatool', methods=['POST'])
 def run_script_metatool():

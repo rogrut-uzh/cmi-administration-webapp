@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}CMI Services{% endblock %}
+
+{% block content %}
+
+<div class="row align-items-start p-2">
+    <div class="col p-2">
+      {% for table in tables %}
+      <div class="row mb-2 align-items-start">
+            <div class="col">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">{{ table.label }} (<small>{{ table.endpoint }}</small>)</h2>
+                        <table class="table table-striped table-bordered">
+                            <thead>
+                              <tr>
+                                <th>Name Full</th>
+                                <th>Status (Service)</th>
+                                <th>Status (Relay Service)</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr>
+                                <td>{{ table.namefull }}</td>
+                                <td>{{ table.status_service }}</td>
+                                <td>{{ table.status_relay }}</td>
+                              </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+      </div>
+      {% endfor %}
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/services-single.js') }}"></script>
+
+{% endblock %}
