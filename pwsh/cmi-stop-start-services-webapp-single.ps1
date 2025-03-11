@@ -3,7 +3,7 @@
 #############################################
 Param(
     [Parameter(Mandatory = $true)]
-    [string]$Hostname,
+    [string]$Computername,
 
     [Parameter(Mandatory = $true)]
     [string]$Services
@@ -16,7 +16,7 @@ $results = @{}
 foreach ($service in $serviceList) {
     try {
         # Abfrage des Service-Status per Invoke-Command auf dem Remote-Host
-        $svc = Invoke-Command -ComputerName $Hostname -ScriptBlock {
+        $svc = Invoke-Command -ComputerName $Computername -ScriptBlock {
             param($s)
             Get-Service -Name $s -ErrorAction Stop
         } -ArgumentList $service
