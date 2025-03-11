@@ -4,7 +4,7 @@ Used for retrieving information about the CMI installations, and for maintenance
 
 ## Access
 
-http://localhost:5000 or https://zidbacons02.uzh.ch
+http://localhost:5000 or https://zidbacons02.d.uzh.ch
 
 ## reverse proxy
 
