@@ -1,6 +1,19 @@
 #############################################
 # cmi-stop-start-services-webapp-single.ps1 #
 #############################################
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:NO_PROXY = "127.0.0.1,localhost"
+$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+function Get-CMI-Config-Data {
+    param (
+        [string]$u
+    )
+	#write-host $Url
+    $RawJson = (Invoke-WebRequest -Uri $u -Method Get).Content 
+    $ParsedJson = $RawJson | ConvertFrom-Json
+    return $ParsedJson
+}
 
 # API-Endpunkte definieren
 $endpoints = @(
@@ -23,18 +36,21 @@ foreach ($ep in $endpoints) {
 
     try {
         # API-Daten abrufen
-        $jsonData = Invoke-RestMethod -Uri $url -Method Get -UseBasicParsing
+        $jsonData = Get-CMI-Config-Data -u $url
+
         if ($jsonData -isnot [System.Collections.IEnumerable]) {
             $jsonData = @($jsonData)
         }
+		#$jsonData
         foreach ($item in $jsonData) {
-            # Annahme: Die API liefert Objekte, in denen unter result.app die Daten stehen.
-            $appInfo = $item.result.app
-            $hostname = ($appInfo.hostname).Trim()
-            $servicename = ($appInfo.servicename).Trim()
-            $servicenamerelay = ($appInfo.servicenamerelay).Trim()
+			$namefull = if ($item.namefull) { $item.namefull } else { "" }
+            $appInfo = $item.app
+            $hostname = if ($appInfo.host) { $appInfo.host.Trim() } else { "" }
+			$servicename = if ($appInfo.servicename) { $appInfo.servicename.Trim() } else { "" }
+            $servicenamerelay = if ($appInfo.servicenamerelay) { $appInfo.servicenamerelay.Trim() } else { "" }
             
             $entry = @{
+                namefull = $namefull
                 hostname = $hostname
                 servicename = $servicename
                 servicenamerelay = $servicenamerelay
@@ -59,6 +75,7 @@ foreach ($ep in $endpoints) {
     }
     catch {
         $entries += @{
+			namefull = ""
             hostname = "Error: $($_.Exception.Message)"
             servicename = ""
             servicenamerelay = ""
@@ -118,5 +135,5 @@ foreach ($epData in $endpointsData) {
 }
 
 # Ausgabe des Ergebnis als JSON (höhere Depth für verschachtelte Strukturen)
-$endpointsData | ConvertTo-Json -Depth 5
+Write-Output ($endpointsData | ConvertTo-Json -Depth 5 -Compress)
 exit 0

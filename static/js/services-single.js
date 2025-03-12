@@ -1,45 +1,71 @@
-document.addEventListener("DOMContentLoaded", function() {
-    fetch('/services-single')
+document.addEventListener("DOMContentLoaded", function(event) {
+    getServicesStatus();
+});
+function getServicesStatus() {
+	
+    // Zeige den Spinner, falls er nicht sichtbar ist
+    document.getElementById("loading").style.display = "block";
+	
+    fetch('/run-script-services-single-stream')
         .then(response => response.json())
         .then(data => {
             // data ist ein Array mit den Endpunkt-Daten
             data.forEach(endpoint => {
-                // Beispiel: Füge für jeden Endpunkt ein HTML-Element hinzu
+				
+				// Verstecke den Spinner, sobald die Daten geladen sind
+				document.getElementById("loading").style.display = "none";
+				
+                // Container für die Karten
                 let container = document.getElementById("services-container");
                 let card = document.createElement("div");
                 card.className = "card mb-3";
                 
-                let header = document.createElement("div");
-                header.className = "card-header";
-                header.innerHTML = `<h3>${endpoint.label}</h3>`;
-                card.appendChild(header);
-                
                 let body = document.createElement("div");
                 body.className = "card-body";
                 
-                // Erstelle eine Tabelle
+                let h2 = document.createElement("h2");
+                h2.innerHTML = `${endpoint.label}`;
+                h2.className = "card-title";
+                body.appendChild(h2);
+                
+                // Tabelle erstellen
                 let table = document.createElement("table");
                 table.className = "table table-striped table-bordered";
                 table.innerHTML = `
                   <thead>
                     <tr>
                       <th>Hostname</th>
-                      <th>Status (Service)</th>
-                      <th>Status (Relay Service)</th>
+                      <th>Mandant</th>
+                      <th>Service Name</th>
+                      <td>Anwendung</td>
+                      <th>Status</th>
                     </tr>
                   </thead>
                   <tbody></tbody>
                 `;
                 let tbody = table.querySelector("tbody");
-                // Fülle die Zeilen aus den Einträgen
+                // Für jeden Eintrag: Zwei Zeilen erzeugen
                 endpoint.entries.forEach(entry => {
-                    let tr = document.createElement("tr");
-                    tr.innerHTML = `
+                    // Zeile für den ersten Service
+                    let tr1 = document.createElement("tr");
+                    tr1.innerHTML = `
                         <td>${entry.hostname}</td>
-                        <td>${entry.status_service}</td>
-                        <td>${entry.status_relay}</td>
+                        <td>${entry.namefull}</td>
+                        <td>${entry.servicename}</td>
+                        <td>App</td>
+                        <td><code>${entry.status_service}</code></td>
                     `;
-                    tbody.appendChild(tr);
+                    tbody.appendChild(tr1);
+                    // Zeile für den Relay-Service
+                    let tr2 = document.createElement("tr");
+                    tr2.innerHTML = `
+                        <td>${entry.hostname}</td>
+                        <td>${entry.namefull}</td>
+                        <td>${entry.servicenamerelay}</td>
+                        <td>Relay</td>
+                        <td><code>${entry.status_relay}</code></td>
+                    `;
+                    tbody.appendChild(tr2);
                 });
                 body.appendChild(table);
                 card.appendChild(body);
@@ -48,5 +74,6 @@ document.addEventListener("DOMContentLoaded", function() {
         })
         .catch(error => {
             console.error("Error fetching services:", error);
+			document.getElementById("loading").style.display = "none";
         });
-});
+}

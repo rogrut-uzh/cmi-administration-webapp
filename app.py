@@ -60,6 +60,11 @@ def fulloverview():
 def services():
     return render_template('services.html', active_page='services')
 
+@app.route('/services-single')
+@requires_auth
+def services_single():
+    return render_template('services-single.html', active_page='services-single')
+
 @app.route('/metatool')
 @requires_auth
 def metatool():
@@ -243,20 +248,49 @@ def run_script_services_stream():
 
     return Response(generate_output(), content_type='text/event-stream')
 
-@app.route('/services-single')
-def get_services():
-    # Passe den Pfad zum PowerShell-Skript ggf. an
+#@app.route('/run-script-services-single-stream')
+#def run_script_services_single_stream():
+#    # Passe den Pfad zum PowerShell-Skript ggf. an
+#    ps_command = [
+#        'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1'
+#    ]
+#    try:
+#        result = subprocess.run(ps_command, capture_output=True, text=True)
+#        if result.returncode == 0:
+#            try:
+#                output = json.loads(result.stdout)
+#                return jsonify({"Status": "Success", "Data": output}), 200
+#            except json.JSONDecodeError:
+#                return jsonify({"error": "Invalid JSON output from PowerShell script"}), 500
+#        else:
+#            return jsonify({"error": result.stderr.strip()}), 500
+#            
+#    except Exception as e:
+#        return jsonify({"error": str(e)}), 500
+#
+@app.route('/run-script-services-single-stream')
+def run_script_services_single_stream():
     ps_command = [
-        "pwsh", '-NoProfile', "-File", "D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-all-services.ps1"
+        'pwsh', 
+        '-NoProfile', 
+        '-File', 
+        'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1'
     ]
     try:
-        ps_result = subprocess.run(ps_command, capture_output=True, text=True, timeout=60)
-        if ps_result.returncode == 0:
-            # Parse die JSON-Ausgabe des Skripts
-            data = json.loads(ps_result.stdout)
-            return jsonify(data)
+        result = subprocess.run(ps_command, capture_output=True, text=True, encoding='utf-8', errors='replace')
+        print("Return code:", result.returncode)
+        print("STDOUT repr:", repr(result.stdout))
+        print("STDERR repr:", repr(result.stderr))
+        if result.returncode == 0:
+            try:
+                output = json.loads(result.stdout)
+                # Direkt das Array zurückgeben
+                return jsonify(output), 200
+            except json.JSONDecodeError:
+                return jsonify({"error": "Invalid JSON output from PowerShell script"}), 500
         else:
-            return jsonify({"error": f"PowerShell returned code {ps_result.returncode}", "stderr": ps_result.stderr}), 500
+            return jsonify({"error": result.stderr.strip()}), 500
+            
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
