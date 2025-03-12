@@ -8,8 +8,6 @@ import os
 import time
 import json
 import base64
-import logging
-logging.basicConfig(level=logging.DEBUG)
 #import logging
 #logging.basicConfig(filename='app_debug.log', level=logging.DEBUG)
 
@@ -246,112 +244,21 @@ def run_script_services_stream():
     return Response(generate_output(), content_type='text/event-stream')
 
 @app.route('/services-single')
-def run_script_services_single_stream():
-    endpoints = [
-        {"label": "CMI Prod", "url": "https://zidbacons02.d.uzh.ch/api/data/cmi/prod"},
-        {"label": "AIS Prod", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/prod"},
-        {"label": "CMI Test", "url": "https://zidbacons02.d.uzh.ch/api/data/cmi/test"},
-        {"label": "AIS Test", "url": "https://zidbacons02.d.uzh.ch/api/data/ais/test"}
+def get_services():
+    # Passe den Pfad zum PowerShell-Skript ggf. an
+    ps_command = [
+        "pwsh", '-NoProfile', "-File", "D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-all-services.ps1"
     ]
-    
-    endpoints_data = []
-    
-    for endpoint in endpoints:
-        label = endpoint["label"]
-        url = endpoint["url"]
-        entries = []
-        try:
-            # Falls Zertifikatfehler auftreten: verify=False verwenden (Achtung: nur zu Debug-Zwecken!)
-            resp = requests.get(url, timeout=10)  # , verify=False
-            resp.raise_for_status()
-            json_data = resp.json()
-            logging.debug(f"API Response from {url}: {json_data}")
-            
-            # Falls die API kein Array liefert, packe das Ergebnis in eine Liste
-            if not isinstance(json_data, list):
-                json_data = [json_data]
-            
-            for item in json_data:
-                # Debug-Ausgabe, um den Aufbau zu prüfen:
-                logging.debug(f"Item: {item}")
-                app_info = item.get('result', {}).get('app', {})
-                hostname = app_info.get('hostname', 'Unknown')
-                servicename = app_info.get('servicename', '')
-                servicenamerelay = app_info.get('servicenamerelay', '')
-                entries.append({
-                    "hostname": hostname,
-                    "servicename": servicename,
-                    "servicenamerelay": servicenamerelay,
-                    "status_service": None,
-                    "status_relay": None
-                })
-        except Exception as e:
-            logging.error(f"Fehler beim Abruf von {url}: {e}")
-            entries.append({
-                "hostname": f"Error: {e}",
-                "servicename": "",
-                "servicenamerelay": "",
-                "status_service": f"Error: {e}",
-                "status_relay": f"Error: {e}"
-            })
-        
-        endpoints_data.append({
-            "label": label,
-            "endpoint": url,
-            "entries": entries
-        })
-    
-    # Sammle pro Host alle eindeutigen Service-Namen
-    host_services = {}
-    for endpoint in endpoints_data:
-        for entry in endpoint["entries"]:
-            hostname = entry["hostname"]
-            # Überspringe Einträge, die bereits einen Fehler enthalten
-            if hostname.startswith("Error"):
-                continue
-            if hostname not in host_services:
-                host_services[hostname] = set()
-            if entry["servicename"]:
-                host_services[hostname].add(entry["servicename"])
-            if entry["servicenamerelay"]:
-                host_services[hostname].add(entry["servicenamerelay"])
-    
-    # Für jeden Host: Einmaliger Powershell-Aufruf
-    host_statuses = {}
-    for hostname, services_set in host_services.items():
-        services_str = ",".join(services_set)
-        logging.debug(f"Für Host '{hostname}' werden die Services abgefragt: {services_str}")
-        try:
-            ps_command = [
-                "pwsh", '-NoProfile', "-File", "D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1",
-                "-Computername", hostname,
-                "-Services", services_str
-            ]
-            ps_result = subprocess.run(ps_command, capture_output=True, text=True, timeout=30)
-            logging.debug(f"Powershell Rückgabe für '{hostname}': returncode={ps_result.returncode}, stdout={ps_result.stdout}, stderr={ps_result.stderr}")
-            if ps_result.returncode == 0:
-                host_status = json.loads(ps_result.stdout.strip())
-            else:
-                host_status = {}
-                logging.error(f"Powershell Fehlercode {ps_result.returncode} für Host '{hostname}'")
-        except Exception as e:
-            logging.error(f"Powershell Exception für Host '{hostname}': {e}")
-            host_status = {}
-        host_statuses[hostname] = host_status
-
-    # Aktualisiere alle Einträge mit den abgefragten Statuswerten
-    for endpoint in endpoints_data:
-        for entry in endpoint["entries"]:
-            hostname = entry["hostname"]
-            if hostname in host_statuses:
-                mapping = host_statuses[hostname]
-                entry["status_service"] = mapping.get(entry["servicename"], "unknown")
-                entry["status_relay"] = mapping.get(entry["servicenamerelay"], "unknown")
-            else:
-                entry["status_service"] = "Error"
-                entry["status_relay"] = "Error"
-    
-    return render_template("services-single.html", endpoints_data=endpoints_data)
+    try:
+        ps_result = subprocess.run(ps_command, capture_output=True, text=True, timeout=60)
+        if ps_result.returncode == 0:
+            # Parse die JSON-Ausgabe des Skripts
+            data = json.loads(ps_result.stdout)
+            return jsonify(data)
+        else:
+            return jsonify({"error": f"PowerShell returned code {ps_result.returncode}", "stderr": ps_result.stderr}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/run-script-metatool', methods=['POST'])
 def run_script_metatool():
