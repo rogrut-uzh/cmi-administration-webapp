@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", function(event) {
     getServicesStatus();
 });
+
 function getServicesStatus() {
 	
     // Zeige den Spinner, falls er nicht sichtbar ist
@@ -30,14 +31,14 @@ function getServicesStatus() {
                 
                 // Tabelle erstellen
                 let table = document.createElement("table");
-                table.className = "table table-striped table-bordered";
+                table.className = "table table-striped table-bordered sortable";
                 table.innerHTML = `
                   <thead>
                     <tr>
                       <th>Hostname</th>
                       <th>Mandant</th>
                       <th>Service Name</th>
-                      <td>Anwendung</td>
+                      <th>Anwendung</th>
                       <th>Status</th>
                     </tr>
                   </thead>
@@ -53,7 +54,7 @@ function getServicesStatus() {
                         <td>${entry.namefull}</td>
                         <td>${entry.servicename}</td>
                         <td>App</td>
-                        <td><code>${entry.status_service}</code></td>
+                        <td><code class="${entry.status_service}">${entry.status_service}</code></td>
                     `;
                     tbody.appendChild(tr1);
                     // Zeile für den Relay-Service
@@ -63,7 +64,7 @@ function getServicesStatus() {
                         <td>${entry.namefull}</td>
                         <td>${entry.servicenamerelay}</td>
                         <td>Relay</td>
-                        <td><code>${entry.status_relay}</code></td>
+                        <td><code class="${entry.status_relay}">${entry.status_relay}</code></td>
                     `;
                     tbody.appendChild(tr2);
                 });
@@ -77,3 +78,4 @@ function getServicesStatus() {
 			document.getElementById("loading").style.display = "none";
         });
 }
+

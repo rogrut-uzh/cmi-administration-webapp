@@ -91,7 +91,7 @@ function populateTable(data, app, env) {
         //appTypeCell.textContent = app || "";
         //row.appendChild(appTypeCell);
 
-        const nameCell = document.createElement("th");
+        const nameCell = document.createElement("td");
         nameCell.classList.add(tdclass);
         nameCell.textContent = item.namefull || "";
         nameCell.setAttribute('scope', 'row');

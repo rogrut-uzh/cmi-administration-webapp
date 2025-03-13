@@ -17,10 +17,10 @@ function Get-CMI-Config-Data {
 
 # API-Endpunkte definieren
 $endpoints = @(
-    @{ Label = "CMI Prod"; Url = "http://localhost:5001/api/data/cmi/prod" },
-    @{ Label = "AIS Prod"; Url = "http://localhost:5001/api/data/ais/prod" },
-    @{ Label = "CMI Test"; Url = "http://localhost:5001/api/data/cmi/test" },
-    @{ Label = "AIS Test"; Url = "http://localhost:5001/api/data/ais/test" }
+    @{ Label = "CMI GEVER (Prod)"; Url = "http://localhost:5001/api/data/cmi/prod" },
+    @{ Label = "CMI AIS (Prod)"; Url = "http://localhost:5001/api/data/ais/prod" },
+    @{ Label = "CMI GEVER (Test)"; Url = "http://localhost:5001/api/data/cmi/test" },
+    @{ Label = "CMI AIS (Test)"; Url = "http://localhost:5001/api/data/ais/test" }
 )
 
 # Array für die Endpunkt-Daten

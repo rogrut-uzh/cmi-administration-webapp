@@ -5,73 +5,65 @@
 {% block content %}
 <div class="row align-items-start p-2">
 
-    <!-- Left Column: Buttons and Actions -->
-    <div class="col-4 p-2">
-        <div class="row mb-2 align-items-start">
-            <div class="col">
-                <h2 class="mb-0">CMI MetaTool</h2>
-            </div>
-        </div>
-
-        <div class="row mb-2 align-items-start">
-		  <div class="col">
+	<div class="col p-2">
+		<h1>CMI MetaTool</h1>
+		<div class="row mb-2 align-items-start">
 		
-			<div id="tableRaw"></div>
+			<!-- Left Column: Buttons and Actions -->
+			<div class="col-sm-4">
+				<div id="tableRaw"></div>
 			
-			<h3 class="card-title">CMI GEVER (Prod)</h3>
-			<div class="card">
-				<div class="card-body">
-					<div class="table-responsive table-responsive-heightlimit">
-                        <table id="dataTableCmiProd" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
-                    </div>
+				<div class="row mb-2 align-items-start">
+					<div class="col">
+					
+						<div class="card mb-2">
+							<div class="card-body">
+								<h3 class="card-title">CMI GEVER (Prod)</h3>
+								<div class="table-responsive table-responsive-heightlimit">
+									<table id="dataTableCmiProd" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+								</div>
+							</div>
+						</div>
+						
+						<div class="card mb-2">
+							<div class="card-body">
+								<h3 class="card-title">CMI AIS (Prod)</h3>
+								<div class="table-responsive table-responsive-heightlimit">
+									<table id="dataTableAisProd" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+								</div>
+							</div>
+						</div>
+					
+						<div class="card mb-2">
+							<div class="card-body">
+								<h3 class="card-title">CMI GEVER (Test)</h3>
+								<div class="table-responsive table-responsive-heightlimit">
+									<table id="dataTableCmiTest" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+								</div>
+							</div>
+						</div>
+					
+						<div class="card mb-2">
+							<div class="card-body">
+								<h3 class="card-title">CMI AIS (Test)</h3>
+								<div class="table-responsive table-responsive-heightlimit">
+									<table id="dataTableAisTest" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
+								</div>
+							</div>
+						</div>
+			
+					</div>
 				</div>
 			</div>
-		  </div>
-		</div>
-        <div class="row mb-2 align-items-start">
-		  <div class="col">
-			<h3 class="card-title">CMI AIS (Prod)</h3>
-			<div class="card">
-				<div class="card-body">
-					<div class="table-responsive table-responsive-heightlimit">
-                        <table id="dataTableAisProd" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
-                    </div>
-				</div>
-			</div>
-		  </div>
-		</div>
-        <div class="row mb-2 align-items-start">
-		  <div class="col">
-			<h3 class="card-title">CMI GEVER (Test)</h3>
-			<div class="card">
-				<div class="card-body">
-					<div class="table-responsive table-responsive-heightlimit">
-                        <table id="dataTableCmiTest" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
-                    </div>
-				</div>
-			</div>
-		  </div>
-		</div>
-        <div class="row mb-2 align-items-start">
-		  <div class="col">
-		    <h3 class="card-title">CMI AIS (Test)</h3>
-			<div class="card">
-				<div class="card-body">
-					<div class="table-responsive table-responsive-heightlimit">
-                        <table id="dataTableAisTest" class="table table-borderless" style="background: none; width:auto; table-layout:auto;"></table>
-                    </div>
-				</div>
-			</div>
-		  </div>
-        </div>
-        
-    </div>
 
-    <!-- Right Column: content/edit -->
-    <div class="col-8 p-2 output">
-        <pre id="metatool-content" contenteditable="true"></pre>
-        <button class="btn mt-2 btn-primary" id="saveBtn" onclick="">SAVE</button>
-    </div>
+			<!-- Right Column: content/edit -->
+			<div class="col-sm-8 output">
+				<pre id="metatool-content" contenteditable="true"></pre>
+				<button class="btn mt-2 btn-primary" id="saveBtn" onclick="">SAVE</button>
+			</div>
+		
+		</div>
+	</div>
 
 </div>
 

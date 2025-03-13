@@ -176,13 +176,13 @@ function populateTable(data, app, env) {
     data.forEach(item => {
         const row = document.createElement("tr");
 
-        const nameCell = document.createElement("th");
+        const nameCell = document.createElement("td");
         nameCell.classList.add(tdclass);
         nameCell.textContent = item.namefull || "";
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
-        const nameshortCell = document.createElement("th");
+        const nameshortCell = document.createElement("td");
         nameshortCell.classList.add(tdclass);
         nameshortCell.textContent = item.nameshort || "";
         nameshortCell.setAttribute('scope', 'row');
