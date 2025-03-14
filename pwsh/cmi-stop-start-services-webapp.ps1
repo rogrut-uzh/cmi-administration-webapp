@@ -45,7 +45,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 # Variablen
 $Delay = 2
-$ApiUrl = "http://localhost:5001/api/data"
+$ApiUrl = "https://zidbacons02.d.uzh.ch/api/data"
 $WindowsServicesList = @()
 if ($Env -like "test") {
     $RemoteHost = "ziaxiomatap02"
