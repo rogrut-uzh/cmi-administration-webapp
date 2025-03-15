@@ -36,6 +36,10 @@ param (
     [Parameter(Mandatory = $false)]
     [bool]$IncludeRelay = $true  # Optional parameter with a default value
 )
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+$env:NO_PROXY = "127.0.0.1,localhost"
+$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 
 # Exit, wenn nicht als admin ausgeführt
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
@@ -45,7 +49,7 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 # Variablen
 $Delay = 2
-$ApiUrl = "https://zidbacons02.d.uzh.ch/api/data"
+$ApiUrl = "http://localhost:5001/api/data"
 $WindowsServicesList = @()
 if ($Env -like "test") {
     $RemoteHost = "ziaxiomatap02"
@@ -162,9 +166,9 @@ if (($elements | Measure-Object).count -lt 1) {
 
 foreach ($ele in $elements) {
 	if ($IncludeRelay) {
-		$WindowsServicesList += $ele.app.servicenamerelay
+		$WindowsServicesList += $ele.app.servicenamerelay._text
 	}
-	$WindowsServicesList += $ele.app.servicename
+	$WindowsServicesList += $ele.app.servicename._text
 }
 
 $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {

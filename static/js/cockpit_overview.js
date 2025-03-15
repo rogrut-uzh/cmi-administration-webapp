@@ -5,16 +5,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
     runScriptCockpitOverview('ais', 'test');
 });
 
-function getSubLevels(u) {
-    var r = "";
-    if (u) { // only if u is not undefined (= there are urls)
-        for (var i = 0; i < u.length; i++) {
-            r += "<br/>";
-            r += u[i];
-        }
-    }
-    return r;
-}
 
 function populateTable(data, app, env) {
     const tdclass = "py-1";
@@ -93,18 +83,18 @@ function populateTable(data, app, env) {
 
         const nameCell = document.createElement("td");
         nameCell.classList.add(tdclass);
-        nameCell.textContent = item.namefull || "";
+        nameCell.innerHTML = "<b>"+item.namefull._text+"</b>" || "";
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
         const versionCell = document.createElement("td");
         versionCell.classList.add(tdclass);
-        versionCell.textContent = item.app.releaseversion || "";
+        versionCell.textContent = item.app.releaseversion._text || "";
         row.appendChild(versionCell);
 
         const hostCell = document.createElement("td");
         hostCell.classList.add(tdclass);
-        hostCell.textContent = item.app.host || "";
+        hostCell.textContent = item.app.host._text || "";
         row.appendChild(hostCell);
 
         const licenseCell = document.createElement("td");
@@ -112,26 +102,30 @@ function populateTable(data, app, env) {
         licenseCell.textContent = item.licenseserver ? "Yes" : "No";
         row.appendChild(licenseCell);
 
-        const mobileCell = document.createElement("td");
-        mobileCell.classList.add(tdclass);
-        const link = document.createElement("a");
-        link.href = item.mobilefirst;
-        link.textContent = item.mobilefirst;
-        link.target = "_blank";
-        mobileCell.appendChild(link);
-        row.appendChild(mobileCell);
+        if (item.mobilefirst === undefined) {
+            row.appendChild(document.createElement("td"));
+        } else {
+			const mobileCell = document.createElement("td");
+			mobileCell.classList.add(tdclass);
+			const link = document.createElement("a");
+			link.href = item.mobilefirst._text;
+			link.textContent = item.mobilefirst._text;
+			link.target = "_blank";
+			mobileCell.appendChild(link);
+			row.appendChild(mobileCell);
+		}
         
         const jobsCell = document.createElement("td");
         jobsCell.classList.add(tdclass);
         if (item.jobs) {
             if (item.jobs.adrsync) {
-                jobsCell.innerHTML += "<b>Adr. Sync: </b>"+item.jobs.adrsync+"<br/>" || "";
+                jobsCell.innerHTML += "<b>Adr. Sync: </b>"+item.jobs.adrsync._text+"<br/>" || "";
             }
             if (item.jobs.fulltextoptimize) {
-                jobsCell.innerHTML += "<b>Fulltext Index Optimize: </b>"+item.jobs.fulltextoptimize+"<br/>" || "";
+                jobsCell.innerHTML += "<b>Fulltext Index Optimize: </b>"+item.jobs.fulltextoptimize._text+"<br/>" || "";
             }
             if (item.jobs.fulltextrebuild) {
-                jobsCell.innerHTML += "<b>Fulltext Index Rebuild: </b>"+item.jobs.fulltextrebuild || "";
+                jobsCell.innerHTML += "<b>Fulltext Index Rebuild: </b>"+item.jobs.fulltextrebuild._text || "";
             }
         }
         row.appendChild(jobsCell);

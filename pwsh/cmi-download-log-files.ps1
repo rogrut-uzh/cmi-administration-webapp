@@ -43,17 +43,17 @@ $mandanten += Get-CMI-Config-Data -Env $Env -App "ais"
 
 foreach ($mandant in $mandanten) {
     # data needed for app log files:
-    $logPathApp = $mandant.app.installpath
+    $logPathApp = $mandant.app.installpath._text
     $logPathApp = "${logPathApp}\Trace"
     
     # data needed for relay log files:
-    $logPathRelay = $mandant.app.installpathrelay
+    $logPathRelay = $mandant.app.installpathrelay._text
     $logPathRelay = "${logPathRelay}\logs"
 	
 	$arrLogPaths = @($logPathApp, $logPathRelay)
     
-    $shortName = $mandant.nameshort
-    $apphost = $mandant.app.host
+    $shortName = $mandant.nameshort._text
+    $apphost = $mandant.app.host._text
 
 	$remoteCommand = {
 		param ($logPath, $date, $shortName)
