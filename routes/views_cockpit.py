@@ -1,6 +1,13 @@
-from flask import request, jsonify
-import subprocess, os, json, base64, gzip, io, zipfile
+from flask import request, jsonify, send_file
+import subprocess
+import os
+import json
+import base64
+import gzip
+import io
+import zipfile
 from . import main
+
 
 @main.route('/run-script-cockpit-overview', methods=['POST'])
 def run_script_cockpit_overview():

@@ -1,9 +1,12 @@
-from flask import request, jsonify, Response
-import subprocess, os, json, base64, gzip, io, zipfile, time
+from flask import request, jsonify
+import subprocess
+import os
+import json
 from . import main
 from .auth import requires_auth
 
 @main.route('/run-script-metatool', methods=['POST'])
+@requires_auth
 def run_script_metatool():
     try:
         # Retrieve query parameters

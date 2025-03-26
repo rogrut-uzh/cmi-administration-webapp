@@ -1,7 +1,9 @@
 from flask import request, jsonify, Response
-import subprocess, os, json, base64, gzip, io, zipfile, time
+import subprocess
+import os
+import json
+import time
 from . import main
-from .auth import requires_auth
 
 @main.route('/run-script-services-stream', methods=['GET'])
 def run_script_services_stream():
