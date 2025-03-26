@@ -44,10 +44,17 @@ function getServicesStatus() {
                 let tbody = table.querySelector("tbody");
                 // Für jeden Eintrag: Zwei Zeilen erzeugen
                 endpoint.entries.forEach(entry => {
-                    // Zeile für den ersten Service
+                    // Table Zeile für den ersten Service
                     let tr1 = document.createElement("tr");
                     const idSafeServiceName = removeAllWhitespace(entry.servicename);
-                    const idSafeServiceNameRelay = removeAllWhitespace(entry.servicenamerelay);
+					let button_start_disabled1 = " disabled";
+					let button_stop_disabled1 = " disabled";
+					if (entry.status_service === "running") { 
+					    button_stop_disabled1 = ""; 
+					}
+					if (entry.status_service === "stopped") { 
+					    button_start_disabled1 = ""; 
+					}
                     tr1.innerHTML = `
                         <td>${entry.hostname}</td>
                         <td>${entry.namefull}</td>
@@ -57,13 +64,22 @@ function getServicesStatus() {
                             <code id="status-${idSafeServiceName}" class="${entry.status_service}">${entry.status_service}</code>
                         </td>
                         <td>
-                            <button class="btn btn-primary btn-sm" data-hostname="${entry.hostname}" data-service="${entry.servicename}" data-action="start">Start</button>
-                            <button class="btn btn-primary btn-sm" data-hostname="${entry.hostname}" data-service="${entry.servicename}" data-action="stop">Stop</button>
+                            <button class="btn btn-primary btn-sm" id="btn_start_${entry.servicename}" data-hostname="${entry.hostname}" data-service="${entry.servicename}" data-action="start"${button_start_disabled1}>Start</button>
+                            <button class="btn btn-primary btn-sm" id="btn_stop_${entry.servicename}" data-hostname="${entry.hostname}" data-service="${entry.servicename}" data-action="stop"${button_stop_disabled1}>Stop</button>
                         </td>
                     `;
                     tbody.appendChild(tr1);
-                    // Zeile für den Relay-Service
+                    // Table Zeile für den Relay-Service
                     let tr2 = document.createElement("tr");
+                    const idSafeServiceNameRelay = removeAllWhitespace(entry.servicenamerelay);
+					let button_start_disabled2 = " disabled";
+					let button_stop_disabled2 = " disabled";
+					if (entry.status_relay === "running") { 
+					    button_stop_disabled2 = ""; 
+					}
+					if (entry.status_relay === "stopped") { 
+					    button_start_disabled2 = ""; 
+					}
                     tr2.innerHTML = `
                         <td>${entry.hostname}</td>
                         <td>${entry.namefull}</td>
@@ -73,8 +89,8 @@ function getServicesStatus() {
                             <code id="status-${idSafeServiceNameRelay}" class="${entry.status_relay}">${entry.status_relay}</code>
                         </td>
                         <td>
-                            <button class="btn btn-primary btn-sm" data-hostname="${entry.hostname}" data-service="${entry.servicenamerelay}" data-action="start">Start</button>
-                            <button class="btn btn-primary btn-sm" data-hostname="${entry.hostname}" data-service="${entry.servicenamerelay}" data-action="stop">Stop</button>
+                            <button class="btn btn-primary btn-sm" id="btn_start_${entry.servicenamerelay}" data-hostname="${entry.hostname}" data-service="${entry.servicenamerelay}" data-action="start"${button_start_disabled2}>Start</button>
+                            <button class="btn btn-primary btn-sm" id="btn_stop_${entry.servicenamerelay}" data-hostname="${entry.hostname}" data-service="${entry.servicenamerelay}" data-action="stop"${button_stop_disabled2}>Stop</button>
                         </td>
                     `;
                     tbody.appendChild(tr2);
@@ -92,7 +108,7 @@ function getServicesStatus() {
 
 function controlService(hostname, service, action) {
     
-    alert(`Clicked ${action} on ${service} at ${hostname}`);
+    //alert(`Clicked ${action} on ${service} at ${hostname}`);
     
     fetch('/service-control', {
         method: 'POST',
@@ -107,13 +123,32 @@ function controlService(hostname, service, action) {
     .then(data => {
         if (data.status) {
             // Neuen Status anzeigen
-            service = removeAllWhitespace(service);
-            const statusCell = document.getElementById(`status-${service}`);
+            serviceClean = removeAllWhitespace(service);
+            const statusCell = document.getElementById(`status-${serviceClean}`);
             if (statusCell) {
                 statusCell.textContent = data.status;
+                statusCell.classList.remove('running', 'stopped', 'unknown');
+                statusCell.classList.add(data.status);
             }
-            // Tabelle neu laden oder nur diese Zeile neu rendern
-            //reloadServices(); // deine bestehende Funktion zum Neuladen
+			
+            // Passende Buttons aktivieren/deaktivieren
+            const parentTd = document.querySelector(`button[data-service="${service}"][data-hostname="${hostname}"]`)?.parentElement;
+            if (parentTd) {
+                const startBtn = parentTd.querySelector(`button[data-action="start"]`);
+                const stopBtn = parentTd.querySelector(`button[data-action="stop"]`);
+
+                if (data.status === 'running') {
+                    startBtn.disabled = true;
+                    stopBtn.disabled = false;
+                } else if (data.status === 'stopped') {
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                } else {
+                    // z. B. "unknown" → beide deaktivieren oder ausblenden
+                    startBtn.disabled = true;
+                    stopBtn.disabled = true;
+                }
+            }
         } else {
             alert("Fehler: " + (data.error || "Unbekannter Fehler"));
         }

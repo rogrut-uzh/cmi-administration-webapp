@@ -76,14 +76,14 @@ def service_control():
     action = data.get("action")  # "start" oder "stop"
     hostname = data.get("hostname")
 
-    if not service_name or not action:
+    if not service or not action:
         return jsonify({"error": "Missing parameters"}), 400
 
     command = [
         'pwsh', 
         '-NoProfile',
         '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-control-single-service.ps1').replace('\\', '\\\\'),
-        '-Service', service
+        '-Service', service,
         '-Action', action,
         '-Hostname', hostname
     ]
