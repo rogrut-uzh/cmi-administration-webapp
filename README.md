@@ -14,9 +14,9 @@ Created with [caddy](https://caddyserver.com/). Port 80 and 443 are redirected t
 
 Created with nssm ([The Non-Sucking Service Manager](https://nssm.cc/)).
 
-  - `nssm install cmi-administration-webapp`
-  - `nssm edit cmi-administration-webapp`
-    - Path: `python.exe`
+  - `nssm install cmi-admin-webapp`
+  - `nssm edit cmi-admin-webapp`
+    - Path: `powershell.exe`
     - Startup Directory: `D:\gitlab\cmi-administration-webapp`
-    - Arguments: `D:\gitlab\cmi-administration-webapp\app.py`
+    - Arguments: `D:\gitlab\cmi-administration-webapp\start.ps1`
   - Logon with `uzh\rogrut-adm`, Startup Automatic.
