@@ -18,7 +18,7 @@ def run_script_services_stream():
     # using -command instead of -file, because with -file all parameters are treated as strings, but -IncludeRelay must be boolean.
     command = [
         'pwsh', '-NoProfile', '-Command',
-        f"& {{ . 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp.ps1' "
+        f"& {{ . 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services.ps1' "
         f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps} }}"
     ]
 
@@ -48,7 +48,7 @@ def run_script_services_single_stream():
     ps_command = [
         'pwsh', 
         '-NoProfile',
-        '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-stop-start-services-webapp-single.ps1').replace('\\', '\\\\'),
+        '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-list-single-services.ps1').replace('\\', '\\\\'),
         '-Env', f"{env}",
     ]
     try:

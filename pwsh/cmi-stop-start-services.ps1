@@ -1,25 +1,3 @@
-######################################
-# cmi-stop-start-services-webapp.ps1 #
-######################################
-# 
-# Stoppt oder startet die angegebenen CMI-Windows-Services.
-# 
-# Aufruf: 
-# ./cmi-stop-start-services-test.ps1 -Action "stop" -App "cmi" -Env "test"
-# ./cmi-stop-start-services-test.ps1 -Action "start" -App "ais" -Env "prod" -IncludeRelay $false
-#
-# Argumente:
-# -Action:          "start" oder "stop" des Services
-# -App:             "cmi" für CMI oder "ais" für die Archivinformationssysteme 
-# -Env:             "prod" für Produktiv-Umgebung, "test" für Testumgebung
-# -IncludeRelay:    true/false. Ob auch die Relay-Server berücksichtigt werden sollen. Default: true
-#
-# Script in der Admin-Console ausführen, oder als Teil der Web-App.
-# Funktioniert mit Powershell 5.x.
-#
-# Autor: rogrut / Dezember 2024
-#
-######################################
 param (
     [Parameter(Mandatory = $true)]
     [ValidateSet("cmi", "ais")]
