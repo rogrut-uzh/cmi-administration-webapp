@@ -60,10 +60,15 @@ def fulloverview():
 def services():
     return render_template('services.html', active_page='services')
 
-@app.route('/services-single')
+@app.route('/services-single-prod')
 @requires_auth
-def services_single():
-    return render_template('services-single.html', active_page='services-single')
+def services_single_prod():
+    return render_template('services-single-prod.html', active_page='services-single-prod')
+
+@app.route('/services-single-test')
+@requires_auth
+def services_single_test():
+    return render_template('services-single-test.html', active_page='services-single-test')
 
 @app.route('/metatool')
 @requires_auth
@@ -270,11 +275,13 @@ def run_script_services_stream():
 #
 @app.route('/run-script-services-single-stream')
 def run_script_services_single_stream():
+    env = request.args.get('env')
     ps_command = [
         'pwsh', 
         '-NoProfile', 
         '-File', 
-        'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1'
+        'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1',
+        '-Env', f"{env}",
     ]
     try:
         result = subprocess.run(ps_command, capture_output=True, text=True, encoding='utf-8', errors='replace')

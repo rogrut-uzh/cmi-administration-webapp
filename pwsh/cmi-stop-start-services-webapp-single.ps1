@@ -1,10 +1,27 @@
 #############################################
 # cmi-stop-start-services-webapp-single.ps1 #
 #############################################
+param (
+    [string]$Env
+)
+
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $env:NO_PROXY = "127.0.0.1,localhost"
 $env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 $env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+
+if ($Env -eq "prod") {
+    $endpoints = @(
+        @{ Label = "CMI GEVER (Prod)"; Url = "http://localhost:5001/api/data/cmi/prod" },
+        @{ Label = "CMI AIS (Prod)"; Url = "http://localhost:5001/api/data/ais/prod" }
+    )
+} elseif ($Env -eq "test") {
+    $endpoints = @(
+        @{ Label = "CMI GEVER (Test)"; Url = "http://localhost:5001/api/data/cmi/test" },
+        @{ Label = "CMI AIS (Test)"; Url = "http://localhost:5001/api/data/ais/test" }
+    )
+} else { throw "no environment set" }
+
 function Get-CMI-Config-Data {
     param (
         [string]$u
@@ -15,13 +32,7 @@ function Get-CMI-Config-Data {
     return $ParsedJson
 }
 
-# API-Endpunkte definieren
-$endpoints = @(
-    @{ Label = "CMI GEVER (Prod)"; Url = "http://localhost:5001/api/data/cmi/prod" },
-    @{ Label = "CMI AIS (Prod)"; Url = "http://localhost:5001/api/data/ais/prod" },
-    @{ Label = "CMI GEVER (Test)"; Url = "http://localhost:5001/api/data/cmi/test" },
-    @{ Label = "CMI AIS (Test)"; Url = "http://localhost:5001/api/data/ais/test" }
-)
+
 
 # Array für die Endpunkt-Daten
 $endpointsData = @()

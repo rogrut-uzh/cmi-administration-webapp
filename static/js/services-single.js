@@ -7,7 +7,7 @@ function getServicesStatus() {
     // Zeige den Spinner, falls er nicht sichtbar ist
     document.getElementById("loading").style.display = "block";
 	
-    fetch('/run-script-services-single-stream')
+    fetch('/run-script-services-single-stream?env='+env)
         .then(response => response.json())
         .then(data => {
             // data ist ein Array mit den Endpunkt-Daten
