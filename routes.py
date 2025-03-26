@@ -1,5 +1,5 @@
 # routes.py
-from flask import Flask, render_template, request, Response, jsonify, send_file
+from flask import Blueprint, render_template, request, Response, jsonify, send_file
 from functools import wraps
 import io
 import gzip
@@ -45,37 +45,35 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-@app.route('/')
-@requires_auth
+@main.route('/')
 def cockpit():
     return render_template('cockpit.html', active_page='cockpit')
 
-@app.route('/fulloverview')
-@requires_auth
+@main.route('/fulloverview')
 def fulloverview():
     return render_template('fulloverview.html', active_page='fulloverview')
 
-@app.route('/services')
+@main.route('/services')
 @requires_auth
 def services():
     return render_template('services.html', active_page='services')
 
-@app.route('/services-single-prod')
+@main.route('/services-single-prod')
 @requires_auth
 def services_single_prod():
     return render_template('services-single-prod.html', active_page='services-single-prod')
 
-@app.route('/services-single-test')
+@main.route('/services-single-test')
 @requires_auth
 def services_single_test():
     return render_template('services-single-test.html', active_page='services-single-test')
 
-@app.route('/metatool')
+@main.route('/metatool')
 @requires_auth
 def metatool():
     return render_template('metatool.html', active_page='metatool')
 
-@app.route('/run-script-cockpit-overview', methods=['POST'])
+@main.route('/run-script-cockpit-overview', methods=['POST'])
 def run_script_cockpit_overview():
     try:
         # Retrieve query parameters
@@ -83,7 +81,8 @@ def run_script_cockpit_overview():
         app = data.get('app')
         env = data.get('env')    
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
+            'pwsh', '-NoProfile', 
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit.ps1').replace('\\', '\\\\'), 
             '-App', f"{app}",
             '-Env', f"{env}"
         ]
@@ -103,7 +102,7 @@ def run_script_cockpit_overview():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-log-files', methods=['GET'])
+@main.route('/get-log-files', methods=['GET'])
 def get_log_files():
     try:
         log_date = request.args.get("log_date")
@@ -114,7 +113,8 @@ def get_log_files():
 
         # Construct the PowerShell command
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-download-log-files.ps1',
+            'pwsh', '-NoProfile',
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-download-log-files.ps1').replace('\\', '\\\\'),
             '-Date', log_date,
             '-Env', env
         ]
@@ -158,12 +158,14 @@ def get_log_files():
         mimetype="application/zip"
     )
 
-@app.route('/get-config-files', methods=['GET'])
+@main.route('/get-config-files', methods=['GET'])
 def get_config_files():
     try:
         # Construct the PowerShell command
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-download-config-files.ps1',
+            'pwsh', 
+            '-NoProfile',
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-download-config-files.ps1').replace('\\', '\\\\')
         ]
 
         # Run the PowerShell script
@@ -188,7 +190,7 @@ def get_config_files():
         mimetype="application/zip"
     )
 
-@app.route('/run-script-fulloverview', methods=['POST'])
+@main.route('/run-script-fulloverview', methods=['POST'])
 def run_script_fulloverview():
     try:
         # Retrieve query parameters
@@ -196,7 +198,9 @@ def run_script_fulloverview():
         app = data.get('app')
         env = data.get('env')
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
+            'pwsh', 
+            '-NoProfile',
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit.ps1').replace('\\', '\\\\'),
             '-App', f"{app}",
             '-Env', f"{env}"
         ]
@@ -216,7 +220,7 @@ def run_script_fulloverview():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/run-script-services-stream', methods=['GET'])
+@main.route('/run-script-services-stream', methods=['GET'])
 def run_script_services_stream():
     # Retrieve query parameters
     action = request.args.get('action')
@@ -253,7 +257,7 @@ def run_script_services_stream():
 
     return Response(generate_output(), content_type='text/event-stream')
 
-#@app.route('/run-script-services-single-stream')
+#@main.route('/run-script-services-single-stream')
 #def run_script_services_single_stream():
 #    # Passe den Pfad zum PowerShell-Skript ggf. an
 #    ps_command = [
@@ -273,14 +277,13 @@ def run_script_services_stream():
 #    except Exception as e:
 #        return jsonify({"error": str(e)}), 500
 #
-@app.route('/run-script-services-single-stream')
+@main.route('/run-script-services-single-stream')
 def run_script_services_single_stream():
     env = request.args.get('env')
     ps_command = [
         'pwsh', 
-        '-NoProfile', 
-        '-File', 
-        'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services-webapp-single.ps1',
+        '-NoProfile',
+        '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-stop-start-services-webapp-single.ps1').replace('\\', '\\\\'),
         '-Env', f"{env}",
     ]
     try:
@@ -301,7 +304,7 @@ def run_script_services_single_stream():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/run-script-metatool', methods=['POST'])
+@main.route('/run-script-metatool', methods=['POST'])
 def run_script_metatool():
     try:
         # Retrieve query parameters
@@ -309,7 +312,8 @@ def run_script_metatool():
         app = data.get('app')
         env = data.get('env')
         command = [
-            'pwsh', '-NoProfile', '-File', 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-cockpit.ps1',
+            'pwsh', '-NoProfile', 
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit.ps1').replace('\\', '\\\\'),
             '-App', f"{app}",
             '-Env', f"{env}"
         ]
@@ -329,7 +333,7 @@ def run_script_metatool():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/update-metatool', methods=['POST'])
+@main.route('/update-metatool', methods=['POST'])
 @requires_auth
 def update_remote_file():
     data = request.get_json()
@@ -356,7 +360,7 @@ def update_remote_file():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/get-file', methods=['GET'])
+@main.route('/get-file', methods=['GET'])
 @requires_auth
 def get_file():
     file_path = request.args.get("file")

@@ -31,47 +31,45 @@ function populateTable(data, app, env) {
 
     // Loop through JSON data and create rows
     data.forEach(item => {
-//if (item.nameshort === "Informatik" && item.app.host === "ziaxiomatap02") {
         const row = document.createElement("tr");
 
         const nameCell = document.createElement("th");
         nameCell.classList.add(tdclass);
-        nameCell.textContent = item.namefull || "";
+        nameCell.textContent = item.namefull._text || "";
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
         const metatoolFilePathServerCell = document.createElement("td");
         metatoolFilePathServerCell.classList.add(tdclass);
-        if (item.app.installpath) {
+        if (item.app.installpath._text) {
           // Erstelle ein Anchor-Element statt nur Text
           const serverLink = document.createElement("a");
           serverLink.href = "#";
           // Doppelte Backslashes, da der Backslash ein Escape-Zeichen ist
-          const filePath = `${item.app.installpath}\\Server\\MetaTool.ini`;
+          const filePath = `${item.app.installpath._text}\\Server\\MetaTool.ini`;
           serverLink.textContent = "MetaTool.ini SERVER";
           // Speichere Dateipfad und Servername als Data-Attribute
           serverLink.dataset.file = filePath;
-          serverLink.dataset.server = item.app.host; // Servername kommt hier aus item.app.host
+          serverLink.dataset.server = item.app.host._text; // 
           metatoolFilePathServerCell.appendChild(serverLink);
         }
         row.appendChild(metatoolFilePathServerCell);
 
         const metatoolFilePathClientCell = document.createElement("td");
         metatoolFilePathClientCell.classList.add(tdclass);
-        if (item.app.installpath) {
+        if (item.app.installpath._text) {
           const clientLink = document.createElement("a");
           clientLink.href = "#";
-          const filePath = `${item.app.installpath}\\Client\\MetaTool.ini`;
+          const filePath = `${item.app.installpath._text}\\Client\\MetaTool.ini`;
           clientLink.textContent = "MetaTool.ini CLIENT";
           clientLink.dataset.file = filePath;
-          clientLink.dataset.server = item.app.host;
+          clientLink.dataset.server = item.app.host._text;
           metatoolFilePathClientCell.appendChild(clientLink);
         }
         row.appendChild(metatoolFilePathClientCell);
 
         // Append row to the table body
         tableBody.appendChild(row);
-//}
     });
 }
 
