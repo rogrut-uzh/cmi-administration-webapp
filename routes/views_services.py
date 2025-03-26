@@ -68,3 +68,33 @@ def run_script_services_single_stream():
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@main.route('/service-control', methods=['POST'])
+def service_control():
+    data = request.get_json()
+    service = data.get("service")
+    action = data.get("action")  # "start" oder "stop"
+    hostname = data.get("hostname")
+
+    if not service_name or not action:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    command = [
+        'pwsh', 
+        '-NoProfile',
+        '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-control-single-service.ps1').replace('\\', '\\\\'),
+        '-Service', service
+        '-Action', action,
+        '-Hostname', hostname
+    ]
+
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, encoding='utf-8')
+        if result.returncode == 0:
+            # Skript gibt z. B. den neuen Status zurück
+            new_status = result.stdout.strip()
+            return jsonify({"status": new_status}), 200
+        else:
+            return jsonify({"error": result.stderr.strip()}), 500
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
