@@ -54,11 +54,11 @@ foreach ($ep in $endpoints) {
         }
 		#$jsonData
         foreach ($item in $jsonData) {
-			$namefull = if ($item.namefull) { $item.namefull } else { "" }
+			$namefull = if ($item.namefull._text) { $item.namefull._text } else { "" }
             $appInfo = $item.app
-            $hostname = if ($appInfo.host) { $appInfo.host.Trim() } else { "" }
-			$servicename = if ($appInfo.servicename) { $appInfo.servicename.Trim() } else { "" }
-            $servicenamerelay = if ($appInfo.servicenamerelay) { $appInfo.servicenamerelay.Trim() } else { "" }
+            $hostname = if ($appInfo.host._text) { $appInfo.host._text.Trim() } else { "" }
+			$servicename = if ($appInfo.servicename._text) { $appInfo.servicename._text.Trim() } else { "" }
+            $servicenamerelay = if ($appInfo.servicenamerelay._text) { $appInfo.servicenamerelay._text.Trim() } else { "" }
             
             $entry = @{
                 namefull = $namefull

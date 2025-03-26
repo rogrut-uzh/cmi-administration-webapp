@@ -25,10 +25,10 @@ $mandanten = Get-CMI-Config-Data
 $mandantenNeededValues = @()
 foreach ($mandant in $mandanten) {
     $mandantenNeededValues += ,@(
-        $mandant.app.host, 
-        $mandant.app.installpath, 
-        (Split-Path -Path $mandant.app.installpath -Leaf),
-        @("$($mandant.app.installpath)\Client\MetaTool.ini","$($mandant.app.installpath)\Server\MetaTool.ini","$($mandant.app.installpath)\Server\install_service.bat","$($mandant.app.installpath)\Server\uninstall_service.bat")
+        $mandant.app.host._text, 
+        $mandant.app.installpath._text, 
+        (Split-Path -Path $mandant.app.installpath._text -Leaf),
+        @("$($mandant.app.installpath._text)\Client\MetaTool.ini","$($mandant.app.installpath._text)\Server\MetaTool.ini","$($mandant.app.installpath._text)\Server\install_service.bat","$($mandant.app.installpath._text)\Server\uninstall_service.bat")
     )
 }
 for ($i = 0; $i -lt $mandantenNeededValues.Count; $i++) {
