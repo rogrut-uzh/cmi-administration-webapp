@@ -8,7 +8,7 @@ http://localhost:5000 or https://zidbacons02.d.uzh.ch
 
 ## reverse proxy
 
-Created with [caddy](https://caddyserver.com/). Port 80 and 443 are redirected to localhost:5000. Currently, a self signed certificate is used. 
+Created with [caddy](https://caddyserver.com/). Port 80 and 443 are redirected to localhost:5000.  
 
 ## Windows Service "cmi-administration-webapp"
 
