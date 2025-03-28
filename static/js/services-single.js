@@ -110,6 +110,11 @@ function controlService(hostname, service, action) {
     
     //alert(`Clicked ${action} on ${service} at ${hostname}`);
     
+	serviceClean = removeAllWhitespace(service);
+	const statusCell = document.getElementById(`status-${serviceClean}`);
+    statusCell.classList.remove('running', 'stopped', 'unknown');
+    statusCell.textContent = 'working on it...';
+	
     fetch('/service-control', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -123,11 +128,8 @@ function controlService(hostname, service, action) {
     .then(data => {
         if (data.status) {
             // Neuen Status anzeigen
-            serviceClean = removeAllWhitespace(service);
-            const statusCell = document.getElementById(`status-${serviceClean}`);
             if (statusCell) {
                 statusCell.textContent = data.status;
-                statusCell.classList.remove('running', 'stopped', 'unknown');
                 statusCell.classList.add(data.status);
             }
 			
