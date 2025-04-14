@@ -2,7 +2,7 @@ from flask import request, jsonify
 import subprocess
 import os
 import json
-from . import main
+from routes import main
 
 @main.route('/run-script-fulloverview', methods=['POST'])
 def run_script_fulloverview():

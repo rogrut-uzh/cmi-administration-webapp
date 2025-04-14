@@ -1,5 +1,5 @@
 from flask import render_template
-from . import main
+from routes import main
 from .auth import requires_auth
 
 @main.route('/')
@@ -29,3 +29,8 @@ def services_single_test():
 @requires_auth
 def metatool():
     return render_template('metatool.html', active_page='metatool')
+
+@main.route('/databases')
+@requires_auth
+def databases():
+    return render_template('databases.html', active_page='databases')

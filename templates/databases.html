@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}Databases{% endblock %}
+
+{% block content %}
+
+<div class="row align-items-start p-2">
+
+    <div class="col p-2">
+	
+	    <h1>Databases</h1>
+		
+		<!-- Loading Spinner -->
+		<div id="loading" class="text-center my-3">
+		  <div class="spinner-border text-primary" role="status">
+			<span class="sr-only">Loading...</span>
+		  </div>
+		</div>
+		
+        <div class="row mb-2 align-items-start">
+            <div id="databases-container" class="col"></div>
+		</div>
+		
+	</div>
+	
+</div>
+
+<script src="{{ url_for('static', filename='js/databases.js') }}"></script>
+
+
+{% endblock %}
