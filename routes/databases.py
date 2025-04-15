@@ -24,9 +24,9 @@ def database_backup():
         output = result.stdout.strip()
 
         if result.returncode == 0 and "SUCCESS" in output:
-            return jsonify({"message": "Backup erfolgreich!"}), 200
+            return jsonify({"message": "Backup successful"}), 200
         else:
-            return jsonify({"error": output or "Backup fehlgeschlagen"}), 500
+            return jsonify({"error": output or "Backup failed"}), 500
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
