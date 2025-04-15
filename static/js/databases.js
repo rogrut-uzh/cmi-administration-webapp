@@ -69,18 +69,18 @@ function getDatabases(job, env) {
 function triggerDbBackup(db, dbhost, buttonElement) {
     const originalText = buttonElement.textContent;
     buttonElement.disabled = true;
-    buttonElement.textContent = "Läuft...";
+    buttonElement.textContent = "Running...";
 
     fetch(`/database-backup?db=${db}&dbhost=${dbhost}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
-                alert("Backup fehlgeschlagen:\n" + data.error);
+                alert("Backup failed:\n" + data.error);
                 buttonElement.textContent = originalText;
                 buttonElement.disabled = false;
             } else {
-                //alert("✅ " + data.message);
-                buttonElement.textContent = "Erfolgreich";
+                //alert("DB " + db + " on " + dbhost + " saved to " + data.message + ".");
+                buttonElement.textContent = data.message;
             }
         })
         .catch(error => {
@@ -96,7 +96,7 @@ function removeAllWhitespace(str) {
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    getDatabases("list", "Prod");
     getDatabases("list", "Test");
+    getDatabases("list", "Prod");
 });
 
