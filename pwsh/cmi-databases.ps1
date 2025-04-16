@@ -94,25 +94,37 @@ function CreateDbBackup {
         [string]$Db,
         [string]$DbHost
     )
-        
-    Invoke-Command -ComputerName $DbHost -ScriptBlock {
-        param($DbHost, $Db, $currentDate)
-        $backupPath = "S:\manual-backups-from-webapp\"
-        $backupFilename = "DB-Backup-${Db}_${currentDate}.bak"
+    
+    try {
+        $Result = Invoke-Command -ComputerName $DbHost -ScriptBlock {
+            param($DbHost, $Db, $currentDate)
+            $backupPath = "S:\manual-backups-from-webapp\"
+            $backupFilename = "DB-Backup-${Db}_${currentDate}.bak"
 
-        try {
-            #Write-Output "STARTE BACKUP"
-            Backup-SqlDatabase -ServerInstance "$DbHost" -Database $Db -BackupFile "${backupPath}${backupFilename}" -CopyOnly -Initialize -Checksum
-            #Backup-SqlDatabase -ServerInstance "$DbHost" -Database $Db -BackupFile "${backupPath}${backupFilename}" -CopyOnly -Initialize -Checksum -PercentCompleteNotification 10
+            try {
+                Backup-SqlDatabase -ServerInstance "$DbHost" -Database $Db -BackupFile "${backupPath}${backupFilename}" -CopyOnly -Initialize -Checksum
+                $msg = "SUCCESS"
+            }
+            catch {
+                $msg =  "ERROR: $_"
+            }
             
-            Write-Output "SUCCESS"
-            exit 0
+            return $msg
+            
+        } -ArgumentList $DbHost, $Db, (Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -ErrorAction stop
+
+        write-host $Result # <--- für databases.py Prüfung auf "SUCCESS"
+        
+        if ($Result -match '^SUCCESS') {
+            return 0
+        } else {
+            return 1
         }
-        catch {
-            Write-Output "ERROR: $_"
-            exit 1
-        }
-    } -ArgumentList $DbHost, $Db, (Get-Date -Format "yyyy-MM-dd_HH-mm-ss")
+    }
+    catch {
+        Write-Output "ERROR: Invoke-Command fehlgeschlagen: $_" 
+        return 3
+    }
 }
 
 
@@ -124,20 +136,21 @@ function CmiAppService {
     )
     
     # get the CMI service name and the hostname where the CMI service is running
+    $ApiUrl = "${ApiRoot}?database/name=${Db}"
     try {
-        $jsonData = Get-CMI-Config-Data -u "${ApiRoot}?database/name=${Db}"
+        $jsonData = Get-CMI-Config-Data -u $ApiUrl
         
         if (($jsonData | Measure-Object).count -lt 1) {
             Write-Output (@{
                 error = "Keine Daten gefunden."
             } | ConvertTo-Json -Compress)
-            exit 1
+            $ReturnCode = 1
         }
-        $jsonData = @($jsonData)
         
         $Service = $jsonData.app.servicename._text
         $Hostname = $jsonData.app.host._text
     }
+
     catch {
         $Hostname = ""
         $Service = "Error: $($_.Exception.Message)"
@@ -145,8 +158,8 @@ function CmiAppService {
     
     # start or stop the service
     & "$PSScriptRoot\cmi-control-single-service.ps1" -Service $Service -Action $Action -Hostname $Hostname
-    return $LASTEXITCODE
-    
+    $ReturnCode = $LASTEXITCODE
+    return $ReturnCode
 }
 
 
@@ -169,10 +182,16 @@ if ($Job -eq "list") {
     }
     
     $CmiAppServiceStatus = CmiAppService -Db $Db -Action "stop" -ApiRoot $ApiRoot
+    #write-host "stopping..."
+    #write-host $CmiAppServiceStatus
     if ($CmiAppServiceStatus -eq 0) {
-        CreateDbBackup -Db $Db -DbHost $DbHost
-        if ($LASTEXITCODE -eq 0) {
+        $CreateDbBackupStatus = CreateDbBackup -Db $Db -DbHost $DbHost
+        #write-host "creating db backup..."
+        #write-host $CreateDbBackupStatus
+        if ($CreateDbBackupStatus -eq 0) {
             $CmiAppServiceStatus = CmiAppService -Db $Db -Action "start" -ApiRoot $ApiRoot
+            #write-host "starting..."
+            #write-host $CmiAppServiceStatus
         }
     }
     
