@@ -12,13 +12,68 @@ $env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 
 $ApiRoot = "http://localhost:5001/api/data"
 
+
+
+
 function Get-CMI-Config-Data {
     param (
         [string]$u
     )
 	
 	try {
-		$response = Invoke-WebRequest -Uri $u -Method Get -ErrorAction Stop
+<#
+invoke-webrequest geht nicht bei localhost urls.
+
+PS D:\gitlab\cmi-administration-webapp\pwsh> Invoke-WebRequest -Uri http://localhost:5001/api/data?database/name=star_uaz -Method Get -ErrorAction Stop -UseDefaultCredentials -AllowUnencryptedAuthentication -Proxy $null
+Invoke-WebRequest:
+
+
+
+ERROR: The requested URL could not be retrieved
+
+
+
+ERROR
+The requested URL could not be retrieved
+
+
+
+
+The following error was encountered while trying to retrieve the URL: http://localhost:5001/api/data?
+
+
+Access Denied.
+
+
+Access control configuration prevents your request from being allowed at this time. Please contact your service provider if you feel this is incorrect.
+
+Your cache administrator is root.
+
+
+
+Generated Tue, 27 May 2025 20:43:07 GMT by zoneproxy.zi.uzh.ch (squid/4.15)
+
+
+
+PowerShells -Proxy $null wird leider nicht immer vom zugrundeliegenden .NET-HTTP-Stack respektiert – deine Anfrage landet also weiterhin im Squid. Deshalb kommt weiter der 403 “Access Denied” von zoneproxy. Wir müssen den Proxy wirklich komplett umgehen und gleichzeitig den Slash im Query-Parameter escapen. Probiere es so:
+
+
+
+daher folgende alternative:
+#>
+		# HttpClient-Handler mit deaktiviertem Proxy und Default-Credentials:
+		$handler = [System.Net.Http.HttpClientHandler]::new()
+		$handler.UseProxy              = $false
+		$handler.UseDefaultCredentials = $true
+
+		$client = [System.Net.Http.HttpClient]::new($handler)
+
+		# Request absenden
+		$response = $client.GetAsync($u).Result
+		
+        $RawJson = $response.Content.ReadAsStringAsync().Result
+
+		
 	} catch {
 		Write-Host "FEHLER:"
 		Write-Host $_.Exception.Message
@@ -36,7 +91,7 @@ function Get-CMI-Config-Data {
 		exit 1
 	}
 	
-	$RawJson = $response.Content
+	
 	$ParsedJson = $RawJson | ConvertFrom-Json
 	return $ParsedJson
 }
@@ -136,7 +191,8 @@ function CmiAppService {
     )
     
     # get the CMI service name and the hostname where the CMI service is running
-    $ApiUrl = "${ApiRoot}?database/name=${Db}"
+	$ApiUrl = $ApiRoot + '?database%2Fname=' + $Db + '&exactmatch=true'
+	
     try {
         $jsonData = Get-CMI-Config-Data -u $ApiUrl
         
@@ -155,7 +211,7 @@ function CmiAppService {
         $Hostname = ""
         $Service = "Error: $($_.Exception.Message)"
     }
-    
+
     # start or stop the service
     & "$PSScriptRoot\cmi-control-single-service.ps1" -Service $Service -Action $Action -Hostname $Hostname
     $ReturnCode = $LASTEXITCODE
