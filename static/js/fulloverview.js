@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function(event) {
-    runScriptFullOverview('cmi', 'prod');
-    runScriptFullOverview('ais', 'prod');
-    runScriptFullOverview('cmi', 'test');
-    runScriptFullOverview('ais', 'test');
+    runScriptFullOverview('cmi', 'prod', 'relay-true');
+    runScriptFullOverview('ais', 'prod', 'relay-true');
+    runScriptFullOverview('cmi', 'test', 'relay-false');
+    runScriptFullOverview('ais', 'test', 'relay-false');
 });
 
 function getSubLevels(u) {
@@ -13,18 +13,18 @@ function getSubLevels(u) {
             var r = "";
                 for (var i = 0; i < u.length; i++) {
                     r += "<br/>";
-					if (u[i].name === undefined) {
-						r += u[i]._text;
-					} else {
-						r += u[i].name+": "+u[i]._text;
-					}
+                    if (u[i].name === undefined) {
+                        r += u[i]._text;
+                    } else {
+                        r += u[i].name+": "+u[i]._text;
+                    }
                 }
             return r;
         }
     }
 }
 
-function populateTable(data, app, env) {
+function populateTable(data, app, env, relay_handling) {
     const tdclass = "py-1";
     const tdurlminwidth = "url-minwidth";
     
@@ -79,10 +79,12 @@ function populateTable(data, app, env) {
     installpathCellHeader.textContent = "Install path";
     tableHeadTr.appendChild(installpathCellHeader);
     
+    if (relay_handling == 'relay-true') {
     const installpathRelayCellHeader = document.createElement("th");
     installpathRelayCellHeader.classList.add(tdclass);
     installpathRelayCellHeader.textContent = "Relay install path";
     tableHeadTr.appendChild(installpathRelayCellHeader);
+    }
     
     const servicenameCellHeader = document.createElement("th");
     servicenameCellHeader.classList.add(tdclass);
@@ -95,6 +97,7 @@ function populateTable(data, app, env) {
     serviceuserCellHeader.textContent = "Service User";
     tableHeadTr.appendChild(serviceuserCellHeader);
     
+    if (relay_handling == 'relay-true') {
     const servicenamerelayCellHeader = document.createElement("th");
     servicenamerelayCellHeader.classList.add(tdclass);
     servicenamerelayCellHeader.classList.add(tdurlminwidth);
@@ -106,6 +109,7 @@ function populateTable(data, app, env) {
     serviceuserrelayCellHeader.classList.add(tdurlminwidth);
     serviceuserrelayCellHeader.textContent = "Service User Relay";
     tableHeadTr.appendChild(serviceuserrelayCellHeader);
+    }
     
     const licenseCellHeader = document.createElement("th");
     licenseCellHeader.classList.add(tdclass);
@@ -175,8 +179,8 @@ function populateTable(data, app, env) {
     dbnameCellHeader.classList.add(tdclass);
     dbnameCellHeader.textContent = "DB Name";
     tableHeadTr.appendChild(dbnameCellHeader);
-	
-	console.log(data);
+    
+    console.log(data);
 
     // Loop through JSON data and create rows
     data.forEach(item => {
@@ -209,10 +213,12 @@ function populateTable(data, app, env) {
         installpathCell.textContent = item.app.installpath._text || "";
         row.appendChild(installpathCell);
 
+        if (relay_handling == 'relay-true') {
         const installpathRelayCell = document.createElement("td");
         installpathRelayCell.classList.add(tdclass);
         installpathRelayCell.textContent = item.app.installpathrelay._text || "";
         row.appendChild(installpathRelayCell);
+        }
 
         const servicenameCell = document.createElement("td");
         servicenameCell.classList.add(tdclass);
@@ -223,7 +229,8 @@ function populateTable(data, app, env) {
         serviceuserCell.classList.add(tdclass);
         serviceuserCell.textContent = item.app.serviceuser._text || "";
         row.appendChild(serviceuserCell);
-
+        
+        if (relay_handling == 'relay-true') {
         if (item.app.servicenamerelay === undefined) {
             row.appendChild(document.createElement("td"));
         } else {
@@ -241,6 +248,7 @@ function populateTable(data, app, env) {
             serviceuserrelayCell.textContent = item.app.serviceuserrelay._text;
             row.appendChild(serviceuserrelayCell);
         }
+        }
 
         if (item.licenseserver === undefined) {
             row.appendChild(document.createElement("td"));
@@ -253,21 +261,21 @@ function populateTable(data, app, env) {
 
         if (item.mobilefirst === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
-			const mobilefirstCell = document.createElement("td");
-			mobilefirstCell.classList.add(tdclass);
+        } else {
+            const mobilefirstCell = document.createElement("td");
+            mobilefirstCell.classList.add(tdclass);
             mobilefirstCell.classList.add(tdurlminwidth);
-			let link = document.createElement("a");
-			link.href = item.mobilefirst._text;
-			link.textContent = item.mobilefirst._text;
-			link.target = "_blank";
-			mobilefirstCell.appendChild(link);
-			row.appendChild(mobilefirstCell);
-		}
+            let link = document.createElement("a");
+            link.href = item.mobilefirst._text;
+            link.textContent = item.mobilefirst._text;
+            link.target = "_blank";
+            mobilefirstCell.appendChild(link);
+            row.appendChild(mobilefirstCell);
+        }
 
         if (item.owinserver === undefined || item.owinserver.mand._text === "local" || ((item.nameshort._text).includes('AIS') && item.nameshort._text !== "AISBenutzung")) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const mobileCell = document.createElement("td");
             mobileCell.classList.add(tdclass);
             mobileCell.classList.add(tdurlminwidth);
@@ -279,7 +287,7 @@ function populateTable(data, app, env) {
 
         if (item.ueberweisung === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const ueberweisungCell = document.createElement("td");
             ueberweisungCell.classList.add(tdclass);
             ueberweisungCell.classList.add(tdurlminwidth);
@@ -290,7 +298,7 @@ function populateTable(data, app, env) {
 
         if (item.muegi === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const muegiCell = document.createElement("td");
             muegiCell.classList.add(tdclass);
             muegiCell.classList.add(tdurlminwidth);
@@ -300,7 +308,7 @@ function populateTable(data, app, env) {
 
         if (item.objektloader === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const objloaderCell = document.createElement("td");
             objloaderCell.classList.add(tdclass);
             objloaderCell.classList.add(tdurlminwidth);
@@ -310,7 +318,7 @@ function populateTable(data, app, env) {
 
         if (item.webconsole === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const webconsoleCell = document.createElement("td");
             webconsoleCell.classList.add(tdclass);
             webconsoleCell.innerHTML = "Port: "+item.webconsole.port._text || "";
@@ -319,7 +327,7 @@ function populateTable(data, app, env) {
 
         if (item.owinserver === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const owinCell = document.createElement("td");
             owinCell.classList.add(tdclass);
             owinCell.classList.add(tdurlminwidth);
@@ -331,7 +339,7 @@ function populateTable(data, app, env) {
 
         if (item.sts === undefined) {
             row.appendChild(document.createElement("td"));
-		} else {
+        } else {
             const stsCell = document.createElement("td");
             stsCell.classList.add(tdclass);
             stsCell.classList.add(tdurlminwidth);
@@ -374,7 +382,7 @@ function populateTable(data, app, env) {
 }
 
 // Function to run a script with specified arguments
-async function runScriptFullOverview(app, env) {
+async function runScriptFullOverview(app, env, relay_handling) {
     // Prepare the output element
     const tableRaw = document.getElementById("tableRaw");
     tableRaw.textContent = `Running script with: App=${app}, Env=${env}...\n`;
@@ -397,7 +405,7 @@ async function runScriptFullOverview(app, env) {
             //tableRaw.textContent += `Status: ${status}\nData:\n${JSON.stringify(data, null, 2)}`;
             
             tableRaw.textContent = "";
-            populateTable(result.Data || [], app, env);
+            populateTable(result.Data || [], app, env, relay_handling);
         } else {
             const error = await response.json();
             tableRaw.textContent += `Error: ${error.error}`;
