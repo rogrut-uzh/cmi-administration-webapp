@@ -44,13 +44,14 @@ $mandanten += Get-CMI-Config-Data -Env $Env -App "ais"
 foreach ($mandant in $mandanten) {
     # data needed for app log files:
     $logPathApp = $mandant.app.installpath._text
-    $logPathApp = "${logPathApp}\Trace"
+    $logPathApp = "${logPathApp}\Trace"   
     
     # data needed for relay log files:
-    $logPathRelay = $mandant.app.installpathrelay._text
-    $logPathRelay = "${logPathRelay}\logs"
-	
-	$arrLogPaths = @($logPathApp, $logPathRelay)
+    # no relay anymore
+    #$logPathRelay = $mandant.app.installpathrelay._text
+    #$logPathRelay = "${logPathRelay}\logs"
+	#$arrLogPaths = @($logPathApp, $logPathRelay)
+	$arrLogPaths = @($logPathApp)
     
     $shortName = $mandant.nameshort._text
     $apphost = $mandant.app.host._text
@@ -85,18 +86,10 @@ foreach ($mandant in $mandanten) {
                 #Write-Verbose "Verarbeite Datei: $($_.FullName)"
                 try {
                     $fileBytes = Get-FileBytes -Path $_.FullName
-                    if ($_.FullName -like "*Relay*") {
-                        [PSCustomObject]@{
-                            FullName = $_.FullName
-                            NewName  = "{0}_{1}_{2}{3}" -f "Relay", $_.BaseName, $shortName, $_.Extension
-                            Content  = [Convert]::ToBase64String($fileBytes)
-                        }
-                    } else {
-                        [PSCustomObject]@{
-                            FullName = $_.FullName
-                            NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
-                            Content  = [Convert]::ToBase64String($fileBytes)
-                        }
+                    [PSCustomObject]@{
+                        FullName = $_.FullName
+                        NewName  = "{0}_{1}{2}" -f $_.BaseName, $shortName, $_.Extension
+                        Content  = [Convert]::ToBase64String($fileBytes)
                     }
                 }
                 catch {
