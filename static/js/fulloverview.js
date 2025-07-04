@@ -59,10 +59,10 @@ function populateTable(data, app, env, relay_handling) {
     nameCellHeader.textContent = "Name";
     tableHeadTr.appendChild(nameCellHeader);
     
-    const nameshortCellHeader = document.createElement("th");
-    nameshortCellHeader.classList.add(tdclass);
-    nameshortCellHeader.textContent = "Short Name";
-    tableHeadTr.appendChild(nameshortCellHeader);
+    const mandCellHeader = document.createElement("th");
+    mandCellHeader.classList.add(tdclass);
+    mandCellHeader.textContent = "Mandant";
+    tableHeadTr.appendChild(mandCellHeader);
     
     const versionCellHeader = document.createElement("th");
     versionCellHeader.classList.add(tdclass);
@@ -192,11 +192,11 @@ function populateTable(data, app, env, relay_handling) {
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
-        const nameshortCell = document.createElement("td");
-        nameshortCell.classList.add(tdclass);
-        nameshortCell.textContent = item.nameshort._text || "";
-        nameshortCell.setAttribute('scope', 'row');
-        row.appendChild(nameshortCell);
+        const mandCell = document.createElement("td");
+        mandCell.classList.add(tdclass);
+        mandCell.textContent = item.mand._text || "";
+        mandCell.setAttribute('scope', 'row');
+        row.appendChild(mandCell);
 
         const versionCell = document.createElement("td");
         versionCell.classList.add(tdclass);
@@ -273,15 +273,15 @@ function populateTable(data, app, env, relay_handling) {
             row.appendChild(mobilefirstCell);
         }
 
-        if (item.owinserver === undefined || item.owinserver.mand._text === "local" || ((item.nameshort._text).includes('AIS') && item.nameshort._text !== "AISBenutzung")) {
+        if (item.owinserver === undefined || ((item.namefull._text).includes('AIS') && item.namefull._text !== "AIS Benutzungsverwaltung")) {
             row.appendChild(document.createElement("td"));
         } else {
             const mobileCell = document.createElement("td");
             mobileCell.classList.add(tdclass);
             mobileCell.classList.add(tdurlminwidth);
-            mobileCell.innerHTML = "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/"+item.owinserver.mand._text+"<br/>";
-            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/dossierbrowser/"+item.owinserver.mand._text+"<br/>";
-            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/"+item.owinserver.mand._text;
+            mobileCell.innerHTML = "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/"+item.mand._text+"<br/>";
+            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/dossierbrowser/"+item.mand._text+"<br/>";
+            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/"+item.mand._text;
             row.appendChild(mobileCell);
         }
 

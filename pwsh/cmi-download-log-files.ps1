@@ -53,7 +53,7 @@ foreach ($mandant in $mandanten) {
 	#$arrLogPaths = @($logPathApp, $logPathRelay)
 	$arrLogPaths = @($logPathApp)
     
-    $shortName = $mandant.nameshort._text
+    $shortName = $mandant.mand._text
     $apphost = $mandant.app.host._text
 
 	$remoteCommand = {
