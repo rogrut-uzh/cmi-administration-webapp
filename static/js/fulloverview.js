@@ -225,18 +225,20 @@ function populateTable(data, app, env) {
             row.appendChild(mobilefirstCell);
         }
 
-        //if (item.mand === undefined || ((item.namefull._text).includes('AIS') && item.namefull._text !== "AIS Benutzungsverwaltung")) {
-        //    row.appendChild(document.createElement("td"));
-        //} else {
+        if (item.mand === null || ( 
+            (item.namefull._text).includes('AIS') && item.namefull._text !== "AIS Benutzungsverwaltung") 
+        ) {
+            row.appendChild(document.createElement("td"));
+        } else {
             const mobileCell = document.createElement("td");
             mobileCell.classList.add(tdclass);
             mobileCell.classList.add(tdurlminwidth);
-            mobileCell.innerHTML = item.mand+"<br/>";
+            mobileCell.innerHTML = item.mand._text+"<br/>";
             mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/"+item.mand._text+"<br/>";
             mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/dossierbrowser/"+item.mand._text+"<br/>";
             mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/"+item.mand._text;
             row.appendChild(mobileCell);
-        //}
+        }
 
         if (item.ueberweisung === undefined) {
             row.appendChild(document.createElement("td"));
