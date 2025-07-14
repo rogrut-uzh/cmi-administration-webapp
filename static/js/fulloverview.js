@@ -331,7 +331,6 @@ function populateTable(data, app, env, relay_handling) {
             const owinCell = document.createElement("td");
             owinCell.classList.add(tdclass);
             owinCell.classList.add(tdurlminwidth);
-            owinCell.innerHTML = "Mandant: "+item.owinserver.mand._text+"<br/>";
             owinCell.innerHTML += "Port private: "+item.owinserver.port.private._text+"<br/>";
             owinCell.innerHTML += "Port public: "+item.owinserver.port.public._text;
             row.appendChild(owinCell);
