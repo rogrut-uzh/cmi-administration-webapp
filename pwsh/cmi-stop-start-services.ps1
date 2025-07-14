@@ -9,10 +9,7 @@ param (
     
     [Parameter(Mandatory = $true)]
     [ValidateSet("start", "stop")]
-    [string]$Action,
-    
-    [Parameter(Mandatory = $false)]
-    [bool]$IncludeRelay = $true  # Optional parameter with a default value
+    [string]$Action
 )
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 $env:NO_PROXY = "127.0.0.1,localhost"
@@ -143,19 +140,14 @@ if (($elements | Measure-Object).count -lt 1) {
 }
 
 foreach ($ele in $elements) {
-	if ($IncludeRelay) {
-		$WindowsServicesList += $ele.app.servicenamerelay._text
-	}
 	$WindowsServicesList += $ele.app.servicename._text
 }
 
 $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
     if ($_ -like "*Lizenz*") {
         0 # "Lizenz" has the highest priority
-    } elseif ($_ -like "*Relay*") {
-        1 # "Relay" has the second priority
     } else {
-        2 # All others come last
+        1 # All others come last
     }
 }
 

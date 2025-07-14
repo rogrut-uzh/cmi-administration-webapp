@@ -11,15 +11,13 @@ def run_script_services_stream():
     action = request.args.get('action')
     app = request.args.get('app')
     env = request.args.get('env')
-    include_relay = request.args.get('includeRelay', 'true') == 'true'
-    include_relay_ps = "$true" if include_relay else "$false"
     
     # Run PowerShell script with arguments
-    # using -command instead of -file, because with -file all parameters are treated as strings, but -IncludeRelay must be boolean.
+    # using -command instead of -file, because with -file all parameters are treated as strings
     command = [
         'pwsh', '-NoProfile', '-Command',
         f"& {{ . 'D:\\gitlab\\cmi-administration-webapp\\pwsh\\cmi-stop-start-services.ps1' "
-        f"-Action {action} -App {app} -Env {env} -IncludeRelay {include_relay_ps} }}"
+        f"-Action {action} -App {app} -Env {env} }}"
     ]
 
     def generate_output():

@@ -55,15 +55,12 @@ foreach ($ep in $endpoints) {
             $appInfo = $item.app
             $hostname = if ($appInfo.host._text) { $appInfo.host._text.Trim() } else { "" }
 			$servicename = if ($appInfo.servicename._text) { $appInfo.servicename._text.Trim() } else { "" }
-            $servicenamerelay = if ($appInfo.servicenamerelay._text) { $appInfo.servicenamerelay._text.Trim() } else { "" }
             
             $entry = @{
                 namefull = $namefull
                 hostname = $hostname
                 servicename = $servicename
-                servicenamerelay = $servicenamerelay
                 status_service = ""
-                status_relay = ""
             }
             $entries += $entry
 
@@ -75,9 +72,6 @@ foreach ($ep in $endpoints) {
                 if (-not [string]::IsNullOrEmpty($servicename)) {
                     $hostServices[$hostname].Add($servicename) | Out-Null
                 }
-                if (-not [string]::IsNullOrEmpty($servicenamerelay)) {
-                    $hostServices[$hostname].Add($servicenamerelay) | Out-Null
-                }
             }
         }
     }
@@ -86,9 +80,7 @@ foreach ($ep in $endpoints) {
 			namefull = ""
             hostname = "Error: $($_.Exception.Message)"
             servicename = ""
-            servicenamerelay = ""
             status_service = "Error"
-            status_relay = "Error"
         }
     }
 
@@ -133,11 +125,10 @@ foreach ($epData in $endpointsData) {
         if ($hostStatusMapping.ContainsKey($hostname)) {
             $mapping = $hostStatusMapping[$hostname]
             $entry.status_service = if ($mapping.ContainsKey($entry.servicename)) { $mapping[$entry.servicename] } else { "unknown" }
-            $entry.status_relay = if ($mapping.ContainsKey($entry.servicenamerelay)) { $mapping[$entry.servicenamerelay] } else { "unknown" }
+
         }
         else {
             $entry.status_service = "Error"
-            $entry.status_relay = "Error"
         }
     }
 }

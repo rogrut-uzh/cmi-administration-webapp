@@ -1,8 +1,8 @@
 document.addEventListener("DOMContentLoaded", function(event) {
-    runScriptFullOverview('cmi', 'prod', 'relay-true');
-    runScriptFullOverview('ais', 'prod', 'relay-true');
-    runScriptFullOverview('cmi', 'test', 'relay-false');
-    runScriptFullOverview('ais', 'test', 'relay-false');
+    runScriptFullOverview('cmi', 'prod');
+    runScriptFullOverview('ais', 'prod');
+    runScriptFullOverview('cmi', 'test');
+    runScriptFullOverview('ais', 'test');
 });
 
 function getSubLevels(u) {
@@ -24,7 +24,7 @@ function getSubLevels(u) {
     }
 }
 
-function populateTable(data, app, env, relay_handling) {
+function populateTable(data, app, env) {
     const tdclass = "py-1";
     const tdurlminwidth = "url-minwidth";
     
@@ -79,13 +79,6 @@ function populateTable(data, app, env, relay_handling) {
     installpathCellHeader.textContent = "Install path";
     tableHeadTr.appendChild(installpathCellHeader);
     
-    if (relay_handling == 'relay-true') {
-    const installpathRelayCellHeader = document.createElement("th");
-    installpathRelayCellHeader.classList.add(tdclass);
-    installpathRelayCellHeader.textContent = "Relay install path";
-    tableHeadTr.appendChild(installpathRelayCellHeader);
-    }
-    
     const servicenameCellHeader = document.createElement("th");
     servicenameCellHeader.classList.add(tdclass);
     servicenameCellHeader.textContent = "Service Name";
@@ -96,20 +89,6 @@ function populateTable(data, app, env, relay_handling) {
     serviceuserCellHeader.classList.add(tdurlminwidth);
     serviceuserCellHeader.textContent = "Service User";
     tableHeadTr.appendChild(serviceuserCellHeader);
-    
-    if (relay_handling == 'relay-true') {
-    const servicenamerelayCellHeader = document.createElement("th");
-    servicenamerelayCellHeader.classList.add(tdclass);
-    servicenamerelayCellHeader.classList.add(tdurlminwidth);
-    servicenamerelayCellHeader.textContent = "Service Name Relay";
-    tableHeadTr.appendChild(servicenamerelayCellHeader);
-    
-    const serviceuserrelayCellHeader = document.createElement("th");
-    serviceuserrelayCellHeader.classList.add(tdclass);
-    serviceuserrelayCellHeader.classList.add(tdurlminwidth);
-    serviceuserrelayCellHeader.textContent = "Service User Relay";
-    tableHeadTr.appendChild(serviceuserrelayCellHeader);
-    }
     
     const licenseCellHeader = document.createElement("th");
     licenseCellHeader.classList.add(tdclass);
@@ -213,13 +192,6 @@ function populateTable(data, app, env, relay_handling) {
         installpathCell.textContent = item.app.installpath._text || "";
         row.appendChild(installpathCell);
 
-        if (relay_handling == 'relay-true') {
-        const installpathRelayCell = document.createElement("td");
-        installpathRelayCell.classList.add(tdclass);
-        installpathRelayCell.textContent = item.app.installpathrelay._text || "";
-        row.appendChild(installpathRelayCell);
-        }
-
         const servicenameCell = document.createElement("td");
         servicenameCell.classList.add(tdclass);
         servicenameCell.textContent = item.app.servicename._text || "";
@@ -229,26 +201,6 @@ function populateTable(data, app, env, relay_handling) {
         serviceuserCell.classList.add(tdclass);
         serviceuserCell.textContent = item.app.serviceuser._text || "";
         row.appendChild(serviceuserCell);
-        
-        if (relay_handling == 'relay-true') {
-        if (item.app.servicenamerelay === undefined) {
-            row.appendChild(document.createElement("td"));
-        } else {
-            const servicenamerelayCell = document.createElement("td");
-            servicenamerelayCell.classList.add(tdclass);
-            servicenamerelayCell.textContent = item.app.servicenamerelay._text;
-            row.appendChild(servicenamerelayCell);
-        }
-
-        if (item.app.serviceuserrelay === undefined) {
-            row.appendChild(document.createElement("td"));
-        } else {
-            const serviceuserrelayCell = document.createElement("td");
-            serviceuserrelayCell.classList.add(tdclass);
-            serviceuserrelayCell.textContent = item.app.serviceuserrelay._text;
-            row.appendChild(serviceuserrelayCell);
-        }
-        }
 
         if (item.licenseserver === undefined) {
             row.appendChild(document.createElement("td"));
@@ -381,7 +333,7 @@ function populateTable(data, app, env, relay_handling) {
 }
 
 // Function to run a script with specified arguments
-async function runScriptFullOverview(app, env, relay_handling) {
+async function runScriptFullOverview(app, env) {
     // Prepare the output element
     const tableRaw = document.getElementById("tableRaw");
     tableRaw.textContent = `Running script with: App=${app}, Env=${env}...\n`;
@@ -404,7 +356,7 @@ async function runScriptFullOverview(app, env, relay_handling) {
             //tableRaw.textContent += `Status: ${status}\nData:\n${JSON.stringify(data, null, 2)}`;
             
             tableRaw.textContent = "";
-            populateTable(result.Data || [], app, env, relay_handling);
+            populateTable(result.Data || [], app, env);
         } else {
             const error = await response.json();
             tableRaw.textContent += `Error: ${error.error}`;

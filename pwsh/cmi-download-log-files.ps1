@@ -46,11 +46,6 @@ foreach ($mandant in $mandanten) {
     $logPathApp = $mandant.app.installpath._text
     $logPathApp = "${logPathApp}\Trace"   
     
-    # data needed for relay log files:
-    # no relay anymore
-    #$logPathRelay = $mandant.app.installpathrelay._text
-    #$logPathRelay = "${logPathRelay}\logs"
-	#$arrLogPaths = @($logPathApp, $logPathRelay)
 	$arrLogPaths = @($logPathApp)
     
     $shortName = $mandant.mand._text

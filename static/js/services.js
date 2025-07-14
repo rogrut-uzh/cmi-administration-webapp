@@ -3,15 +3,12 @@ function runScriptServices(action, app, env, groupId) {
     // Disable only the buttons in this group
     disableButtonGroup(groupId);
 
-    // Get the state of the checkbox
-    const includeRelay = document.getElementById("includeRelay").checked;
-
     // Prepare the output element
     const outputElement = document.getElementById("output");
-    outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}, IncludeRelay=${includeRelay}...\n`;
+    outputElement.textContent = `Running script with: Action=${action}, App=${app}, Env=${env}...\n`;
 
     // Create an EventSource for real-time updates
-    const eventSource = new EventSource(`/run-script-services-stream?action=${action}&app=${app}&env=${env}&includeRelay=${includeRelay}`);
+    const eventSource = new EventSource(`/run-script-services-stream?action=${action}&app=${app}&env=${env}`);
 
     // Handle incoming data from the server
     eventSource.onmessage = (event) => {

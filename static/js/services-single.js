@@ -69,31 +69,6 @@ function getServicesStatus() {
                         </td>
                     `;
                     tbody.appendChild(tr1);
-                    // Table Zeile für den Relay-Service
-                    let tr2 = document.createElement("tr");
-                    const idSafeServiceNameRelay = removeAllWhitespace(entry.servicenamerelay);
-					let button_start_disabled2 = " disabled";
-					let button_stop_disabled2 = " disabled";
-					if (entry.status_relay === "running") { 
-					    button_stop_disabled2 = ""; 
-					}
-					if (entry.status_relay === "stopped") { 
-					    button_start_disabled2 = ""; 
-					}
-                    tr2.innerHTML = `
-                        <td>${entry.hostname}</td>
-                        <td>${entry.namefull}</td>
-                        <td>${entry.servicenamerelay}</td>
-                        <td>Relay</td>
-                        <td>
-                            <code id="status-${idSafeServiceNameRelay}" class="${entry.status_relay}">${entry.status_relay}</code>
-                        </td>
-                        <td>
-                            <button class="btn btn-primary btn-sm" id="btn_start_${entry.servicenamerelay}" data-hostname="${entry.hostname}" data-service="${entry.servicenamerelay}" data-action="start"${button_start_disabled2}>Start</button>
-                            <button class="btn btn-primary btn-sm" id="btn_stop_${entry.servicenamerelay}" data-hostname="${entry.hostname}" data-service="${entry.servicenamerelay}" data-action="stop"${button_stop_disabled2}>Stop</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr2);
                 });
                 body.appendChild(table);
                 card.appendChild(body);
