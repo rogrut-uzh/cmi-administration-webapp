@@ -273,7 +273,7 @@ function populateTable(data, app, env, relay_handling) {
             row.appendChild(mobilefirstCell);
         }
 
-        if (item.owinserver === undefined || ((item.namefull._text).includes('AIS') && item.namefull._text !== "AIS Benutzungsverwaltung")) {
+        if (item.mand === undefined || ((item.namefull._text).includes('AIS') && item.namefull._text !== "AIS Benutzungsverwaltung")) {
             row.appendChild(document.createElement("td"));
         } else {
             const mobileCell = document.createElement("td");
