@@ -5,339 +5,275 @@ document.addEventListener("DOMContentLoaded", function(event) {
     runScriptFullOverview('ais', 'test');
 });
 
+// Hilfsfunktion für sicheres Escapen von HTML (verhindert XSS)
+function escapeHtml(unsafe) {
+    if (!unsafe) return "";
+    return String(unsafe)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}
+
 function getSubLevels(u) {
-    if (u) { // only if u is not undefined (= there are urls)
-        if (typeof u._text === "string") { // in case only one muegi url
-            return u._text;
-        } else {
-            var r = "";
-                for (var i = 0; i < u.length; i++) {
-                    r += "<br/>";
-                    if (u[i].name === undefined) {
-                        r += u[i]._text;
-                    } else {
-                        r += u[i].name+": "+u[i]._text;
-                    }
+    if (u) {
+        if (typeof u._text === "string") {
+            return escapeHtml(u._text);
+        } else if (Array.isArray(u)) {
+            let r = "";
+            for (let i = 0; i < u.length; i++) {
+                r += "<br/>";
+                if (u[i].name === undefined) {
+                    r += escapeHtml(u[i]._text);
+                } else {
+                    r += escapeHtml(u[i].name) + ": " + escapeHtml(u[i]._text);
                 }
-            return r;
+            }
+            return r || "";
         }
     }
+    return "";
 }
 
 function populateTable(data, app, env) {
     const tdclass = "py-1";
     const tdurlminwidth = "url-minwidth";
-    
-    var table;
-    
+    let table;
+
     if (app == "cmi") {
-        if (env == "prod") {
-            table = document.querySelector("#dataTableCmiProd");
-        } else {
-            table = document.querySelector("#dataTableCmiTest");
-        }
+        table = (env == "prod") ? document.querySelector("#dataTableCmiProd") : document.querySelector("#dataTableCmiTest");
     } else {
-        if (env == "prod") {
-            table = document.querySelector("#dataTableAisProd");
-        } else {
-            table = document.querySelector("#dataTableAisTest");
-        }
+        table = (env == "prod") ? document.querySelector("#dataTableAisProd") : document.querySelector("#dataTableAisTest");
     }
-    
+
     const tableHead = document.createElement("thead");
     table.appendChild(tableHead);
-    
+
     const tableBody = document.createElement("tbody");
     table.appendChild(tableBody);
-    
-    
+
     const tableHeadTr = document.createElement("tr");
     tableHead.appendChild(tableHeadTr);
-    
-    const nameCellHeader = document.createElement("th");
-    nameCellHeader.classList.add(tdclass);
-    nameCellHeader.textContent = "Name";
-    tableHeadTr.appendChild(nameCellHeader);
-    
-    const mandCellHeader = document.createElement("th");
-    mandCellHeader.classList.add(tdclass);
-    mandCellHeader.textContent = "Mandant";
-    tableHeadTr.appendChild(mandCellHeader);
-    
-    const versionCellHeader = document.createElement("th");
-    versionCellHeader.classList.add(tdclass);
-    versionCellHeader.textContent = "Release";
-    tableHeadTr.appendChild(versionCellHeader);
-    
-    const hostCellHeader = document.createElement("th");
-    hostCellHeader.classList.add(tdclass);
-    hostCellHeader.textContent = "Host";
-    tableHeadTr.appendChild(hostCellHeader);
-    
-    const installpathCellHeader = document.createElement("th");
-    installpathCellHeader.classList.add(tdclass);
-    installpathCellHeader.textContent = "Install path";
-    tableHeadTr.appendChild(installpathCellHeader);
-    
-    const servicenameCellHeader = document.createElement("th");
-    servicenameCellHeader.classList.add(tdclass);
-    servicenameCellHeader.textContent = "Service Name";
-    tableHeadTr.appendChild(servicenameCellHeader);
-    
-    const serviceuserCellHeader = document.createElement("th");
-    serviceuserCellHeader.classList.add(tdclass);
-    serviceuserCellHeader.classList.add(tdurlminwidth);
-    serviceuserCellHeader.textContent = "Service User";
-    tableHeadTr.appendChild(serviceuserCellHeader);
-    
-    const licenseCellHeader = document.createElement("th");
-    licenseCellHeader.classList.add(tdclass);
-    licenseCellHeader.classList.add(tdurlminwidth);
-    licenseCellHeader.textContent = "License Server/Port";
-    tableHeadTr.appendChild(licenseCellHeader);
-    
-    const mobileCellHeader = document.createElement("th");
-    mobileCellHeader.classList.add(tdclass);
-    mobileCellHeader.classList.add(tdurlminwidth);
-    mobileCellHeader.textContent = "Mobile Client";
-    tableHeadTr.appendChild(mobileCellHeader);
-    
-    const mobileAppsCellHeader = document.createElement("th");
-    mobileAppsCellHeader.classList.add(tdclass);
-    mobileAppsCellHeader.classList.add(tdurlminwidth);
-    mobileAppsCellHeader.textContent = "Mobile Apps";
-    tableHeadTr.appendChild(mobileAppsCellHeader);
-    
-    const ueberweisungCellHeader = document.createElement("th");
-    ueberweisungCellHeader.classList.add(tdclass);
-    ueberweisungCellHeader.classList.add(tdurlminwidth);
-    ueberweisungCellHeader.textContent = "Ueberweisungen";
-    tableHeadTr.appendChild(ueberweisungCellHeader);
-    
-    const muegiCellHeader = document.createElement("th");
-    muegiCellHeader.classList.add(tdclass);
-    muegiCellHeader.classList.add(tdurlminwidth);
-    muegiCellHeader.textContent = "Mügi";
-    tableHeadTr.appendChild(muegiCellHeader);
-    
-    const objloaderCellHeader = document.createElement("th");
-    objloaderCellHeader.classList.add(tdclass);
-    objloaderCellHeader.classList.add(tdurlminwidth);
-    objloaderCellHeader.textContent = "Objekt Loader / Remoting";
-    tableHeadTr.appendChild(objloaderCellHeader);
-    
-    const webconsoleCellHeader = document.createElement("th");
-    webconsoleCellHeader.classList.add(tdclass);
-    webconsoleCellHeader.textContent = "Webconsole";
-    tableHeadTr.appendChild(webconsoleCellHeader);
-    
-    const owinCellHeader = document.createElement("th");
-    owinCellHeader.classList.add(tdclass);
-    owinCellHeader.classList.add(tdurlminwidth);
-    owinCellHeader.textContent = "Owin Server";
-    tableHeadTr.appendChild(owinCellHeader);
-    
-    const stsCellHeader = document.createElement("th");
-    stsCellHeader.classList.add(tdclass);
-    stsCellHeader.classList.add(tdurlminwidth);
-    stsCellHeader.textContent = "STS3";
-    tableHeadTr.appendChild(stsCellHeader);
-    
-    const jobsCellHeader = document.createElement("th");
-    jobsCellHeader.classList.add(tdclass);
-    jobsCellHeader.classList.add(tdurlminwidth);
-    jobsCellHeader.textContent = "Jobs";
-    tableHeadTr.appendChild(jobsCellHeader);
-    
-    const dbhostCellHeader = document.createElement("th");
-    dbhostCellHeader.classList.add(tdclass);
-    dbhostCellHeader.textContent = "DB Host";
-    tableHeadTr.appendChild(dbhostCellHeader);
-    
-    const dbnameCellHeader = document.createElement("th");
-    dbnameCellHeader.classList.add(tdclass);
-    dbnameCellHeader.textContent = "DB Name";
-    tableHeadTr.appendChild(dbnameCellHeader);
-    
-    console.log(data);
 
-    // Loop through JSON data and create rows
+    // Alle Header wie gehabt...
+    const headers = [
+        { text: "Name" }, { text: "Mandant" }, { text: "Release" }, { text: "Host" },
+        { text: "Install path" }, { text: "Service Name" }, { text: "Service User", minwidth: true },
+        { text: "License Server/Port", minwidth: true }, { text: "Mobile Client", minwidth: true },
+        { text: "Mobile Apps", minwidth: true }, { text: "Ueberweisungen", minwidth: true },
+        { text: "Mügi", minwidth: true }, { text: "Objekt Loader / Remoting", minwidth: true },
+        { text: "Webconsole" }, { text: "Owin Server", minwidth: true }, { text: "STS3", minwidth: true },
+        { text: "Jobs", minwidth: true }, { text: "DB Host" }, { text: "DB Name" }
+    ];
+    for (const h of headers) {
+        const th = document.createElement("th");
+        th.classList.add(tdclass);
+        if (h.minwidth) th.classList.add(tdurlminwidth);
+        th.textContent = h.text;
+        tableHeadTr.appendChild(th);
+    }
+
     data.forEach(item => {
         const row = document.createElement("tr");
 
+        // Name
         const nameCell = document.createElement("td");
         nameCell.classList.add(tdclass);
-        nameCell.innerHTML = "<b>"+item.namefull._text+"</b>" || "";
+        if (item.namefull?._text) {
+            nameCell.innerHTML = "<b>" + escapeHtml(item.namefull._text) + "</b>";
+        } else {
+            nameCell.textContent = "";
+        }
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
 
+        // Mandant
         const mandCell = document.createElement("td");
         mandCell.classList.add(tdclass);
-        mandCell.textContent = item.mand._text || "";
+        mandCell.textContent = item.mand?._text ?? "";
         mandCell.setAttribute('scope', 'row');
         row.appendChild(mandCell);
 
+        // Release
         const versionCell = document.createElement("td");
         versionCell.classList.add(tdclass);
-        versionCell.textContent = item.app.releaseversion._text || "";
+        versionCell.textContent = item.app?.releaseversion?._text ?? "";
         row.appendChild(versionCell);
 
+        // Host
         const hostCell = document.createElement("td");
         hostCell.classList.add(tdclass);
-        hostCell.textContent = item.app.host._text || "";
+        hostCell.textContent = item.app?.host?._text ?? "";
         row.appendChild(hostCell);
 
+        // Install path
         const installpathCell = document.createElement("td");
         installpathCell.classList.add(tdclass);
-        installpathCell.textContent = item.app.installpath._text || "";
+        installpathCell.textContent = item.app?.installpath?._text ?? "";
         row.appendChild(installpathCell);
 
+        // Service Name
         const servicenameCell = document.createElement("td");
         servicenameCell.classList.add(tdclass);
-        servicenameCell.textContent = item.app.servicename._text || "";
+        servicenameCell.textContent = item.app?.servicename?._text ?? "";
         row.appendChild(servicenameCell);
 
+        // Service User
         const serviceuserCell = document.createElement("td");
-        serviceuserCell.classList.add(tdclass);
-        serviceuserCell.textContent = item.app.serviceuser._text || "";
+        serviceuserCell.classList.add(tdclass, tdurlminwidth);
+        serviceuserCell.textContent = item.app?.serviceuser?._text ?? "";
         row.appendChild(serviceuserCell);
 
-        if (item.licenseserver === undefined) {
-            row.appendChild(document.createElement("td"));
+        // License Server/Port
+        const licenseCell = document.createElement("td");
+        licenseCell.classList.add(tdclass, tdurlminwidth);
+        if (item.licenseserver?.server?._text && item.licenseserver?.port?._text) {
+            licenseCell.textContent = item.licenseserver.server._text + ":" + item.licenseserver.port._text;
         } else {
-            const licenseCell = document.createElement("td");
-            licenseCell.classList.add(tdclass);
-            licenseCell.textContent = item.licenseserver.server._text+":"+item.licenseserver.port._text;
-            row.appendChild(licenseCell);
+            licenseCell.textContent = "";
         }
+        row.appendChild(licenseCell);
 
-        if (item.mobilefirst === undefined) {
-            row.appendChild(document.createElement("td"));
-        } else {
-            const mobilefirstCell = document.createElement("td");
-            mobilefirstCell.classList.add(tdclass);
-            mobilefirstCell.classList.add(tdurlminwidth);
+        // Mobile Client
+        const mobilefirstCell = document.createElement("td");
+        mobilefirstCell.classList.add(tdclass, tdurlminwidth);
+        if (item.mobilefirst?._text) {
             let link = document.createElement("a");
             link.href = item.mobilefirst._text;
             link.textContent = item.mobilefirst._text;
             link.target = "_blank";
             mobilefirstCell.appendChild(link);
-            row.appendChild(mobilefirstCell);
         }
+        row.appendChild(mobilefirstCell);
 
-        if (item.mand === null || ( 
-            (item.namefull._text).includes('AIS') && item.namefull._text !== "AIS Benutzungsverwaltung") 
+        // Mobile Apps
+        const mobileCell = document.createElement("td");
+        mobileCell.classList.add(tdclass, tdurlminwidth);
+        if (
+            item.mand?._text &&
+            !(item.namefull?._text?.includes('AIS') && item.namefull?._text !== "AIS Benutzungsverwaltung")
         ) {
-            row.appendChild(document.createElement("td"));
+            let m = escapeHtml(item.mand._text);
+            mobileCell.innerHTML = m + "<br/>"
+                + "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/" + m + "<br/>"
+                + "https://mobile.cmiaxioma.ch/dossierbrowser/" + m + "<br/>"
+                + "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/" + m;
         } else {
-            const mobileCell = document.createElement("td");
-            mobileCell.classList.add(tdclass);
-            mobileCell.classList.add(tdurlminwidth);
-            mobileCell.innerHTML = item.mand._text+"<br/>";
-            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/"+item.mand._text+"<br/>";
-            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/dossierbrowser/"+item.mand._text+"<br/>";
-            mobileCell.innerHTML += "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/"+item.mand._text;
-            row.appendChild(mobileCell);
+            mobileCell.textContent = "";
         }
+        row.appendChild(mobileCell);
 
-        if (item.ueberweisung === undefined) {
-            row.appendChild(document.createElement("td"));
+        // Ueberweisungen
+        const ueberweisungCell = document.createElement("td");
+        ueberweisungCell.classList.add(tdclass, tdurlminwidth);
+        if (item.ueberweisung?.port?._text && item.app?.host?._text) {
+            ueberweisungCell.innerHTML = "<b>http://" + escapeHtml(item.app.host._text)
+                + ":" + escapeHtml(item.ueberweisung.port._text) + "/</b>";
+            ueberweisungCell.innerHTML += getSubLevels(item.ueberweisung.url);
         } else {
-            const ueberweisungCell = document.createElement("td");
-            ueberweisungCell.classList.add(tdclass);
-            ueberweisungCell.classList.add(tdurlminwidth);
-            ueberweisungCell.innerHTML = "<b>http://"+item.app.host._text+":"+item.ueberweisung.port._text+"/</b>" || "";
-            ueberweisungCell.innerHTML += getSubLevels(item.ueberweisung.url) || "";
-            row.appendChild(ueberweisungCell);
+            ueberweisungCell.textContent = "";
         }
+        row.appendChild(ueberweisungCell);
 
-        if (item.muegi === undefined) {
-            row.appendChild(document.createElement("td"));
+        // Mügi
+        const muegiCell = document.createElement("td");
+        muegiCell.classList.add(tdclass, tdurlminwidth);
+        if (item.muegi?.url) {
+            muegiCell.innerHTML = getSubLevels(item.muegi.url);
         } else {
-            const muegiCell = document.createElement("td");
-            muegiCell.classList.add(tdclass);
-            muegiCell.classList.add(tdurlminwidth);
-            muegiCell.innerHTML = getSubLevels(item.muegi.url) || "";
-            row.appendChild(muegiCell);
+            muegiCell.textContent = "";
         }
+        row.appendChild(muegiCell);
 
-        if (item.objektloader === undefined) {
-            row.appendChild(document.createElement("td"));
+        // Objekt Loader / Remoting
+        const objloaderCell = document.createElement("td");
+        objloaderCell.classList.add(tdclass, tdurlminwidth);
+        if (item.objektloader?.port?._text) {
+            objloaderCell.textContent = "Port: " + item.objektloader.port._text;
         } else {
-            const objloaderCell = document.createElement("td");
-            objloaderCell.classList.add(tdclass);
-            objloaderCell.classList.add(tdurlminwidth);
-            objloaderCell.innerHTML = "Port: "+item.objektloader.port._text || "";
-            row.appendChild(objloaderCell);
+            objloaderCell.textContent = "";
         }
+        row.appendChild(objloaderCell);
 
-        if (item.webconsole === undefined) {
-            row.appendChild(document.createElement("td"));
+        // Webconsole
+        const webconsoleCell = document.createElement("td");
+        webconsoleCell.classList.add(tdclass);
+        if (item.webconsole?.port?._text) {
+            webconsoleCell.textContent = "Port: " + item.webconsole.port._text;
         } else {
-            const webconsoleCell = document.createElement("td");
-            webconsoleCell.classList.add(tdclass);
-            webconsoleCell.innerHTML = "Port: "+item.webconsole.port._text || "";
-            row.appendChild(webconsoleCell);
+            webconsoleCell.textContent = "";
         }
+        row.appendChild(webconsoleCell);
 
-        if (item.owinserver === undefined) {
-            row.appendChild(document.createElement("td"));
+        // Owin Server
+        const owinCell = document.createElement("td");
+        owinCell.classList.add(tdclass, tdurlminwidth);
+        if (item.owinserver?.port?.private?._text || item.owinserver?.port?.public?._text) {
+            let out = "";
+            if (item.owinserver?.port?.private?._text) {
+                out += "Port private: " + escapeHtml(item.owinserver.port.private._text) + "<br/>";
+            }
+            if (item.owinserver?.port?.public?._text) {
+                out += "Port public: " + escapeHtml(item.owinserver.port.public._text);
+            }
+            owinCell.innerHTML = out;
         } else {
-            const owinCell = document.createElement("td");
-            owinCell.classList.add(tdclass);
-            owinCell.classList.add(tdurlminwidth);
-            owinCell.innerHTML += "Port private: "+item.owinserver.port.private._text+"<br/>";
-            owinCell.innerHTML += "Port public: "+item.owinserver.port.public._text;
-            row.appendChild(owinCell);
+            owinCell.textContent = "";
         }
+        row.appendChild(owinCell);
 
-        if (item.sts === undefined) {
-            row.appendChild(document.createElement("td"));
+        // STS3
+        const stsCell = document.createElement("td");
+        stsCell.classList.add(tdclass, tdurlminwidth);
+        if (item.sts?.desktopclient?._text || item.sts?.ea?._text) {
+            let out = "";
+            if (item.sts.desktopclient?._text) {
+                out += "DesktopClient: " + escapeHtml(item.sts.desktopclient._text) + "<br/>";
+            }
+            if (item.sts.ea?._text) {
+                out += "Entra App: " + escapeHtml(item.sts.ea._text);
+            }
+            stsCell.innerHTML = out;
         } else {
-            const stsCell = document.createElement("td");
-            stsCell.classList.add(tdclass);
-            stsCell.classList.add(tdurlminwidth);
-            stsCell.innerHTML = "DesktopClient: "+item.sts.desktopclient._text+"<br/>";
-            stsCell.innerHTML += "Entra App: "+item.sts.ea._text;
-            row.appendChild(stsCell);
+            stsCell.textContent = "";
         }
+        row.appendChild(stsCell);
 
+        // Jobs
         const jobsCell = document.createElement("td");
-        jobsCell.classList.add(tdclass);
-        jobsCell.classList.add(tdurlminwidth);
-        if (item.jobs) {
-            if (item.jobs.adrsync) {
-                jobsCell.innerHTML += "<b>Adr. Sync: </b>"+item.jobs.adrsync._text+"<br/>" || "";
-            }
-            if (item.jobs.fulltextoptimize) {
-                jobsCell.innerHTML += "<b>Fulltext Index Optimize: </b>"+item.jobs.fulltextoptimize._text+"<br/>" || "";
-            }
-            if (item.jobs.fulltextrebuild) {
-                jobsCell.innerHTML += "<b>Fulltext Index Rebuild: </b>"+item.jobs.fulltextrebuild._text || "";
-            }
+        jobsCell.classList.add(tdclass, tdurlminwidth);
+        let jobsOutput = "";
+        if (item.jobs?.adrsync?._text) {
+            jobsOutput += "<b>Adr. Sync: </b>" + escapeHtml(item.jobs.adrsync._text) + "<br/>";
         }
+        if (item.jobs?.fulltextoptimize?._text) {
+            jobsOutput += "<b>Fulltext Index Optimize: </b>" + escapeHtml(item.jobs.fulltextoptimize._text) + "<br/>";
+        }
+        if (item.jobs?.fulltextrebuild?._text) {
+            jobsOutput += "<b>Fulltext Index Rebuild: </b>" + escapeHtml(item.jobs.fulltextrebuild._text);
+        }
+        jobsCell.innerHTML = jobsOutput;
         row.appendChild(jobsCell);
 
+        // DB Host
         const dbhostCell = document.createElement("td");
         dbhostCell.classList.add(tdclass);
-        dbhostCell.textContent = item.database.host._text || "";
+        dbhostCell.textContent = item.database?.host?._text ?? "";
         row.appendChild(dbhostCell);
 
+        // DB Name
         const dbnameCell = document.createElement("td");
         dbnameCell.classList.add(tdclass);
-        dbnameCell.textContent = item.database.name._text || "";
+        dbnameCell.textContent = item.database?.name?._text ?? "";
         row.appendChild(dbnameCell);
 
-
-
-        // Append row to the table body
+        // Row anfügen
         tableBody.appendChild(row);
     });
 }
 
-// Function to run a script with specified arguments
 async function runScriptFullOverview(app, env) {
-    // Prepare the output element
     const tableRaw = document.getElementById("tableRaw");
     tableRaw.textContent = `Running script with: App=${app}, Env=${env}...\n`;
 
@@ -352,16 +288,15 @@ async function runScriptFullOverview(app, env) {
 
         if (response.ok) {
             const result = await response.json();
-
-            // ----- Access the response data for debugging -----
-            //const status = result.Status || "Unknown";
-            //const data = result.Data || [];
-            //tableRaw.textContent += `Status: ${status}\nData:\n${JSON.stringify(data, null, 2)}`;
-            
             tableRaw.textContent = "";
             populateTable(result.Data || [], app, env);
         } else {
-            const error = await response.json();
+            let error;
+            try {
+                error = await response.json();
+            } catch {
+                error = { error: "Unbekannter Fehler" };
+            }
             tableRaw.textContent += `Error: ${error.error}`;
         }
     } catch (error) {
