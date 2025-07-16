@@ -291,7 +291,7 @@ function tableToCsv(table) {
             csv.push(cells.join(','));
         }
     }
-    return csv.join('\n');
+    return csv.join('\r\n');
 }
 
 function downloadTableAsCsv(tableId, filename) {
