@@ -21,7 +21,7 @@ function getSubLevels(u) {
         } else if (Array.isArray(u)) {
             let r = "";
             for (let i = 0; i < u.length; i++) {
-                r += "<br/>";
+                r += "<br>";
                 if (u[i].name === undefined) {
                     r += escapeHtml(u[i]._text);
                 } else {
@@ -153,9 +153,9 @@ function populateTable(data, app, env) {
             !(item.namefull?._text?.includes('AIS') && item.namefull?._text !== "AIS Benutzungsverwaltung")
         ) {
             let m = escapeHtml(item.mand._text);
-            mobileCell.innerHTML = m + "<br/>"
-                + "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/" + m + "<br/>"
-                + "https://mobile.cmiaxioma.ch/dossierbrowser/" + m + "<br/>"
+            mobileCell.innerHTML = m + "<br>"
+                + "https://mobile.cmiaxioma.ch/sitzungsvorbereitung/" + m + "<br>"
+                + "https://mobile.cmiaxioma.ch/dossierbrowser/" + m + "<br>"
                 + "https://mobile.cmiaxioma.ch/zusammenarbeitdritte/" + m;
         } else {
             mobileCell.textContent = "";
@@ -210,7 +210,7 @@ function populateTable(data, app, env) {
         if (item.owinserver?.port?.private?._text || item.owinserver?.port?.public?._text) {
             let out = "";
             if (item.owinserver?.port?.private?._text) {
-                out += "Port private: " + escapeHtml(item.owinserver.port.private._text) + "<br/>";
+                out += "Port private: " + escapeHtml(item.owinserver.port.private._text) + "<br>";
             }
             if (item.owinserver?.port?.public?._text) {
                 out += "Port public: " + escapeHtml(item.owinserver.port.public._text);
@@ -227,7 +227,7 @@ function populateTable(data, app, env) {
         if (item.sts?.desktopclient?._text || item.sts?.ea?._text) {
             let out = "";
             if (item.sts.desktopclient?._text) {
-                out += "DesktopClient: " + escapeHtml(item.sts.desktopclient._text) + "<br/>";
+                out += "DesktopClient: " + escapeHtml(item.sts.desktopclient._text) + "<br>";
             }
             if (item.sts.ea?._text) {
                 out += "Entra App: " + escapeHtml(item.sts.ea._text);
@@ -243,10 +243,10 @@ function populateTable(data, app, env) {
         jobsCell.classList.add(tdclass, tdurlminwidth);
         let jobsOutput = "";
         if (item.jobs?.adrsync?._text) {
-            jobsOutput += "<b>Adr. Sync: </b>" + escapeHtml(item.jobs.adrsync._text) + "<br/>";
+            jobsOutput += "<b>Adr. Sync: </b>" + escapeHtml(item.jobs.adrsync._text) + "<br>";
         }
         if (item.jobs?.fulltextoptimize?._text) {
-            jobsOutput += "<b>Fulltext Index Optimize: </b>" + escapeHtml(item.jobs.fulltextoptimize._text) + "<br/>";
+            jobsOutput += "<b>Fulltext Index Optimize: </b>" + escapeHtml(item.jobs.fulltextoptimize._text) + "<br>";
         }
         if (item.jobs?.fulltextrebuild?._text) {
             jobsOutput += "<b>Fulltext Index Rebuild: </b>" + escapeHtml(item.jobs.fulltextrebuild._text);
@@ -278,7 +278,7 @@ function cloneTableWithLinebreaks(table) {
     // Alle Zellen durchgehen
     clone.querySelectorAll('td,th').forEach(cell => {
         // Ersetze <br> durch \n im Inhalt
-        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, ' | ');
     });
     return clone;
 }
@@ -291,25 +291,8 @@ function downloadTableAsXlsx(tableId, filename) {
     }
     const clone = cloneTableWithLinebreaks(table);
     const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
-    const ws = wb.Sheets["Tabelle"];
-
-    // Für alle Zellen: Wenn \n enthalten, wrapText aktivieren
-    for (const cellAddress in ws) {
-        if (!ws.hasOwnProperty(cellAddress)) continue;
-        if (cellAddress[0] === '!') continue; // Meta-Daten überspringen
-
-        const cell = ws[cellAddress];
-        if (typeof cell.v === "string" && cell.v.includes('\n')) {
-            cell.s = cell.s || {};
-            cell.s.alignment = cell.s.alignment || {};
-            cell.s.alignment.wrapText = true;
-        }
-    }
-
-    // Schreibe das File mit Styles
-    XLSX.writeFile(wb, filename, {cellStyles: true});
+    XLSX.writeFile(wb, filename);
 }
-
 
 
 async function runScriptFullOverview(app, env) {
