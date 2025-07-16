@@ -277,18 +277,14 @@ function tableToCsv(table) {
     for (let row of table.querySelectorAll('tr')) {
         let cells = [];
         for (let cell of row.querySelectorAll('th,td')) {
-            // Text holen und ALLE Arten von Zeilenumbrüchen sowie <br> ersetzen
+            // HTML zu Text, <br> zu \n, sonstige HTML weg, dann trim
             let text = cell.innerHTML
-                .replace(/<br\s*\/?>/gi, ' / ') // <br> zu " / "
-                .replace(/(\r\n|\n|\r)/gm, ' ') // echte Zeilenumbrüche zu Leerzeichen
-                .replace(/"/g, '""')            // doppelte Quotes escapen
-                .replace(/\s+/g, ' ')           // mehrere Leerzeichen zu einem
+                .replace(/<br\s*\/?>/gi, '\n')
+                .replace(/<[^>]+>/g, '')
                 .trim();
 
-            // Wenn Komma oder Anführungszeichen vorkommt, Feld quoten
-            if (text.indexOf(',') !== -1 || text.indexOf('"') !== -1) {
-                text = `"${text}"`;
-            }
+            // JEDES Feld wird in doppelte Anführungszeichen gesetzt (auch wenn keine Kommas)
+            text = `"${text.replace(/"/g, '""')}"`;
             cells.push(text);
         }
         if (cells.length) {
@@ -298,7 +294,6 @@ function tableToCsv(table) {
     return csv.join('\n');
 }
 
-
 function downloadTableAsCsv(tableId, filename) {
     const table = document.getElementById(tableId);
     if (!table) {
@@ -306,7 +301,10 @@ function downloadTableAsCsv(tableId, filename) {
         return;
     }
     const csv = tableToCsv(table);
-    const blob = new Blob([csv], {type: 'text/csv'});
+
+    // UTF-8 BOM für Excel-Kompatibilität
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csv], {type: 'text/csv;charset=utf-8;'});
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
