@@ -166,8 +166,8 @@ function populateTable(data, app, env) {
         const ueberweisungCell = document.createElement("td");
         ueberweisungCell.classList.add(tdclass, tdurlminwidth);
         if (item.ueberweisung?.port?._text && item.app?.host?._text) {
-            ueberweisungCell.innerHTML = "<b>http://" + escapeHtml(item.app.host._text)
-                + ":" + escapeHtml(item.ueberweisung.port._text) + "/</b>";
+            ueberweisungCell.innerHTML = "<strong>http://" + escapeHtml(item.app.host._text)
+                + ":" + escapeHtml(item.ueberweisung.port._text) + "/</strong>";
             ueberweisungCell.innerHTML += getSubLevels(item.ueberweisung.url);
         } else {
             ueberweisungCell.textContent = "";
@@ -278,7 +278,7 @@ function cloneTableWithLinebreaks(table) {
     // Alle Zellen durchgehen
     clone.querySelectorAll('td,th').forEach(cell => {
         // Ersetze <br> durch \n im Inhalt
-        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, ' | ');
+        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, '\n');
     });
     return clone;
 }
