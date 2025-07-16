@@ -269,6 +269,50 @@ function populateTable(data, app, env) {
         // Row anfügen
         tableBody.appendChild(row);
     });
+    
+}
+
+function tableToCsv(table) {
+    let csv = [];
+    // alle Zeilen (thead + tbody)
+    for (let row of table.querySelectorAll('tr')) {
+        let cells = [];
+        // alle Zellen in der Zeile
+        for (let cell of row.querySelectorAll('th,td')) {
+            // HTML-Tags entfernen, Kommas ersetzen, trimmen
+            let text = cell.textContent.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""').trim();
+            // Kommas in Feldern erlauben: Feld mit "
+            if (text.indexOf(',') !== -1 || text.indexOf('"') !== -1) {
+                text = `"${text}"`;
+            }
+            cells.push(text);
+        }
+        // nur hinzufügen, wenn Zeile nicht leer
+        if (cells.length) {
+            csv.push(cells.join(','));
+        }
+    }
+    return csv.join('\n');
+}
+
+function downloadTableAsCsv(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) {
+        alert("Tabelle nicht gefunden!");
+        return;
+    }
+    const csv = tableToCsv(table);
+    const blob = new Blob([csv], {type: 'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }, 0);
 }
 
 async function runScriptFullOverview(app, env) {
