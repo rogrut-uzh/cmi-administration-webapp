@@ -291,8 +291,25 @@ function downloadTableAsXlsx(tableId, filename) {
     }
     const clone = cloneTableWithLinebreaks(table);
     const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
-    XLSX.writeFile(wb, filename);
+    const ws = wb.Sheets["Tabelle"];
+
+    // Für alle Zellen: Wenn \n enthalten, wrapText aktivieren
+    for (const cellAddress in ws) {
+        if (!ws.hasOwnProperty(cellAddress)) continue;
+        if (cellAddress[0] === '!') continue; // Meta-Daten überspringen
+
+        const cell = ws[cellAddress];
+        if (typeof cell.v === "string" && cell.v.includes('\n')) {
+            cell.s = cell.s || {};
+            cell.s.alignment = cell.s.alignment || {};
+            cell.s.alignment.wrapText = true;
+        }
+    }
+
+    // Schreibe das File mit Styles
+    XLSX.writeFile(wb, filename, {cellStyles: true});
 }
+
 
 
 async function runScriptFullOverview(app, env) {
