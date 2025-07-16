@@ -4,6 +4,8 @@
 
 {% block content %}
 
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <div class="row align-items-start p-2">
     <div class="col p-2">
 	    <h1>Full Overview TEST</h1>
@@ -16,7 +18,9 @@
 			<div class="card">
 				<div class="card-body">
 					<h2 class="card-title">CMI GEVER</h2>
-                    <button style="margin-bottom:10px;" class="btn btn-primary btn-sm" onclick="downloadTableAsCsv('dataTableCmiTest', 'Overview_CMI_GEVER_TEST.csv')">Download als CSV</button>
+                    
+                    <button style="margin-bottom:10px;" class="btn btn-primary btn-sm" onclick="downloadTableAsXlsx('dataTableCmiTest', 'Overview_CMI_GEVER_Test.xlsx')">Download als XLSX</button>
+                    
 					<div class="table-responsive table-responsive-heightlimit"><table id="dataTableCmiTest" class="table table-striped table-bordered sortable"></table></div>
 				</div>
 			</div>
@@ -28,7 +32,9 @@
 			<div class="card">
 				<div class="card-body">
 					<h2 class="card-title">CMI AIS</h2>
-                    <button style="margin-bottom:10px;" class="btn btn-primary btn-sm" onclick="downloadTableAsCsv('dataTableAisTest', 'Overview_CMI_AIS_TEST.csv')">Download als CSV</button>
+                    
+                    <button style="margin-bottom:10px;" class="btn btn-primary btn-sm" onclick="downloadTableAsXlsx('dataTableAisTest', 'Overview_CMI_AIS_Test.xlsx')">Download als XLSX</button>
+                    
 					<div class="table-responsive table-responsive-heightlimit"><table id="dataTableAisTest" class="table table-striped table-bordered sortable"></table></div>
 				</div>
 			</div>

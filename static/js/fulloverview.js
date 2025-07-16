@@ -272,49 +272,16 @@ function populateTable(data, app, env) {
     
 }
 
-function tableToCsv(table) {
-    let csv = [];
-    for (let row of table.querySelectorAll('tr')) {
-        let cells = [];
-        for (let cell of row.querySelectorAll('th,td')) {
-            // HTML zu Text, <br> zu \n, sonstige HTML weg, dann trim
-            let text = cell.innerHTML
-                .replace(/<br\s*\/?>/gi, '\n')
-                .replace(/<[^>]+>/g, '')
-                .trim();
-
-            // JEDES Feld wird in doppelte Anführungszeichen gesetzt (auch wenn keine Kommas)
-            text = `"${text.replace(/"/g, '""')}"`;
-            cells.push(text);
-        }
-        if (cells.length) {
-            csv.push(cells.join(','));
-        }
-    }
-    return csv.join('\r\n');
-}
-
-function downloadTableAsCsv(tableId, filename) {
+function downloadTableAsXlsx(tableId, filename) {
     const table = document.getElementById(tableId);
     if (!table) {
         alert("Tabelle nicht gefunden!");
         return;
     }
-    const csv = tableToCsv(table);
-
-    // UTF-8 BOM für Excel-Kompatibilität
-    const BOM = "\uFEFF";
-    const blob = new Blob([BOM + csv], {type: 'text/csv;charset=utf-8;'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(() => {
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    }, 0);
+    // Tabelle in ein SheetJS-Workbook umwandeln
+    const wb = XLSX.utils.table_to_book(table, {sheet: "Tabelle"});
+    // Datei erzeugen und speichern
+    XLSX.writeFile(wb, filename);
 }
 
 async function runScriptFullOverview(app, env) {
