@@ -278,7 +278,7 @@ function cloneTableWithLinebreaks(table) {
     // Alle Zellen durchgehen
     clone.querySelectorAll('td,th').forEach(cell => {
         // Ersetze <br> durch \n im Inhalt
-        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, ' | ');
     });
     return clone;
 }
