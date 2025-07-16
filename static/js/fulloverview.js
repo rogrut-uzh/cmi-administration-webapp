@@ -274,26 +274,30 @@ function populateTable(data, app, env) {
 
 function tableToCsv(table) {
     let csv = [];
-    // alle Zeilen (thead + tbody)
     for (let row of table.querySelectorAll('tr')) {
         let cells = [];
-        // alle Zellen in der Zeile
         for (let cell of row.querySelectorAll('th,td')) {
-            // HTML-Tags entfernen, Kommas ersetzen, trimmen
-            let text = cell.textContent.replace(/(\r\n|\n|\r)/gm, " ").replace(/"/g, '""').trim();
-            // Kommas in Feldern erlauben: Feld mit "
+            // Text holen und ALLE Arten von Zeilenumbrüchen sowie <br> ersetzen
+            let text = cell.innerHTML
+                .replace(/<br\s*\/?>/gi, ' / ') // <br> zu " / "
+                .replace(/(\r\n|\n|\r)/gm, ' ') // echte Zeilenumbrüche zu Leerzeichen
+                .replace(/"/g, '""')            // doppelte Quotes escapen
+                .replace(/\s+/g, ' ')           // mehrere Leerzeichen zu einem
+                .trim();
+
+            // Wenn Komma oder Anführungszeichen vorkommt, Feld quoten
             if (text.indexOf(',') !== -1 || text.indexOf('"') !== -1) {
                 text = `"${text}"`;
             }
             cells.push(text);
         }
-        // nur hinzufügen, wenn Zeile nicht leer
         if (cells.length) {
             csv.push(cells.join(','));
         }
     }
     return csv.join('\n');
 }
+
 
 function downloadTableAsCsv(tableId, filename) {
     const table = document.getElementById(tableId);
