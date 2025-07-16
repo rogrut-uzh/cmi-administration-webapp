@@ -6,9 +6,13 @@ from .auth import requires_auth
 def cockpit():
     return render_template('cockpit.html', active_page='cockpit')
 
-@main.route('/fulloverview')
-def fulloverview():
-    return render_template('fulloverview.html', active_page='fulloverview')
+@main.route('/fulloverview-prod')
+def fulloverview_prod():
+    return render_template('fulloverview-prod.html', active_page='fulloverview-prod')
+
+@main.route('/fulloverview-test')
+def fulloverview_test():
+    return render_template('fulloverview-test.html', active_page='fulloverview-test')
 
 @main.route('/services')
 @requires_auth

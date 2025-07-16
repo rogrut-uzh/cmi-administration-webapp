@@ -21,12 +21,19 @@
         </div>
 
         <ul class="navbar-nav ml-md-auto nav-pills">
+        
           <li class="nav-item">
             <a class="nav-link {% if active_page == 'cockpit' %}active{% endif %}" href="/">Cockpit</a>
           </li>
-          <li class="nav-item">
-            <a class="nav-link {% if active_page == 'fulloverview' %}active{% endif %}" href="/fulloverview">Full Overview</a>
+          
+          <li class="nav-item dropdown">
+            <a class="nav-link {% if active_page in ['fulloverview-test', 'fulloverview-prod'] %}active{% endif %} dropdown-toggle" href="#" id="navbarFulloverviewLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Full Overview</a>
+            <div class="dropdown-menu" aria-labelledby="navbarFulloverviewLink">
+              <a class="dropdown-item" href="/fulloverview-prod">PROD</a>
+              <a class="dropdown-item" href="/fulloverview-test">TEST</a>
+            </div>
           </li>
+          
           <li class="nav-item dropdown">
             <a class="nav-link {% if active_page in ['services', 'services-single'] %}active{% endif %} dropdown-toggle" href="#" id="navbarServicesLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">CMI Services</a>
             <div class="dropdown-menu" aria-labelledby="navbarServicesLink">
@@ -35,12 +42,15 @@
               <a class="dropdown-item" href="/services-single-test">Single TEST</a>
             </div>
           </li>
+          
           <li class="nav-item">
             <a class="nav-link {% if active_page == 'metatool' %}active{% endif %}" href="/metatool">MetaTool</a>
           </li>
+          
           <li class="nav-item">
             <a class="nav-link {% if active_page == 'databases' %}active{% endif %}" href="/databases">Databases</a>
           </li>
+          
         </ul>
         
 	</header>

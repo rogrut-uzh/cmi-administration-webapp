@@ -23,7 +23,7 @@ h3 {
 	white-space: pre-wrap;
 }
 .table-responsive-heightlimit {
-    max-height: 400px; 
+    /*max-height: 400px;*/
     overflow-y: auto; 
     overflow-x: auto;
 }

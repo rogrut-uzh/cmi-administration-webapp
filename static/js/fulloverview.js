@@ -1,8 +1,6 @@
 document.addEventListener("DOMContentLoaded", function(event) {
-    runScriptFullOverview('cmi', 'prod');
-    runScriptFullOverview('ais', 'prod');
-    runScriptFullOverview('cmi', 'test');
-    runScriptFullOverview('ais', 'test');
+    runScriptFullOverview('cmi', environment);
+    runScriptFullOverview('ais', environment);
 });
 
 // Hilfsfunktion für sicheres Escapen von HTML (verhindert XSS)
