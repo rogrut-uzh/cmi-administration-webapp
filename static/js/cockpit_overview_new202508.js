@@ -123,6 +123,8 @@ async function runScriptCockpitOverview() {
                 'Content-Type': 'application/json'
             },
         });
+        console.log(response);
+        console.log(response.json());
 
         if (response.ok) {
             const result = await response.json();
