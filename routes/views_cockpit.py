@@ -16,7 +16,9 @@ def run_script_cockpit_overview():
             'pwsh', '-NoProfile',
             '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\')
         ]
-        result = subprocess.run(command, capture_output=True, text=True)
+        result = subprocess.run(command, capture_output=True)
+        stdout = result.stdout.decode('utf-8-sig')
+        data = json.loads(stdout)
         if result.returncode == 0:
             try:
                 output = json.loads(result.stdout)

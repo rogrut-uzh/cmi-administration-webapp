@@ -31,6 +31,11 @@ function populateTable(data) {
     releaseversionCellHeader.textContent = "Release";
     tableHeadTr.appendChild(releaseversionCellHeader);
     
+    const envCellHeader = document.createElement("th");
+    envCellHeader.classList.add(tdclass);
+    envCellHeader.textContent = "Env";
+    tableHeadTr.appendChild(envCellHeader);
+    
     const apptypeCellHeader = document.createElement("th");
     apptypeCellHeader.classList.add(tdclass);
     apptypeCellHeader.textContent = "Typ";
@@ -57,7 +62,7 @@ function populateTable(data) {
     tableHeadTr.appendChild(licenseCellHeader);
     
 
-//  Name/namefull | Release/releaseversion | Typ/apptype | Mandant/mand | Host/host | Web/web | Lic.Server/license
+//  Name/namefull | Release/releaseversion | Env/env | Typ/apptype | Mandant/mand | Host/host | Web/web | Lic.Server/license
 
 
     // Loop through JSON data and create rows
@@ -75,6 +80,11 @@ function populateTable(data) {
         releaseversionCell.classList.add(tdclass);
         releaseversionCell.textContent = item.app.releaseversion._text || "";
         row.appendChild(releaseversionCell);
+
+        const envCell = document.createElement("td");
+        envCell.classList.add(tdclass);
+        envCell.textContent = item.environment || "";
+        row.appendChild(envCell);
 
         const apptypeCell = document.createElement("td");
         apptypeCell.classList.add(tdclass);
