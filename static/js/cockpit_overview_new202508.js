@@ -79,7 +79,7 @@ function populateTable(data) {
 
         const mandantCell = document.createElement("td");
         mandantCell.classList.add(tdclass);
-        mandantCell.textContent = item.app.mand._text || "";
+        mandantCell.textContent = item.mand._text || "";
         row.appendChild(mandantCell);
 
         const hostCell = document.createElement("td");
