@@ -12,25 +12,10 @@ $env:NO_PROXY = "127.0.0.1,localhost"
 $env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 $env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 
-# Variablen
-$ApiUrl = "http://localhost:5001/api/data"
 
-
-#Functions
-function Get-CMI-Config-Data {
-    $Url = "${ApiUrl}"
-	#write-host $Url
-    $RawJson = (Invoke-WebRequest -Uri $Url -Method Get).Content # this must be returned to the app!
-    #$ParsedJson = ($RawJson | ConvertFrom-Json) | ConvertTo-Json -Depth 10 -Compress:$false # nur zu testzwecken für die schöne ausgabe am terminal
-    #$ParsedJson = $RawJson | ConvertFrom-Json
-    return $RawJson
-}
-
-
-$elements = Get-CMI-Config-Data
+$elements = (Invoke-WebRequest -Uri "http://localhost:5001/api/data" -Method Get).Content
 if (($elements | Measure-Object).count -lt 1) {
     write-host "nothing found."
     exit 1
 }
 $elements
-

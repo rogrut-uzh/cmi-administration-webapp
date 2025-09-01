@@ -13,13 +13,9 @@ from routes import main
 def run_script_cockpit_overview():
     try:
         data = request.get_json()
-        app = data.get('app')
-        env = data.get('env')
         command = [
             'pwsh', '-NoProfile',
-            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\'),
-            '-App', f"{app}",
-            '-Env', f"{env}"
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\')
         ]
         result = subprocess.run(command, capture_output=True, text=True)
         if result.returncode == 0:
