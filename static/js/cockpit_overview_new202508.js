@@ -62,7 +62,7 @@ function populateTable(data) {
 
         const nameCell = document.createElement("td");
         nameCell.classList.add(tdclass);
-        nameCell.innerHTML = item.namefull._text || "";
+        nameCell.textContent = item.app.namefull._text || "";
         //nameCell.innerHTML = "<b>"+item.namefull._text+"</b>" || "";
         nameCell.setAttribute('scope', 'row');
         row.appendChild(nameCell);
@@ -74,7 +74,7 @@ function populateTable(data) {
 
         const typCell = document.createElement("td");
         typCell.classList.add(tdclass);
-        typCell.textContent = item.apptype._text || "";
+        typCell.textContent = item.apptype || "";
         row.appendChild(typCell);
 
         const mandantCell = document.createElement("td");
