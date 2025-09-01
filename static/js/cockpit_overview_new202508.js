@@ -74,7 +74,7 @@ function populateTable(data) {
 
         const typCell = document.createElement("td");
         typCell.classList.add(tdclass);
-        typCell.textContent = item.app.apptype._text || "";
+        typCell.textContent = item.apptype._text || "";
         row.appendChild(typCell);
 
         const mandantCell = document.createElement("td");
