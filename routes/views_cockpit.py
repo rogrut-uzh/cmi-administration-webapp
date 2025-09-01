@@ -17,7 +17,7 @@ def run_script_cockpit_overview():
         env = data.get('env')
         command = [
             'pwsh', '-NoProfile',
-            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit.ps1').replace('\\', '\\\\'),
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\'),
             '-App', f"{app}",
             '-Env', f"{env}"
         ]
