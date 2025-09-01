@@ -21,25 +21,25 @@ function populateTable(data) {
     
     
     
-    const nameCellHeader = document.createElement("th");
-    nameCellHeader.classList.add(tdclass);
-    nameCellHeader.textContent = "Name";
-    tableHeadTr.appendChild(nameCellHeader);
+    const namefullCellHeader = document.createElement("th");
+    namefullCellHeader.classList.add(tdclass);
+    namefullCellHeader.textContent = "Name";
+    tableHeadTr.appendChild(namefullCellHeader);
     
     const releaseversionCellHeader = document.createElement("th");
     releaseversionCellHeader.classList.add(tdclass);
     releaseversionCellHeader.textContent = "Release";
     tableHeadTr.appendChild(releaseversionCellHeader);
     
-    const mandantCellHeader = document.createElement("th");
-    mandantCellHeader.classList.add(tdclass);
-    mandantCellHeader.textContent = "Mandant";
-    tableHeadTr.appendChild(mandantCellHeader);
+    const apptypeCellHeader = document.createElement("th");
+    apptypeCellHeader.classList.add(tdclass);
+    apptypeCellHeader.textContent = "Typ";
+    tableHeadTr.appendChild(apptypeCellHeader);
     
-    const typCellHeader = document.createElement("th");
-    typCellHeader.classList.add(tdclass);
-    typCellHeader.textContent = "Typ";
-    tableHeadTr.appendChild(typCellHeader);
+    const mandCellHeader = document.createElement("th");
+    mandCellHeader.classList.add(tdclass);
+    mandCellHeader.textContent = "Mandant";
+    tableHeadTr.appendChild(mandCellHeader);
     
     const hostCellHeader = document.createElement("th");
     hostCellHeader.classList.add(tdclass);
@@ -57,31 +57,34 @@ function populateTable(data) {
     tableHeadTr.appendChild(licenseCellHeader);
     
 
+//  Name/namefull | Release/releaseversion | Typ/apptype | Mandant/mand | Host/host | Web/web | Lic.Server/license
+
+
     // Loop through JSON data and create rows
     data.forEach(item => {
         const row = document.createElement("tr");
 
-        const nameCell = document.createElement("td");
-        nameCell.classList.add(tdclass);
-        nameCell.textContent = item.namefull._text || "";
+        const namefullCell = document.createElement("td");
+        namefullCell.classList.add(tdclass);
+        namefullCell.textContent = item.namefull._text || "";
         //nameCell.innerHTML = "<b>"+item.namefull._text+"</b>" || "";
-        nameCell.setAttribute('scope', 'row');
-        row.appendChild(nameCell);
+        namefullCell.setAttribute('scope', 'row');
+        row.appendChild(namefullCell);
 
         const releaseversionCell = document.createElement("td");
         releaseversionCell.classList.add(tdclass);
         releaseversionCell.textContent = item.app.releaseversion._text || "";
         row.appendChild(releaseversionCell);
 
-        const typCell = document.createElement("td");
-        typCell.classList.add(tdclass);
-        typCell.textContent = item.apptype || "";
-        row.appendChild(typCell);
+        const apptypeCell = document.createElement("td");
+        apptypeCell.classList.add(tdclass);
+        apptypeCell.textContent = item.apptype || "";
+        row.appendChild(apptypeCell);
 
-        const mandantCell = document.createElement("td");
-        mandantCell.classList.add(tdclass);
-        mandantCell.textContent = item?.mand?._text ?? item?.mand ?? "";
-        row.appendChild(mandantCell);
+        const mandCell = document.createElement("td");
+        mandCell.classList.add(tdclass);
+        mandCell.textContent = item?.mand?._text ?? item?.mand ?? "";
+        row.appendChild(mandCell);
 
         const hostCell = document.createElement("td");
         hostCell.classList.add(tdclass);
