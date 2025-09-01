@@ -119,11 +119,9 @@ async function runScriptCockpitOverview() {
     try {
         const response = await fetch('/run-script-cockpit-overview', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
+            body: '{}'
         });
-
         if (response.ok) {
             const result = await response.json();
 
@@ -142,3 +140,9 @@ async function runScriptCockpitOverview() {
         tableRaw.textContent += `Error: ${error.message}`;
     }
 }
+
+await fetch('/run-script-cockpit-overview', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: '{}' // oder JSON.stringify(payload)
+});

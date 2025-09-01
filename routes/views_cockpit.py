@@ -8,11 +8,10 @@ import io
 import zipfile
 from routes import main
 
-
 @main.route('/run-script-cockpit-overview', methods=['POST'])
 def run_script_cockpit_overview():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True) or {} 
         command = [
             'pwsh', '-NoProfile',
             '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\')

@@ -11,9 +11,12 @@
 $env:NO_PROXY = "localhost,127.0.0.1,::1"
 $env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 $env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
-$elements = (Invoke-WebRequest -Uri "http://localhost:5001/api/data" -Method Get).Content
-if (($elements | Measure-Object).count -lt 1) {
-    write-host "nothing found."
+
+$elements = Invoke-RestMethod -Uri "http://127.0.0.1:5001/api/data" -Method Get -NoProxy
+
+if (-not $elements -or $elements.Count -lt 1) {
+    Write-Error "nothing found."   # -> stderr
     exit 1
 }
-$elements
+
+$elements | ConvertTo-Json -Depth 10  # -> stdout (nur JSON)
