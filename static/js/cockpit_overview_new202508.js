@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 
 function populateTable(data) {
+    console.log(data);
     const tdclass = "py-1";
     
     var table = document.querySelector("#dataTableCmi");
