@@ -140,9 +140,3 @@ async function runScriptCockpitOverview() {
         tableRaw.textContent += `Error: ${error.message}`;
     }
 }
-
-await fetch('/run-script-cockpit-overview', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: '{}' // oder JSON.stringify(payload)
-});
