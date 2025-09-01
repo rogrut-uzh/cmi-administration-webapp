@@ -128,17 +128,17 @@ async function runScriptCockpitOverview() {
             const result = await response.json();
 
             // ----- Access the response data for debugging -----
-            //const status = result.Status || "Unknown";
-            //const data = result.Data || [];
-            //tableRaw.textContent += `Status: ${status}\nData:\n${JSON.stringify(data, null, 2)}`;
+            const status = result.Status || "Unknown";
+            const data = result.Data || [];
+            tableRaw.textContent += `Status: ${status}\nData:\n${JSON.stringify(data, null, 2)}`;
             
-            tableRaw.textContent = "";
-            populateTable(result.Data || []);
+            //tableRaw.textContent = "";
+            //populateTable(result.Data || []);
         } else {
             const error = await response.json();
             tableRaw.textContent += `Error: ${error.error}`;
         }
     } catch (error) {
-        tableRaw.textContent += `Error: ${error.message}`;
+        //tableRaw.textContent += `Error: ${error.message}`;
     }
 }
