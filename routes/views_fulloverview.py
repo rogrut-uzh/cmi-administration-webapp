@@ -38,18 +38,15 @@ def run_script_fulloverview():
 @main.route('/run-script-fulloverview-jobs', methods=['POST'])
 def run_script_fulloverview_jobs():
     try:
-        # Retrieve query parameters
-        data = request.get_json()
+        data = request.get_json(silent=True) or {} 
         command = [
-            'pwsh', 
-            '-NoProfile',
-            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\'),
+            'pwsh', '-NoProfile',
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\')
         ]
-        # Run the PowerShell script
-        result = subprocess.run(command, capture_output=True, text=True)
-
+        result = subprocess.run(command, capture_output=True)
+        stdout = result.stdout.decode('utf-8-sig')
+        data = json.loads(stdout)
         if result.returncode == 0:
-            # Attempt to parse PowerShell output as JSON
             try:
                 output = json.loads(result.stdout)
                 return jsonify({"Status": "Success", "Data": output}), 200
@@ -57,6 +54,5 @@ def run_script_fulloverview_jobs():
                 return jsonify({"error": "Invalid JSON output from PowerShell script"}), 500
         else:
             return jsonify({"error": result.stderr.strip()}), 500
-
     except Exception as e:
         return jsonify({"error": str(e)}), 500
