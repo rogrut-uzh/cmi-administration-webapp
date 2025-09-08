@@ -5,7 +5,7 @@ import json
 from routes import main
 
 @main.route('/run-script-fulloverviewjobs', methods=['POST'])
-def run_script_fulloverview():
+def run_script_fulloverviewjobs():
     try:
         # Retrieve query parameters
         data = request.get_json()
