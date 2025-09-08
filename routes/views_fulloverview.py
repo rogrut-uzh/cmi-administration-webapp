@@ -36,7 +36,7 @@ def run_script_fulloverview():
 
 
 @main.route('/run-script-fulloverview-jobs', methods=['POST'])
-def run_script_fulloverviewjobs():
+def run_script_fulloverview_jobs():
     try:
         # Retrieve query parameters
         data = request.get_json()
