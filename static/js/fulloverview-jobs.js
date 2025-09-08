@@ -105,7 +105,7 @@ async function runScriptJobsOverview() {
     tableRaw.textContent = `Running script\n`;
 
     try {
-        const response = await fetch('/run-script-fulloverview-jobs', {
+        const response = await fetch('/run-script-fulloverviewjobs', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: '{}'
