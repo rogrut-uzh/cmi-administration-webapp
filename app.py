@@ -7,6 +7,7 @@ import routes.views_general
 import routes.views_cockpit
 import routes.cockpit
 import routes.views_fulloverview
+import routes.views_jobs
 import routes.views_services
 import routes.services
 import routes.views_metatool

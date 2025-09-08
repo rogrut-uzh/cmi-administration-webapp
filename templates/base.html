@@ -27,19 +27,20 @@
           </li>
           
           <li class="nav-item dropdown">
-            <a class="nav-link {% if active_page in ['fulloverview-test', 'fulloverview-prod'] %}active{% endif %} dropdown-toggle" href="#" id="navbarFulloverviewLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Full Overview</a>
+            <a class="nav-link {% if active_page in ['fulloverview-test', 'fulloverview-prod', fulloverview-jobs] %}active{% endif %} dropdown-toggle" href="#" id="navbarFulloverviewLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Full Overview</a>
             <div class="dropdown-menu" aria-labelledby="navbarFulloverviewLink">
               <a class="dropdown-item" href="/fulloverview-prod">PROD</a>
               <a class="dropdown-item" href="/fulloverview-test">TEST</a>
+              <a class="dropdown-item" href="/fulloverview-jobs">Jobs</a>
             </div>
           </li>
           
           <li class="nav-item dropdown">
-            <a class="nav-link {% if active_page in ['services', 'services-single'] %}active{% endif %} dropdown-toggle" href="#" id="navbarServicesLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">CMI Services</a>
+            <a class="nav-link {% if active_page in ['services', 'services-single'] %}active{% endif %} dropdown-toggle" href="#" id="navbarServicesLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">CMI Windows Services</a>
             <div class="dropdown-menu" aria-labelledby="navbarServicesLink">
-              <a class="dropdown-item" href="/services">Groups</a>
-              <a class="dropdown-item" href="/services-single-prod">Single PROD</a>
-              <a class="dropdown-item" href="/services-single-test">Single TEST</a>
+              <a class="dropdown-item" href="/services">Grouped</a>
+              <a class="dropdown-item" href="/services-single-prod">PROD</a>
+              <a class="dropdown-item" href="/services-single-test">TEST</a>
             </div>
           </li>
           

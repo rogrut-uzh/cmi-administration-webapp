@@ -54,15 +54,25 @@ function populateTable(data, app, env) {
     const tableHeadTr = document.createElement("tr");
     tableHead.appendChild(tableHeadTr);
 
-    // Alle Header wie gehabt...
     const headers = [
-        { text: "Name" }, { text: "Mandant" }, { text: "Release" }, { text: "Host" },
-        { text: "Install path" }, { text: "Service Name" }, { text: "Service User", minwidth: true },
-        { text: "License Server/Port", minwidth: true }, { text: "Mobile Client", minwidth: true },
-        { text: "Mobile Apps", minwidth: true }, { text: "Ueberweisungen", minwidth: true },
-        { text: "Mügi", minwidth: true }, { text: "Objekt Loader / Remoting", minwidth: true },
-        { text: "Webconsole" }, { text: "Owin Server", minwidth: true }, { text: "STS3", minwidth: true },
-        { text: "Jobs", minwidth: true }, { text: "DB Host" }, { text: "DB Name" }
+        { text: "Name" },
+        { text: "Mandant" },
+        { text: "Release" },
+        { text: "Host" },
+        { text: "Install path" },
+        { text: "Service Name" },
+        { text: "Service User", minwidth: true },
+        { text: "License Server/Port", minwidth: true },
+        { text: "Mobile Client", minwidth: true },
+        { text: "Mobile Apps", minwidth: true },
+        { text: "Ueberweisungen", minwidth: true },
+        { text: "Mügi", minwidth: true },
+        { text: "Objekt Loader / Remoting", minwidth: true },
+        { text: "Webconsole" },
+        { text: "Owin Server", minwidth: true },
+        { text: "STS3", minwidth: true },
+        { text: "DB Host" },
+        { text: "DB Name" }
     ];
     for (const h of headers) {
         const th = document.createElement("th");
@@ -237,22 +247,6 @@ function populateTable(data, app, env) {
             stsCell.textContent = "";
         }
         row.appendChild(stsCell);
-
-        // Jobs
-        const jobsCell = document.createElement("td");
-        jobsCell.classList.add(tdclass, tdurlminwidth);
-        let jobsOutput = "";
-        if (item.jobs?.adrsync?._text) {
-            jobsOutput += "<b>Adr. Sync: </b>" + escapeHtml(item.jobs.adrsync._text) + "<br>";
-        }
-        if (item.jobs?.fulltextoptimize?._text) {
-            jobsOutput += "<b>Fulltext Index Optimize: </b>" + escapeHtml(item.jobs.fulltextoptimize._text) + "<br>";
-        }
-        if (item.jobs?.fulltextrebuild?._text) {
-            jobsOutput += "<b>Fulltext Index Rebuild: </b>" + escapeHtml(item.jobs.fulltextrebuild._text);
-        }
-        jobsCell.innerHTML = jobsOutput;
-        row.appendChild(jobsCell);
 
         // DB Host
         const dbhostCell = document.createElement("td");
