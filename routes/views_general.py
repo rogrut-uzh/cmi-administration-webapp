@@ -1,3 +1,5 @@
+# routes/views_general.py
+#
 from flask import render_template
 from routes import main
 from .auth import requires_auth
@@ -13,6 +15,10 @@ def fulloverview_prod():
 @main.route('/fulloverview-test')
 def fulloverview_test():
     return render_template('fulloverview-test.html', active_page='fulloverview-test')
+
+@main.route('/fulloverview-jobs')
+def fulloverview_jobs():
+    return render_template('fulloverview-jobs.html', active_page='fulloverview-jobs')
 
 @main.route('/services')
 @requires_auth
