@@ -39,6 +39,18 @@ function collectJobNames(data) {
     );
 }
 
+function computeJobCounts(data) {
+    const map = new Map();
+    for (const item of data) {
+        for (const j of toArray(item?.jobs?.job)) {
+            const name = getText(j?.name).trim();
+            if (!name) continue;
+            map.set(name, (map.get(name) || 0) + 1);
+        }
+    }
+    return map;
+}
+
 // ---------------- State -----------------------------------------------------
 
 const JOBS_STATE = {
@@ -77,13 +89,19 @@ function renderJobSelector(names) {
         return;
     }
 
+    const counts = computeJobCounts(JOBS_STATE.data);
+
+    // Vertikale Anordnung
     const form = document.createElement("div");
+    // Optional hübsch: form.className = "d-flex flex-column"; // falls Bootstrap 4/5
     form.setAttribute("role", "radiogroup");
 
     names.forEach((name, idx) => {
         const id = `jobradio-${idx}`;
+
+        // Kein "form-check-inline" -> damit jede Option in eigener Zeile
         const wrapper = document.createElement("div");
-        wrapper.className = "form-check form-check-inline";
+        wrapper.className = "form-check mb-1";
 
         const input = document.createElement("input");
         input.className = "form-check-input";
@@ -102,7 +120,8 @@ function renderJobSelector(names) {
         const label = document.createElement("label");
         label.className = "form-check-label";
         label.setAttribute("for", id);
-        label.textContent = name;
+        const count = counts.get(name) || 0;
+        label.textContent = `${name} (${count})`;
 
         wrapper.appendChild(input);
         wrapper.appendChild(label);
@@ -111,11 +130,11 @@ function renderJobSelector(names) {
 
     ctr.appendChild(form);
 
-    // falls noch keine Auswahl gesetzt ist
     if (!JOBS_STATE.selected) {
         JOBS_STATE.selected = names[0];
     }
 }
+
 
 // ---------------- Tabelle: nur 1 Job ---------------------------------------
 
