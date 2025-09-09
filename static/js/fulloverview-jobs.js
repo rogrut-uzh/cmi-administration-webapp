@@ -1,8 +1,9 @@
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", function (event) {
     runScriptJobsOverview();
 });
 
-// Hilfsfunktion für sicheres Escapen von HTML (verhindert XSS)
+// ---------------- Helpers ---------------------------------------------------
+
 function escapeHtml(unsafe) {
     if (!unsafe) return "";
     return String(unsafe)
@@ -13,33 +14,11 @@ function escapeHtml(unsafe) {
         .replace(/'/g, "&#039;");
 }
 
-function getSubLevels(u) {
-    if (u) {
-        if (typeof u._text === "string") {
-            return escapeHtml(u._text);
-        } else if (Array.isArray(u)) {
-            let r = "";
-            for (let i = 0; i < u.length; i++) {
-                r += "<br>";
-                if (u[i].name === undefined) {
-                    r += escapeHtml(u[i]._text);
-                } else {
-                    r += escapeHtml(u[i].name) + ": " + escapeHtml(u[i]._text);
-                }
-            }
-            return r || "";
-        }
-    }
-    return "";
-}
-
-// in Array verwandeln (auch wenn 1 Objekt oder undefined)
 function toArray(x) {
     if (!x) return [];
     return Array.isArray(x) ? x : [x];
 }
 
-// _text sauber lesen (oder string/number direkt)
 function getText(v) {
     if (v == null) return "";
     if (typeof v === "string" || typeof v === "number") return String(v);
@@ -47,7 +26,6 @@ function getText(v) {
     return "";
 }
 
-// alle Job-Namen über die Daten sammeln (einzigartig + sortiert)
 function collectJobNames(data) {
     const set = new Set();
     for (const item of data) {
@@ -56,134 +34,200 @@ function collectJobNames(data) {
             if (name) set.add(name);
         }
     }
-    // Deutsch-freundlich sortieren, Groß/Kleinschreibung ignorieren
     return Array.from(set).sort((a, b) =>
         a.localeCompare(b, "de", { sensitivity: "base", numeric: true })
     );
 }
 
-// --- Tabelle ---------------------------------------------------------------
+// ---------------- State -----------------------------------------------------
 
-function populateTable(data) {
-    const tdclass = "py-1";
-    const tdurlminwidth = "url-minwidth"; // falls du das für min-width nutzt
-    const table = document.querySelector("#dataTableCmiJobs");
+const JOBS_STATE = {
+    data: [],
+    jobNames: [],
+    selected: null,
+};
 
-    // defensiv leeren, falls mehrfach aufgerufen
-    table.innerHTML = "";
+// ---------------- UI: Job-Selector -----------------------------------------
 
-    // 1) dynamische Header bestimmen
-    const jobNames = collectJobNames(data);
-
-    const tableHead = document.createElement("thead");
-    const tableBody = document.createElement("tbody");
-    table.appendChild(tableHead);
-    table.appendChild(tableBody);
-
-    const tableHeadTr = document.createElement("tr");
-    tableHead.appendChild(tableHeadTr);
-
-    const headers = [{ text: "Mandant" }, ...jobNames.map(n => ({ text: n, minwidth: true }))];
-
-    for (const h of headers) {
-        const th = document.createElement("th");
-        th.classList.add(tdclass);
-        if (h.minwidth) th.classList.add(tdurlminwidth);
-        th.textContent = h.text;          // Header selbst nicht als HTML
-        th.title = h.text;                // Tooltip bei langen Namen
-        tableHeadTr.appendChild(th);
+function ensureJobSelectorContainer() {
+    let ctr = document.getElementById("jobSelector");
+    if (!ctr) {
+        // direkt NACH #tableRaw einfügen (existiert schon in deinem HTML)
+        const tableRawEl = document.getElementById("tableRaw");
+        ctr = document.createElement("div");
+        ctr.id = "jobSelector";
+        ctr.className = "mb-2";
+        if (tableRawEl) {
+            tableRawEl.insertAdjacentElement("afterend", ctr);
+        } else {
+            // Fallback: vor die Tabelle setzen
+            const tbl = document.getElementById("dataTableCmiJobs");
+            tbl?.parentElement?.insertAdjacentElement("beforebegin", ctr);
+        }
     }
-
-    // 2) Zeilen befüllen
-    data.forEach(item => {
-        const row = document.createElement("tr");
-
-        // Mandant
-        const mandCell = document.createElement("td");
-        mandCell.classList.add(tdclass);
-        mandCell.textContent = getText(item?.mand);
-        mandCell.setAttribute("scope", "row");
-        row.appendChild(mandCell);
-
-        // Jobs des Mandanten nach Name gruppieren -> mehrere Einträge pro Name via <br>
-        const jobsByName = new Map();
-        for (const j of toArray(item?.jobs?.job)) {
-            const name = getText(j?.name).trim();
-            if (!name) continue;
-
-            const parts = [
-                getText(j?.days),
-                getText(j?.time),
-                (function () {
-                    const t = getText(j?.type);
-                    return t ? `(${t})` : "";
-                })()
-            ].map(escapeHtml).filter(Boolean);
-
-            const line = parts.join(" ");
-            if (!line) continue;
-
-            const existing = jobsByName.get(name);
-            jobsByName.set(name, existing ? `${existing}<br>${line}` : line);
-        }
-
-        // Für jede dynamische Job-Spalte die passende Zelle rendern
-        for (const name of jobNames) {
-            const td = document.createElement("td");
-            td.classList.add(tdclass);
-            // Wir haben die Inhalte bereits escaped; <br> bleibt absichtlich HTML
-            const html = jobsByName.get(name) || "";
-            td.innerHTML = html;
-            row.appendChild(td);
-        }
-
-        tableBody.appendChild(row);
-    });
+    return ctr;
 }
 
-function cloneTableWithLinebreaks(table) {
-    // Tabelle klonen, damit die Seite unverändert bleibt
-    const clone = table.cloneNode(true);
-    // Alle Zellen durchgehen
-    clone.querySelectorAll('td,th').forEach(cell => {
-        // Ersetze <br> durch \n im Inhalt
-        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, ' | ');
-    });
-    return clone;
-}
+function renderJobSelector(names) {
+    const ctr = ensureJobSelectorContainer();
+    ctr.innerHTML = ""; // reset
 
-function downloadTableAsXlsx(tableId, filename) {
-    const table = document.getElementById(tableId);
-    if (!table) {
-        alert("Tabelle nicht gefunden!");
+    if (!names.length) {
+        ctr.textContent = "Keine Jobs gefunden.";
         return;
     }
-    const clone = cloneTableWithLinebreaks(table);
-    const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
-    XLSX.writeFile(wb, filename);
+
+    const form = document.createElement("div");
+    form.setAttribute("role", "radiogroup");
+
+    names.forEach((name, idx) => {
+        const id = `jobradio-${idx}`;
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-check form-check-inline";
+
+        const input = document.createElement("input");
+        input.className = "form-check-input";
+        input.type = "radio";
+        input.name = "jobName";
+        input.id = id;
+        input.value = name;
+        input.checked = JOBS_STATE.selected ? (JOBS_STATE.selected === name) : (idx === 0);
+        input.addEventListener("change", (e) => {
+            if (e.target.checked) {
+                JOBS_STATE.selected = e.target.value;
+                renderTableForSelectedJob();
+            }
+        });
+
+        const label = document.createElement("label");
+        label.className = "form-check-label";
+        label.setAttribute("for", id);
+        label.textContent = name;
+
+        wrapper.appendChild(input);
+        wrapper.appendChild(label);
+        form.appendChild(wrapper);
+    });
+
+    ctr.appendChild(form);
+
+    // falls noch keine Auswahl gesetzt ist
+    if (!JOBS_STATE.selected) {
+        JOBS_STATE.selected = names[0];
+    }
 }
 
+// ---------------- Tabelle: nur 1 Job ---------------------------------------
+
+function renderTableForSelectedJob() {
+    const table = document.querySelector("#dataTableCmiJobs");
+    if (!table) {
+        console.error("#dataTableCmiJobs not found");
+        return;
+    }
+    table.innerHTML = "";
+
+    const thead = document.createElement("thead");
+    const tbody = document.createElement("tbody");
+    table.appendChild(thead);
+    table.appendChild(tbody);
+
+    // Header: Mandant | Name | Days | Time | Type
+    const trh = document.createElement("tr");
+    ["Mandant", "Name", "Days", "Time", "Type"].forEach((h) => {
+        const th = document.createElement("th");
+        th.classList.add("py-1");
+        th.textContent = h;
+        trh.appendChild(th);
+    });
+    thead.appendChild(trh);
+
+    const jobName = JOBS_STATE.selected;
+    if (!jobName) return;
+
+    // Rows sammeln
+    const rows = [];
+    for (const item of JOBS_STATE.data) {
+        const mand = getText(item?.mand).trim();
+        const jobs = toArray(item?.jobs?.job).filter(j => getText(j?.name).trim() === jobName);
+        for (const j of jobs) {
+            rows.push({
+                mand,
+                name: jobName,
+                days: getText(j?.days),
+                time: getText(j?.time),
+                type: getText(j?.type),
+            });
+        }
+    }
+
+    // Nur Mandanten mit diesem Job (rows ist dann leer, wenn keiner passt)
+    // Sortierung: Mandant, dann Time
+    rows.sort((a, b) => {
+        const m = a.mand.localeCompare(b.mand, "de", { sensitivity: "base", numeric: true });
+        if (m !== 0) return m;
+        return a.time.localeCompare(b.time, "de", { numeric: true });
+    });
+
+    // Rendern
+    for (const r of rows) {
+        const tr = document.createElement("tr");
+        const cells = [
+            escapeHtml(r.mand),
+            escapeHtml(r.name),
+            escapeHtml(r.days),
+            escapeHtml(r.time),
+            escapeHtml(r.type),
+        ];
+        for (const html of cells) {
+            const td = document.createElement("td");
+            td.classList.add("py-1");
+            td.textContent = html; // Inhalte sind plain text
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+
+    // Hinweis, wenn keine Zeilen
+    if (!rows.length) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 5;
+        td.className = "py-1 text-muted";
+        td.textContent = "Keine Einträge für diesen Job.";
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    }
+}
+
+// ---------------- Fetch + Init ---------------------------------------------
 
 async function runScriptJobsOverview() {
     const tableRaw = document.getElementById("tableRaw");
-    tableRaw.textContent = `Running script\n`;
+    if (tableRaw) tableRaw.textContent = `Running script\n`;
 
     try {
-        const response = await fetch('/run-script-fulloverview-jobs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: '{}'
+        const response = await fetch("/run-script-fulloverview-jobs", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: "{}",
         });
 
         if (response.ok) {
             const result = await response.json();
-            tableRaw.textContent = "";
-            populateTable(result.Data || []);
+            if (tableRaw) tableRaw.textContent = "";
+            const arr = Array.isArray(result.Data) ? result.Data : (result.Data ? [result.Data] : []);
+
+            JOBS_STATE.data = arr;
+            JOBS_STATE.jobNames = collectJobNames(arr);
+
+            renderJobSelector(JOBS_STATE.jobNames);
+            renderTableForSelectedJob();
         } else {
             const error = await response.json();
-            tableRaw.textContent += `Error: ${error.error}`;
+            if (tableRaw) tableRaw.textContent += `Error: ${error.error}`;
         }
     } catch (error) {
-        tableRaw.textContent += `Error: ${error.message}`;
+        if (tableRaw) tableRaw.textContent += `Error: ${error.message}`;
     }
 }
