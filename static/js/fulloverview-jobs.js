@@ -151,9 +151,9 @@ function renderTableForSelectedJob() {
     table.appendChild(thead);
     table.appendChild(tbody);
 
-    // Header: Mandant | Name | Days | Time | Type
+    // Header: Name | Mandant | Job Name | Days | Time | Type
     const trh = document.createElement("tr");
-    ["Mandant", "Name", "Days", "Time", "Type"].forEach((h) => {
+    ["Name", "Mandant", "Job Name", "Days", "Time", "Type"].forEach((h) => {
         const th = document.createElement("th");
         th.classList.add("py-1");
         th.textContent = h;
@@ -167,12 +167,14 @@ function renderTableForSelectedJob() {
     // Rows sammeln
     const rows = [];
     for (const item of JOBS_STATE.data) {
+        const mandname = getText(item?.name).trim();
         const mand = getText(item?.mand).trim();
         const jobs = toArray(item?.jobs?.job).filter(j => getText(j?.name).trim() === jobName);
         for (const j of jobs) {
             rows.push({
+                mandname,
                 mand,
-                name: jobName,
+                jobname: jobName,
                 days: getText(j?.days),
                 time: getText(j?.time),
                 type: getText(j?.type),
@@ -192,8 +194,9 @@ function renderTableForSelectedJob() {
     for (const r of rows) {
         const tr = document.createElement("tr");
         const cells = [
+            escapeHtml(r.mandname),
             escapeHtml(r.mand),
-            escapeHtml(r.name),
+            escapeHtml(r.jobname),
             escapeHtml(r.days),
             escapeHtml(r.time),
             escapeHtml(r.type),
