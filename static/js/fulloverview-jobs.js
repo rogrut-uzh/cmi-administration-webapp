@@ -167,7 +167,7 @@ function renderTableForSelectedJob() {
     // Rows sammeln
     const rows = [];
     for (const item of JOBS_STATE.data) {
-        const mandname = getText(item?.name).trim();
+        const mandname = getText(item?.namefull).trim();
         const mand = getText(item?.mand).trim();
         const jobs = toArray(item?.jobs?.job).filter(j => getText(j?.name).trim() === jobName);
         for (const j of jobs) {
