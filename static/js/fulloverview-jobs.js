@@ -5,17 +5,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
 // ---------------- Helpers ---------------------------------------------------
 
-function downloadTableAsXlsx(tableId, filename) {
-    const table = document.getElementById(tableId);
-    if (!table) {
-        alert("Tabelle nicht gefunden!");
-        return;
-    }
-    const clone = cloneTableWithLinebreaks(table);
-    const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
-    XLSX.writeFile(wb, filename);
-}
-
 function toArray(x) {
     if (!x) return [];
     return Array.isArray(x) ? x : [x];
@@ -72,6 +61,28 @@ function computeJobCounts(data) {
     }
   }
   return map;
+}
+
+function cloneTableWithLinebreaks(table) {
+    // Tabelle klonen, damit die Seite unverändert bleibt
+    const clone = table.cloneNode(true);
+    // Alle Zellen durchgehen
+    clone.querySelectorAll('td,th').forEach(cell => {
+        // Ersetze <br> durch \n im Inhalt
+        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, ' | ');
+    });
+    return clone;
+}
+
+function downloadTableAsXlsx(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) {
+        alert("Tabelle nicht gefunden!");
+        return;
+    }
+    const clone = cloneTableWithLinebreaks(table);
+    const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
+    XLSX.writeFile(wb, filename);
 }
 
 
