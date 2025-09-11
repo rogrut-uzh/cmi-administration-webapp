@@ -5,6 +5,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
 // ---------------- Helpers ---------------------------------------------------
 
+function downloadTableAsXlsx(tableId, filename) {
+    const table = document.getElementById(tableId);
+    if (!table) {
+        alert("Tabelle nicht gefunden!");
+        return;
+    }
+    const clone = cloneTableWithLinebreaks(table);
+    const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
+    XLSX.writeFile(wb, filename);
+}
+
 function toArray(x) {
     if (!x) return [];
     return Array.isArray(x) ? x : [x];
