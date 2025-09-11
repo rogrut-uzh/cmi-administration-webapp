@@ -2,17 +2,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
     runScriptJobsOverview();
 });
 
-// ---------------- Helpers ---------------------------------------------------
 
-function escapeHtml(unsafe) {
-    if (!unsafe) return "";
-    return String(unsafe)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+// ---------------- Helpers ---------------------------------------------------
 
 function toArray(x) {
     if (!x) return [];
@@ -26,43 +17,52 @@ function getText(v) {
     return "";
 }
 
+function makeJobKey(t, name) {
+  t = (t || "").trim();
+  name = (name || "").trim();
+  return t ? `${t} | ${name}` : name;   // wenn kein type vorhanden, nur name
+}
+
+function splitJobKey(key) {
+  const i = key.indexOf("|");
+  if (i === -1) return ["", key.trim()];
+  return [key.slice(0, i).trim(), key.slice(i + 1).trim()];
+}
+
 function collectJobNames(data) {
   const set = new Set();
   for (const item of data) {
     for (const j of toArray(item?.jobs?.job)) {
       const t = getText(j?.type).trim();
       const name = getText(j?.name).trim();
-      if (name) set.add(`${t} | ${name}`);
+      if (name) set.add(makeJobKey(t, name));
     }
   }
 
   const collator = new Intl.Collator('de', { sensitivity: 'base', numeric: true });
 
-  const splitParts = (s) => {
-    const i = s.indexOf('|');
-    if (i === -1) return [s.trim(), ''];
-    return [s.slice(0, i).trim(), s.slice(i + 1).trim()];
-  };
-
   return Array.from(set).sort((a, b) => {
-    const [ta, na] = splitParts(a);
-    const [tb, nb] = splitParts(b);
+    const [ta, na] = splitJobKey(a);
+    const [tb, nb] = splitJobKey(b);
     const first = collator.compare(ta, tb);
     return first !== 0 ? first : collator.compare(na, nb);
   });
 }
 
 function computeJobCounts(data) {
-    const map = new Map();
-    for (const item of data) {
-        for (const j of toArray(item?.jobs?.job)) {
-            const name = getText(j?.name).trim();
-            if (!name) continue;
-            map.set(name, (map.get(name) || 0) + 1);
-        }
+  const map = new Map();
+  for (const item of data) {
+    for (const j of toArray(item?.jobs?.job)) {
+      const t = getText(j?.type).trim();
+      const name = getText(j?.name).trim();
+      if (!name) continue;
+      const key = makeJobKey(t, name);
+      map.set(key, (map.get(key) || 0) + 1);
     }
-    return map;
+  }
+  return map;
 }
+
 
 // ---------------- State -----------------------------------------------------
 
@@ -106,13 +106,10 @@ function renderJobSelector(names) {
 
     // Vertikale Anordnung
     const form = document.createElement("div");
-    // Optional hübsch: form.className = "d-flex flex-column"; // falls Bootstrap 4/5
     form.setAttribute("role", "radiogroup");
 
     names.forEach((name, idx) => {
         const id = `jobradio-${idx}`;
-
-        // Kein "form-check-inline" -> damit jede Option in eigener Zeile
         const wrapper = document.createElement("div");
         wrapper.className = "form-check mb-1";
 
@@ -152,88 +149,80 @@ function renderJobSelector(names) {
 // ---------------- Tabelle: nur 1 Job ---------------------------------------
 
 function renderTableForSelectedJob() {
-    const table = document.querySelector("#dataTableCmiJobs");
-    if (!table) {
-        console.error("#dataTableCmiJobs not found");
-        return;
+  const table = document.querySelector("#dataTableCmiJobs");
+  if (!table) {
+    console.error("#dataTableCmiJobs not found");
+    return;
+  }
+  table.innerHTML = "";
+
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
+  table.appendChild(thead);
+  table.appendChild(tbody);
+
+  const trh = document.createElement("tr");
+  ["Name", "Mandant", "Job Name", "Days", "Time", "Type"].forEach((h) => {
+    const th = document.createElement("th");
+    th.classList.add("py-1");
+    th.textContent = h;
+    trh.appendChild(th);
+  });
+  thead.appendChild(trh);
+
+  const jobKey = JOBS_STATE.selected;
+  if (!jobKey) return;
+  const [selType, selName] = splitJobKey(jobKey);
+
+  const rows = [];
+  for (const item of JOBS_STATE.data) {
+    const mandname = getText(item?.namefull).trim();
+    const mand = getText(item?.mand).trim();
+    const jobs = toArray(item?.jobs?.job).filter(j =>
+      getText(j?.name).trim() === selName &&
+      getText(j?.type).trim() === selType
+    );
+    for (const j of jobs) {
+      rows.push({
+        mandname,
+        mand,
+        jobname: selName,
+        days: getText(j?.days),
+        time: getText(j?.time),
+        type: getText(j?.type),
+      });
     }
-    table.innerHTML = "";
+  }
 
-    const thead = document.createElement("thead");
-    const tbody = document.createElement("tbody");
-    table.appendChild(thead);
-    table.appendChild(tbody);
+  rows.sort((a, b) => {
+    const m = a.mand.localeCompare(b.mand, "de", { sensitivity: "base", numeric: true });
+    if (m !== 0) return m;
+    return a.time.localeCompare(b.time, "de", { numeric: true });
+  });
 
-    // Header: Name | Mandant | Job Name | Days | Time | Type
-    const trh = document.createElement("tr");
-    ["Name", "Mandant", "Job Name", "Days", "Time", "Type"].forEach((h) => {
-        const th = document.createElement("th");
-        th.classList.add("py-1");
-        th.textContent = h;
-        trh.appendChild(th);
-    });
-    thead.appendChild(trh);
-
-    const jobName = JOBS_STATE.selected;
-    if (!jobName) return;
-
-    // Rows sammeln
-    const rows = [];
-    for (const item of JOBS_STATE.data) {
-        const mandname = getText(item?.namefull).trim();
-        const mand = getText(item?.mand).trim();
-        const jobs = toArray(item?.jobs?.job).filter(j => getText(j?.name).trim() === jobName);
-        for (const j of jobs) {
-            rows.push({
-                mandname,
-                mand,
-                jobname: jobName,
-                days: getText(j?.days),
-                time: getText(j?.time),
-                type: getText(j?.type),
-            });
-        }
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    const cells = [r.mandname, r.mand, r.jobname, r.days, r.time, r.type];
+    for (const txt of cells) {
+      const td = document.createElement("td");
+      td.classList.add("py-1");
+      td.textContent = txt; // textContent ist sicher; escapeHtml hier nicht nötig
+      tr.appendChild(td);
     }
+    tbody.appendChild(tr);
+  }
 
-    // Nur Mandanten mit diesem Job (rows ist dann leer, wenn keiner passt)
-    // Sortierung: Mandant, dann Time
-    rows.sort((a, b) => {
-        const m = a.mand.localeCompare(b.mand, "de", { sensitivity: "base", numeric: true });
-        if (m !== 0) return m;
-        return a.time.localeCompare(b.time, "de", { numeric: true });
-    });
-
-    // Rendern
-    for (const r of rows) {
-        const tr = document.createElement("tr");
-        const cells = [
-            escapeHtml(r.mandname),
-            escapeHtml(r.mand),
-            escapeHtml(r.jobname),
-            escapeHtml(r.days),
-            escapeHtml(r.time),
-            escapeHtml(r.type),
-        ];
-        for (const html of cells) {
-            const td = document.createElement("td");
-            td.classList.add("py-1");
-            td.textContent = html; // Inhalte sind plain text
-            tr.appendChild(td);
-        }
-        tbody.appendChild(tr);
-    }
-
-    // Hinweis, wenn keine Zeilen
-    if (!rows.length) {
-        const tr = document.createElement("tr");
-        const td = document.createElement("td");
-        td.colSpan = 5;
-        td.className = "py-1 text-muted";
-        td.textContent = "Keine Einträge für diesen Job.";
-        tr.appendChild(td);
-        tbody.appendChild(tr);
-    }
+  if (!rows.length) {
+    const tr = document.createElement("tr");
+    const td = document.createElement("td");
+    td.colSpan = 6; // <-- du hast 6 Spalten
+    td.className = "py-1 text-muted";
+    td.textContent = "Keine Einträge für diesen Job.";
+    tr.appendChild(td);
+    tbody.appendChild(tr);
+  }
 }
+
 
 // ---------------- Fetch + Init ---------------------------------------------
 
