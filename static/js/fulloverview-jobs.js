@@ -27,16 +27,29 @@ function getText(v) {
 }
 
 function collectJobNames(data) {
-    const set = new Set();
-    for (const item of data) {
-        for (const j of toArray(item?.jobs?.job)) {
-            const name = getText(j?.name).trim();
-            if (name) set.add(name);
-        }
+  const set = new Set();
+  for (const item of data) {
+    for (const j of toArray(item?.jobs?.job)) {
+      const t = getText(j?.type).trim();
+      const name = getText(j?.name).trim();
+      if (name) set.add(`${t} | ${name}`);
     }
-    return Array.from(set).sort((a, b) =>
-        a.localeCompare(b, "de", { sensitivity: "base", numeric: true })
-    );
+  }
+
+  const collator = new Intl.Collator('de', { sensitivity: 'base', numeric: true });
+
+  const splitParts = (s) => {
+    const i = s.indexOf('|');
+    if (i === -1) return [s.trim(), ''];
+    return [s.slice(0, i).trim(), s.slice(i + 1).trim()];
+  };
+
+  return Array.from(set).sort((a, b) => {
+    const [ta, na] = splitParts(a);
+    const [tb, nb] = splitParts(b);
+    const first = collator.compare(ta, tb);
+    return first !== 0 ? first : collator.compare(na, nb);
+  });
 }
 
 function computeJobCounts(data) {
