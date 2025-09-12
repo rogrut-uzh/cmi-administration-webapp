@@ -74,6 +74,9 @@ function populateTable(data, app, env) {
         { text: "DB Host" },
         { text: "DB Name" }
     ];
+    if ('test' === env) {
+        headers.push({ text: "DB from PROD" });
+    }
     for (const h of headers) {
         const th = document.createElement("th");
         th.classList.add(tdclass);
@@ -259,6 +262,14 @@ function populateTable(data, app, env) {
         dbnameCell.classList.add(tdclass);
         dbnameCell.textContent = item.database?.name?._text ?? "";
         row.appendChild(dbnameCell);
+
+        // DB PROD Abgleich
+        if ('test' === env) {
+            const dbfromprodCell = document.createElement("td");
+            dbfromprodCell.classList.add(tdclass);
+            dbfromprodCell.textContent = item.database?.db_from_prod?._text ?? "";
+            row.appendChild(dbfromprodCell);
+        }
 
         // Row anfügen
         tableBody.appendChild(row);
