@@ -46,7 +46,6 @@ function populateTable(data, app, env) {
         table = (env == "prod") ? document.querySelector("#dataTableAisProd") 
                                 : document.querySelector("#dataTableAisTest");
     }
-    table.classList.add("sticky");
 
     const tableHead = document.createElement("thead");
     table.appendChild(tableHead);
@@ -80,15 +79,31 @@ function populateTable(data, app, env) {
     if ('test' === env) {
         headers.push({ text: "DB from PROD" });
     }
-    for (const h of headers) {
-        const th = document.createElement("th");
+    for (let h of headers) {
+        let th = document.createElement("th");
         th.classList.add(tdclass);
         if (h.minwidth) th.classList.add(tdurlminwidth);
         th.textContent = h.text;
         tableHeadTr.appendChild(th);
     }
-
+    const everyXrow = 5;
+    let rowCount = 0;
+    
     data.forEach(item => {
+        rowCount++;
+        
+        if (rowCount % everyXrow === 0) {
+            let inbetweenHeaderTr = document.createElement("tr");
+            for (let h of headers) {
+                let inbetweenHeaderTd = document.createElement("td");
+                inbetweenHeaderTd.classList.add(tdclass);
+                if (h.minwidth) inbetweenHeaderTd.classList.add(tdurlminwidth);
+                inbetweenHeaderTd.textContent = h.text;
+                inbetweenHeaderTr.appendChild(inbetweenHeaderTd);
+            }
+            tableBody.appendChild(inbetweenHeaderTr);
+        }
+        
         const row = document.createElement("tr");
 
         // Name
