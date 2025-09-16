@@ -90,20 +90,8 @@ function populateTable(data, app, env) {
     let rowCount = 0;
     
     data.forEach(item => {
+        
         rowCount++;
-        
-        if (rowCount % everyXrow === 0) {
-            let inbetweenHeaderTr = document.createElement("tr");
-            for (let h of headers) {
-                let inbetweenHeaderTd = document.createElement("td");
-                inbetweenHeaderTd.classList.add(tdclass);
-                if (h.minwidth) inbetweenHeaderTd.classList.add(tdurlminwidth);
-                inbetweenHeaderTd.textContent = h.text;
-                inbetweenHeaderTr.appendChild(inbetweenHeaderTd);
-            }
-            tableBody.appendChild(inbetweenHeaderTr);
-        }
-        
         const row = document.createElement("tr");
 
         // Name
@@ -291,6 +279,19 @@ function populateTable(data, app, env) {
 
         // Row anfügen
         tableBody.appendChild(row);
+        
+        if (rowCount % everyXrow === 0 && rowCount < data.length) {
+            const inbetweenHeaderTr = document.createElement("tr");
+            inbetweenHeaderTr.classList.add("inbetween-header"); 
+            for (const h of headers) {
+                const inbetweenHeaderTd = document.createElement("th");
+                inbetweenHeaderTd.setAttribute("scope", "col");
+                if (h.minwidth) inbetweenHeaderTd.classList.add(tdurlminwidth);
+                inbetweenHeaderTd.textContent = h.text;
+                inbetweenHeaderTr.appendChild(inbetweenHeaderTd);
+            }
+            tableBody.appendChild(inbetweenHeaderTr);
+        }
     });
     
 }

@@ -37,6 +37,12 @@ h3 {
   color: white;
   box-shadow: 0 1px 0 rgba(0,0,0,.1);
 }
+tr.inbetween-header th {
+  background: #aaa;
+  color: #fff;
+  /* optional: kleine Linie unten für Absetzung */
+  box-shadow: 0 1px 0 rgba(0,0,0,.1);
+}
 th.url-minwidth,
 td.url-minwidth {
   white-space: nowrap;
