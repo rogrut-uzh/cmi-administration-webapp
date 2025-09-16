@@ -284,7 +284,7 @@ function populateTable(data, app, env) {
             const inbetweenHeaderTr = document.createElement("tr");
             inbetweenHeaderTr.classList.add("inbetween-header"); 
             for (const h of headers) {
-                const inbetweenHeaderTd = document.createElement("th");
+                const inbetweenHeaderTd = document.createElement("td");
                 inbetweenHeaderTd.setAttribute("scope", "col");
                 if (h.minwidth) inbetweenHeaderTd.classList.add(tdurlminwidth);
                 inbetweenHeaderTd.textContent = h.text;
