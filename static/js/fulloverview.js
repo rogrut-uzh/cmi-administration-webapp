@@ -40,10 +40,13 @@ function populateTable(data, app, env) {
     let table;
 
     if (app == "cmi") {
-        table = (env == "prod") ? document.querySelector("#dataTableCmiProd") : document.querySelector("#dataTableCmiTest");
+        table = (env == "prod") ? document.querySelector("#dataTableCmiProd") 
+                                : document.querySelector("#dataTableCmiTest");
     } else {
-        table = (env == "prod") ? document.querySelector("#dataTableAisProd") : document.querySelector("#dataTableAisTest");
+        table = (env == "prod") ? document.querySelector("#dataTableAisProd") 
+                                : document.querySelector("#dataTableAisTest");
     }
+    table.classList.add("sticky");
 
     const tableHead = document.createElement("thead");
     table.appendChild(tableHead);

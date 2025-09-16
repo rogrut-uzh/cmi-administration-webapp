@@ -64,3 +64,28 @@ table thead tr th.sort-asc:after {
 table thead tr th.sort-desc:after {
 	content: "\25be";
 }
+
+
+/* sticky table header */
+
+/* Tabelle als Ganzes */
+table.sticky {
+  border-collapse: separate;   /* sicherer für sticky */
+  border-spacing: 0;
+  table-layout: auto;
+}
+
+/* Kopfzellen kleben oben am Viewport */
+table.sticky thead th {
+  position: sticky;
+  top: 0;                      /* bei fixer Navbar z.B. 56px */
+  z-index: 2;                  /* über dem Body-Inhalt */
+  background: #fff;            /* oder deine Theme-Farbe */
+  box-shadow: 0 1px 0 rgba(0,0,0,.1);
+}
+
+/* optional: wenn du innerhalb eines Scroll-Containers scrollen willst */
+.table-scroll {
+  max-height: 70vh;            /* gewünschte Höhe */
+  overflow: auto;
+}
