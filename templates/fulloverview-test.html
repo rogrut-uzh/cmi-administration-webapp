@@ -1,11 +1,7 @@
 {% extends 'base.html' %}
-
 {% block title %}fulloverview-test{% endblock %}
-
 {% block content %}
-
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
 <div class="row align-items-start p-2">
     <div class="col p-2">
 	    <h1>Full Overview TEST</h1>
@@ -26,7 +22,6 @@
 			</div>
 		  </div>
 		</div>
-        
         <div class="row mb-2 align-items-start">
 		  <div class="col">
 			<div class="card">
@@ -43,8 +38,6 @@
         
     </div>
 </div>
-
 <script>const environment = "test";</script>
 <script src="{{ url_for('static', filename='js/fulloverview.js') }}"></script>
-
 {% endblock %}

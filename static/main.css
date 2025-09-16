@@ -1,91 +1,64 @@
+:root { --nav-h: 4rem; } /* Höhe deiner .kustom-navbar */
 body { background-color: #f1f5f7; }
 table {
-	font-size: 0.8rem;
-	background-color: #ffffff;
+  font-size: 0.8rem;
+  background-color: #ffffff;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 h1.main-title { font-weight:bold; font-family:sans-serif; font-size:1.6em; margin:0; }
 h3 {
-	border-bottom:1px solid #000000;
-	font-size:1.2rem;
+  border-bottom:1px solid #000000;
+  font-size:1.2rem;
 }
 .kustom-navbar {
-	min-height: 4rem;
-	background-color: #253a44;
-	box-shadow: 0 .5rem 1rem rgba(0,0,0,.05),inset 0 -1px 0 rgba(0,0,0,.1);
+  min-height: 4rem;
+  background-color: #253a44;
+  box-shadow: 0 .5rem 1rem rgba(0,0,0,.05),inset 0 -1px 0 rgba(0,0,0,.1);
 }
 .output {
-	/*color: #eceff1;*/
+  /*color: #eceff1;*/
 }
 .output pre {
-	background-color: #37474F;
-	color: #eceff1;
-	margin: 0;
-	white-space: pre-wrap;
+  background-color: #37474F;
+  color: #eceff1;
+  margin: 0;
+  white-space: pre-wrap;
 }
 .table-responsive-heightlimit {
-    /*max-height: 400px;*/
-    overflow-y: auto; 
-    overflow-x: auto;
+  /*max-height: 400px;*/
+  overflow-y: visible; 
+  overflow-x: auto;
 }
 .table-responsive-heightlimit thead th {
   position: sticky;
-  top: 0;
+  top: var(--nav-h);
+  z-index: 2;
   background-color: #aaa; 
   color: white;
-  z-index: 2;
 }
 th.url-minwidth,
 td.url-minwidth {
-    white-space: nowrap;
+  white-space: nowrap;
 }
-
 code.unknown {
-	color: blue;
+  color: blue;
 }
 code.running {
-	color: green;
+  color: green;
 }
 code.stopped {
-	color: orange;
+  color: orange;
 }
 code.error {
-	color: red;
+  color: red;
 }
-
-
 table tr th { cursor:pointer; }
 table thead tr th:after {
 }
-
 table thead tr th.sort-asc:after {
-	content: "\25b4";
+  content: "\25b4";
 }
-
 table thead tr th.sort-desc:after {
-	content: "\25be";
-}
-
-
-/* sticky table header */
-
-/* Tabelle als Ganzes */
-table.sticky {
-  border-collapse: separate;   /* sicherer für sticky */
-  border-spacing: 0;
-  table-layout: auto;
-}
-
-/* Kopfzellen kleben oben am Viewport */
-table.sticky thead th {
-  position: sticky;
-  top: 0;                      /* bei fixer Navbar z.B. 56px */
-  z-index: 2;                  /* über dem Body-Inhalt */
-  background: #fff;            /* oder deine Theme-Farbe */
-  box-shadow: 0 1px 0 rgba(0,0,0,.1);
-}
-
-/* optional: wenn du innerhalb eines Scroll-Containers scrollen willst */
-.table-scroll {
-  max-height: 70vh;            /* gewünschte Höhe */
-  overflow: auto;
+  content: "\25be";
 }
