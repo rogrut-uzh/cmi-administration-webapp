@@ -1,4 +1,4 @@
-:root { --nav-h: 4rem; } /* Höhe deiner .kustom-navbar */
+:root { --nav-h: 8rem; } /* Höhe deiner .kustom-navbar */
 body { background-color: #f1f5f7; }
 table {
   font-size: 0.8rem;
@@ -32,10 +32,11 @@ h3 {
 }
 .table-responsive-heightlimit thead th {
   position: sticky;
-  top: var(--nav-h);
+  top: calc(var(--nav-h) + 1rem);
   z-index: 2;
   background-color: #aaa; 
   color: white;
+  box-shadow: 0 1px 0 rgba(0,0,0,.1);
 }
 th.url-minwidth,
 td.url-minwidth {
