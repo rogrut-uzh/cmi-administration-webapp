@@ -156,11 +156,11 @@ function populateTable(data, app, env) {
         const mobilefirstCell = document.createElement("td");
         mobilefirstCell.classList.add(tdclass, tdurlminwidth);
         if (item.mobilefirst?._text) {
-            let link = document.createElement("a");
-            link.href = item.mobilefirst._text;
-            link.textContent = item.mobilefirst._text;
-            link.target = "_blank";
-            mobilefirstCell.appendChild(link);
+            let mlink = document.createElement("a");
+            mlink.href = item.mobilefirst._text;
+            mlink.textContent = item.mobilefirst._text;
+            mlink.target = "_blank";
+            mobilefirstCell.appendChild(mlink);
         }
         row.appendChild(mobilefirstCell);
 
@@ -217,7 +217,12 @@ function populateTable(data, app, env) {
         const webconsoleCell = document.createElement("td");
         webconsoleCell.classList.add(tdclass);
         if (item.webconsole?.port?._text) {
-            webconsoleCell.textContent = "Port: " + item.webconsole.port._text;
+            let webconsoleLink = document.createElement("a");
+            let webconsoleLinkText = "http://" + hostCell.textContent + ":" + item.webconsole.port._text;
+            webconsoleLink.href = webconsoleLinkText;
+            webconsoleLink.textContent = webconsoleLinkText;
+            webconsoleLink.target = "_blank";
+            webconsoleCell.appendChild(webconsoleLink);
         } else {
             webconsoleCell.textContent = "";
         }

@@ -6,7 +6,6 @@ table {
 th {
   background-color: #aaa; 
   color: white;
-  box-shadow: 0 3px 0 rgba(0,0,0,.2);
 }
 h1.main-title { font-weight:bold; font-family:sans-serif; font-size:1.6em; margin:0; }
 h3 {
