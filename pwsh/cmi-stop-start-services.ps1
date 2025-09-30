@@ -18,7 +18,7 @@ $env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 
 # Exit, wenn nicht als admin ausgeführt
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    write-host "run as admin"
+    write-output "run as admin"
     exit 1
 }
 
@@ -81,7 +81,7 @@ function Start-ServicesRemote {
         )
 
         foreach ($service in $services) {
-            write-host ""
+            write-output ""
             $serviceObj = Get-Service -Name $service -ErrorAction SilentlyContinue
             if ($serviceObj -and $serviceObj.Status -ne 'Running') {
                 Write-Output "Trying to start the service ${service}..."
@@ -133,7 +133,7 @@ function Get-CMI-Config-Data {
 $elements = Get-CMI-Config-Data -App $App -Env $Env
 
 if (($elements | Measure-Object).count -lt 1) {
-    write-host "nothing found."
+    write-output "nothing found."
     exit 1
 } else {
 	Write-Output "Answer received. Getting the names of the corresponding services..."
@@ -146,7 +146,7 @@ foreach ($ele in $elements) {
 write-Output ""
 write-Output "Found Services:"
 
-if ($Action -like "stop") {
+if ($Action -eq "stop") {
     
     $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
         if ($_ -like "*Lizenz*") {
@@ -165,7 +165,8 @@ if ($Action -like "stop") {
         exit 1
     }
 
-} else if ($Action -like "start") {
+}
+if ($Action -eq "start") {
     
     $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
         if ($_ -like "*Lizenz*") {
