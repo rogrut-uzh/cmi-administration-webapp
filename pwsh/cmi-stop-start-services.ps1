@@ -143,31 +143,47 @@ foreach ($ele in $elements) {
 	$WindowsServicesList += $ele.app.servicename._text
 }
 
-$WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
-    if ($_ -like "*Lizenz*") {
-        0 # "Lizenz" has the highest priority
-    } else {
-        1 # All others come last
-    }
-}
-
-
 write-Output ""
 write-Output "Found Services:"
-foreach ($e in $WindowsServicesListSorted) {
-    write-Output $e
-}
 
-if ($WindowsServicesListSorted.length -gt 0) {
-    if ($Action -like "stop") {
+if ($Action -like "stop") {
+    
+    $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
+        if ($_ -like "*Lizenz*") {
+            1 # "Lizenz" must shut down the last
+        } else {
+            0 # All others come first
+        }
+    }
+    if ($WindowsServicesListSorted.length -gt 0) {
+        foreach ($e in $WindowsServicesListSorted) {
+            write-Output $e
+        }
         Stop-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
+    } else {
+        write-Output "no services found."
+        exit 1
     }
-    if ($Action -like "start") {
+
+} else if ($Action -like "start") {
+    
+    $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
+        if ($_ -like "*Lizenz*") {
+            0 # "Lizenz" must start first
+        } else {
+            1 # All others come later
+        }
+    }
+    if ($WindowsServicesListSorted.length -gt 0) {
+        foreach ($e in $WindowsServicesListSorted) {
+            write-Output $e
+        }
         Start-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
+    } else {
+        write-Output "no services found."
+        exit 1
     }
-} else {
-    write-Output "no services found."
-    exit 1
+    
 }
 
 exit 0
