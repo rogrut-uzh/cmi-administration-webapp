@@ -1,0 +1,14 @@
+# CMI Administration Webapp - Production Dependencies
+# Python 3.x required
+
+# Web Framework
+Flask==3.0.3
+
+# Production WSGI Server
+waitress==3.0.0
+
+# Environment Variables Management (recommended)
+python-dotenv==1.0.1
+
+# Security: CSRF Protection
+Flask-WTF==1.2.1

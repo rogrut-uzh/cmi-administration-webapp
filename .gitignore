@@ -1,7 +1,136 @@
+# ============================================
+# CMI Administration Webapp - .gitignore
+# ============================================
+
+# ===== Python =====
 __pycache__/
 *.py[cod]
+*$py.class
+*.so
+*.egg
 *.egg-info/
-*.log
-.env
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.manifest
+*.spec
+
+# ===== Virtual Environments =====
 venv/
+env/
 .env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# ===== Environment Variables & Secrets =====
+.env
+.env.local
+.env.*.local
+*.env
+secrets.json
+credentials.json
+
+# ===== Logs & Databases =====
+*.log
+*.log.*
+logs/
+*.sqlite
+*.sqlite3
+*.db
+
+# ===== Testing & Coverage =====
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+.cache
+nosetests.xml
+
+# ===== IDEs & Editors =====
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+
+# ===== Operating Systems =====
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ===== Flask Specific =====
+instance/
+.webassets-cache
+.flask_session/
+
+# ===== Backup & Temporary Files =====
+*.bak
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+.backup/
+temp/
+tmp/
+
+# ===== Archives =====
+*.zip
+*.tar.gz
+*.tar
+*.rar
+*.7z
+
+# ===== Keep Archive Directory Structure =====
+!archive/README.md
