@@ -1,70 +1,150 @@
-body { background-color: #f1f5f7; }
-table {
-  font-size: 0.8rem;
-  background-color: #ffffff;
+/* ===========================================
+ * CMI Admin - Modern CSS with Variables
+ * =========================================== */
+
+:root {
+  /* Color Palette */
+  --color-bg-body: #f1f5f7;
+  --color-bg-table: #ffffff;
+  --color-bg-header: #aaa;
+  --color-bg-navbar: #253a44;
+  --color-bg-code: #37474F;
+  --color-text-white: #ffffff;
+  --color-text-code: #eceff1;
+  --color-border: #000000;
+  
+  /* Status Colors */
+  --color-unknown: #0d6efd;
+  --color-running: #198754;
+  --color-stopped: #fd7e14;
+  --color-error: #dc3545;
+  
+  /* Spacing */
+  --navbar-min-height: 4rem;
+  
+  /* Typography */
+  --font-size-table: 0.8rem;
+  --font-size-h3: 1.2rem;
+  --font-size-title: 1.6em;
 }
-th {
-  background-color: #aaa; 
-  color: white;
+
+/* ===========================================
+ * Base Styles
+ * =========================================== */
+
+body {
+  background-color: var(--color-bg-body);
 }
-h1.main-title { font-weight:bold; font-family:sans-serif; font-size:1.6em; margin:0; }
-h3 {
-  border-bottom:1px solid #000000;
-  font-size:1.2rem;
-}
-.kustom-navbar {
-  min-height: 4rem;
-  background-color: #253a44;
-  box-shadow: 0 .5rem 1rem rgba(0,0,0,.05),inset 0 -1px 0 rgba(0,0,0,.1);
-}
-.output {
-  /*color: #eceff1;*/
-}
-.output pre {
-  background-color: #37474F;
-  color: #eceff1;
+
+/* ===========================================
+ * Typography
+ * =========================================== */
+
+h1.main-title {
+  font-weight: bold;
+  font-family: sans-serif;
+  font-size: var(--font-size-title);
   margin: 0;
-  white-space: pre-wrap;
 }
+
+h3 {
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--font-size-h3);
+}
+
+/* ===========================================
+ * Navigation
+ * =========================================== */
+
+.kustom-navbar {
+  min-height: var(--navbar-min-height);
+  background-color: var(--color-bg-navbar);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.05),
+              inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+/* ===========================================
+ * Tables
+ * =========================================== */
+
+table {
+  font-size: var(--font-size-table);
+  background-color: var(--color-bg-table);
+}
+
+th {
+  background-color: var(--color-bg-header);
+  color: var(--color-text-white);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Sortier-Indikatoren */
+table thead tr th.sort-asc::after {
+  content: "\25b4";
+  margin-left: 0.5rem;
+}
+
+table thead tr th.sort-desc::after {
+  content: "\25be";
+  margin-left: 0.5rem;
+}
+
+/* Sticky Header für scrollbare Tabellen */
 .table-responsive-heightlimit {
-  /*max-height: 400px;*/
-  overflow-y: auto; 
+  overflow-y: auto;
   overflow-x: auto;
 }
+
 .table-responsive-heightlimit thead th {
   position: sticky;
   top: 0;
   z-index: 2;
 }
+
+/* Zwischen-Header in Tabellen */
 tr.inbetween-header td {
-  background: #aaa;
+  background: var(--color-bg-header);
   font-weight: bold;
-  color: #fff;
-  /* optional: kleine Linie unten für Absetzung */
-  box-shadow: 0 1px 0 rgba(0,0,0,.1);
+  color: var(--color-text-white);
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
 }
+
+/* URL-Zellen */
 th.url-minwidth,
 td.url-minwidth {
   white-space: nowrap;
 }
+
+/* ===========================================
+ * Code & Output
+ * =========================================== */
+
+.output pre {
+  background-color: var(--color-bg-code);
+  color: var(--color-text-code);
+  margin: 0;
+  white-space: pre-wrap;
+  padding: 1rem;
+  border-radius: 0.25rem;
+}
+
+/* ===========================================
+ * Status Codes
+ * =========================================== */
+
 code.unknown {
-  color: blue;
+  color: var(--color-unknown);
 }
+
 code.running {
-  color: green;
+  color: var(--color-running);
 }
+
 code.stopped {
-  color: orange;
+  color: var(--color-stopped);
 }
+
 code.error {
-  color: red;
-}
-table tr th { cursor:pointer; }
-table thead tr th:after {
-}
-table thead tr th.sort-asc:after {
-  content: "\25b4";
-}
-table thead tr th.sort-desc:after {
-  content: "\25be";
+  color: var(--color-error);
 }
