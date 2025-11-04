@@ -1,22 +1,32 @@
-###################
-# cmi-cockpit.ps1 #
-###################
-# 
-# Für Aufruf in der Webapp gedacht. Sammelt Informationen zu den CMI-Installationen.
-#
-# Autor: rogrut / Dezember 2024, September 2025
-#
-###################
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:NO_PROXY = "localhost,127.0.0.1,::1"
-$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
-$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+<#
+.SYNOPSIS
+    Fetch all CMI/AIS configuration data for cockpit display
+.DESCRIPTION
+    Simple wrapper to get all data from the CMI Config API
+#>
 
-$elements = Invoke-RestMethod -Uri "http://127.0.0.1:5001/api/data" -Method Get -NoProxy
+param()
 
-if (-not $elements -or $elements.Count -lt 1) {
-    Write-Error "nothing found."   # -> stderr
+# Import common module
+Import-Module "$PSScriptRoot\Common.psm1" -Force
+
+# Initialize environment
+Initialize-CMIEnvironment
+
+try {
+    # Fetch all data
+    $elements = Get-CMIConfigData
+    
+    if (-not $elements -or ($elements | Measure-Object).Count -lt 1) {
+        Write-Error "Nothing found."
+        exit 1
+    }
+    
+    # Output as JSON
+    $elements | ConvertTo-Json -Depth 10
+    exit 0
+}
+catch {
+    Write-Error "Failed to fetch configuration data: $_"
     exit 1
 }
-
-$elements | ConvertTo-Json -Depth 10  # -> stdout (nur JSON)

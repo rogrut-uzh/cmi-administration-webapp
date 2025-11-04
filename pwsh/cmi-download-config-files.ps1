@@ -1,99 +1,136 @@
-#################################
-# cmi-download-config-files.ps1 #
-#################################
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:NO_PROXY = "127.0.0.1,localhost"
-$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
-$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
-$ErrorActionPreference = "Stop"
-$VerbosePreference = "SilentlyContinue"
+<#
+.SYNOPSIS
+    Download all CMI MetaTool.ini config files from all mandants
+.DESCRIPTION
+    Downloads MetaTool.ini, install_service.bat, and uninstall_service.bat
+    from all CMI and AIS mandants (prod and test) and returns as ZIP file
+#>
 
-# Lokaler Basisordner zum Zwischenspeichern der Dateien
+param()
+
+# Import common module
+Import-Module "$PSScriptRoot\Common.psm1" -Force
+
+# Initialize environment
+Initialize-CMIEnvironment
+
+# Temporary path for file collection
 $tempPath = "C:\temp\MandantenFiles"
 if (-Not (Test-Path $tempPath)) {
     New-Item -ItemType Directory -Path $tempPath | Out-Null
 }
 
-function Get-CMI-Config-Data {
-    $ApiUrl = "http://127.0.0.1:5001/api/data"
-    $RawJson = (Invoke-WebRequest -Uri $ApiUrl -Method Get -UseBasicParsing -ErrorAction Stop).Content
-    $ParsedJson = $RawJson | ConvertFrom-Json
-    return $ParsedJson
+# Fetch all configuration data
+try {
+    $mandanten = Get-CMIConfigData
+}
+catch {
+    Write-Error "Failed to fetch configuration data: $_"
+    exit 1
 }
 
-$mandanten = Get-CMI-Config-Data
-$mandantenNeededValues = @()
+# Process each mandant
 foreach ($mandant in $mandanten) {
-    $mandantenNeededValues += ,@(
-        $mandant.app.host._text, 
-        $mandant.app.installpath._text, 
-        (Split-Path -Path $mandant.app.installpath._text -Leaf),
-        @("$($mandant.app.installpath._text)\Client\MetaTool.ini","$($mandant.app.installpath._text)\Server\MetaTool.ini","$($mandant.app.installpath._text)\Server\install_service.bat","$($mandant.app.installpath._text)\Server\uninstall_service.bat")
-    )
-}
-for ($i = 0; $i -lt $mandantenNeededValues.Count; $i++) {
-    # Extrahiere die Gruppen-Elemente
-    $computer      = $mandantenNeededValues[$i][0]
-    $installPath   = $mandantenNeededValues[$i][1]
-    $leafName      = $mandantenNeededValues[$i][2]
-    $arrFilePaths  = $mandantenNeededValues[$i][3]
+    $computer = $mandant.app.host._text
+    $installPath = $mandant.app.installpath._text
+    $leafName = Split-Path -Path $installPath -Leaf
     
-    # Umgebungszuordnung: "test" falls im Installationspfad " Test" vorkommt, sonst "prod"
+    # Determine environment (test or prod)
     if ($installPath -match " Test") {
-         $envFolder = "test"
-    } else {
-         $envFolder = "prod"
+        $envFolder = "test"
+    }
+    else {
+        $envFolder = "prod"
     }
     
-    # Aufbau einer PSSession zum Remote-Computer
-    $session = New-PSSession -ComputerName $computer
+    # Files to download
+    $filesToDownload = @(
+        "$installPath\Client\MetaTool.ini",
+        "$installPath\Server\MetaTool.ini",
+        "$installPath\Server\install_service.bat",
+        "$installPath\Server\uninstall_service.bat"
+    )
     
-    foreach ($file in $arrFilePaths) {
-         # Bestimme, ob die Datei im Client- oder Server-Unterordner abgelegt werden soll
-         if ($file -match "\\Client\\") {
-             $subfolder = "Client"
-         } elseif ($file -match "\\Server\\") {
-             $subfolder = "Server"
-         } else {
-             $subfolder = "Misc"
-         }
-         
-         # Zielordner: Basis\envFolder\subfolder\LeafName
-         $destinationFolder = Join-Path -Path $tempPath -ChildPath "${envFolder}\${leafName}\${subfolder}"
-         if (-Not (Test-Path $destinationFolder)) {
-             New-Item -ItemType Directory -Path $destinationFolder -Force | Out-Null
-         }
-         
-         # Bestimme den Dateinamen und den vollen Zielpfad
-         $fileName = Split-Path -Path $file -Leaf
-         $destinationPath = Join-Path -Path $destinationFolder -ChildPath $fileName
-         # Kopiere die Datei vom Remote-Rechner
-         try {
-             Copy-Item -FromSession $session -Path $file -Destination $destinationPath -ErrorAction $ErrorActionPreference
-             #Write-Host "Kopiert: $file von $computer nach $destinationPath"
-         } catch {
-             #Write-Warning ("Fehler beim Kopieren von {0} von {1}: {2}" -f $file, $computer, $_)
-
-         }
+    # Create PSSession
+    try {
+        $session = New-PSSession -ComputerName $computer -ErrorAction Stop
+    }
+    catch {
+        Write-Warning "Failed to create session to ${computer}: $_"
+        continue
     }
     
-    # Schließe die PSSession
+    # Download each file
+    foreach ($file in $filesToDownload) {
+        # Determine subfolder (Client, Server, or Misc)
+        if ($file -match "\\Client\\") {
+            $subfolder = "Client"
+        }
+        elseif ($file -match "\\Server\\") {
+            $subfolder = "Server"
+        }
+        else {
+            $subfolder = "Misc"
+        }
+        
+        # Create destination folder
+        $destinationFolder = Join-Path -Path $tempPath -ChildPath "${envFolder}\${leafName}\${subfolder}"
+        if (-Not (Test-Path $destinationFolder)) {
+            New-Item -ItemType Directory -Path $destinationFolder -Force | Out-Null
+        }
+        
+        # Copy file from remote host
+        $fileName = Split-Path -Path $file -Leaf
+        $destinationPath = Join-Path -Path $destinationFolder -ChildPath $fileName
+        
+        try {
+            Copy-Item `
+                -FromSession $session `
+                -Path $file `
+                -Destination $destinationPath `
+                -ErrorAction Stop
+        }
+        catch {
+            # Silently skip missing files
+            continue
+        }
+    }
+    
+    # Close session
     Remove-PSSession $session
 }
 
-# Erstelle das ZIP-Archiv aus dem Basisordner
+# Create ZIP archive
 $zipPath = "C:\temp\MandantenFiles.zip"
 if (Test-Path $zipPath) {
     Remove-Item $zipPath -Force
 }
-Compress-Archive -Path "$tempPath\*" -DestinationPath $zipPath
 
-#Write-Host "ZIP-Archiv erstellt: $zipPath"
+try {
+    Compress-Archive -Path "$tempPath\*" -DestinationPath $zipPath -ErrorAction Stop
+}
+catch {
+    Write-Error "Failed to create ZIP archive: $_"
+    exit 1
+}
 
-# ZIP-Datei einlesen und in Base64 kodieren
-$bytes = [System.IO.File]::ReadAllBytes($zipPath)
-$base64Output = [Convert]::ToBase64String($bytes)
-
-Write-Output $base64Output
-
-exit 0
+# Read ZIP and convert to Base64
+try {
+    $bytes = [System.IO.File]::ReadAllBytes($zipPath)
+    $base64Output = [Convert]::ToBase64String($bytes)
+    Write-Output $base64Output
+    exit 0
+}
+catch {
+    Write-Error "Failed to read ZIP file: $_"
+    exit 1
+}
+finally {
+    # Cleanup
+    if (Test-Path $tempPath) {
+        Remove-Item $tempPath -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    if (Test-Path $zipPath) {
+        Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
+    }
+}

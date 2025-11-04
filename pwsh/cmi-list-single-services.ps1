@@ -1,109 +1,112 @@
+<#
+.SYNOPSIS
+    List all CMI/AIS services with their current status
+.PARAMETER Env
+    Environment: test or prod
+#>
+
 param (
+    [Parameter(Mandatory)]
+    [ValidateSet("test", "prod")]
     [string]$Env
 )
 
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:NO_PROXY = "127.0.0.1,localhost"
-$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
-$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
+# Import common module
+Import-Module "$PSScriptRoot\Common.psm1" -Force
 
+# Initialize environment
+Initialize-CMIEnvironment
+
+# Define endpoints based on environment
 if ($Env -eq "prod") {
     $endpoints = @(
-        @{ Label = "CMI GEVER (Prod)"; Url = "http://localhost:5001/api/data/cmi/prod" },
-        @{ Label = "CMI AIS (Prod)"; Url = "http://localhost:5001/api/data/ais/prod" }
+        @{ Label = "CMI GEVER (Prod)"; App = "cmi"; Env = "prod" },
+        @{ Label = "CMI AIS (Prod)"; App = "ais"; Env = "prod" }
     )
-} elseif ($Env -eq "test") {
+}
+elseif ($Env -eq "test") {
     $endpoints = @(
-        @{ Label = "CMI GEVER (Test)"; Url = "http://localhost:5001/api/data/cmi/test" },
-        @{ Label = "CMI AIS (Test)"; Url = "http://localhost:5001/api/data/ais/test" }
+        @{ Label = "CMI GEVER (Test)"; App = "cmi"; Env = "test" },
+        @{ Label = "CMI AIS (Test)"; App = "ais"; Env = "test" }
     )
-} else { throw "no environment set" }
-
-function Get-CMI-Config-Data {
-    param (
-        [string]$u
-    )
-	#write-host $Url
-    $RawJson = (Invoke-WebRequest -Uri $u -Method Get).Content 
-    $ParsedJson = $RawJson | ConvertFrom-Json
-    return $ParsedJson
+}
+else {
+    throw "No environment set"
 }
 
-
-
-# Array für die Endpunkt-Daten
+# Array for endpoint data
 $endpointsData = @()
 
-# Globales Dictionary für Host -> Set von Service-Namen
+# Global dictionary for Host -> Set of Service names
 $hostServices = @{}
 
+# Fetch data for each endpoint
 foreach ($ep in $endpoints) {
     $label = $ep.Label
-    $url = $ep.Url
     $entries = @()
-
+    
     try {
-        # API-Daten abrufen
-        $jsonData = Get-CMI-Config-Data -u $url
-
+        # Fetch API data
+        $jsonData = Get-CMIConfigData -App $ep.App -Environment $ep.Env
+        
         if ($jsonData -isnot [System.Collections.IEnumerable]) {
             $jsonData = @($jsonData)
         }
-		#$jsonData
+        
         foreach ($item in $jsonData) {
-			$namefull = if ($item.namefull._text) { $item.namefull._text } else { "" }
+            $namefull = if ($item.namefull._text) { $item.namefull._text } else { "" }
             $appInfo = $item.app
             $hostname = if ($appInfo.host._text) { $appInfo.host._text.Trim() } else { "" }
-			$servicename = if ($appInfo.servicename._text) { $appInfo.servicename._text.Trim() } else { "" }
+            $servicename = if ($appInfo.servicename._text) { $appInfo.servicename._text.Trim() } else { "" }
             
             $entry = @{
-                namefull = $namefull
-                hostname = $hostname
-                servicename = $servicename
+                namefull       = $namefull
+                hostname       = $hostname
+                servicename    = $servicename
                 status_service = ""
             }
             $entries += $entry
-
-            # Service-Namen global pro Host sammeln
+            
+            # Collect service names globally per host
             if (-not [string]::IsNullOrEmpty($hostname)) {
                 if (-not $hostServices.ContainsKey($hostname)) {
                     $hostServices[$hostname] = New-Object System.Collections.Generic.HashSet[string]
                 }
                 if (-not [string]::IsNullOrEmpty($servicename)) {
-                    $hostServices[$hostname].Add($servicename) | Out-Null
+                    [void]$hostServices[$hostname].Add($servicename)
                 }
             }
         }
     }
     catch {
         $entries += @{
-			namefull = ""
-            hostname = "Error: $($_.Exception.Message)"
-            servicename = ""
+            namefull       = ""
+            hostname       = "Error: $($_.Exception.Message)"
+            servicename    = ""
             status_service = "Error"
         }
     }
-
+    
     $endpointsData += @{
-        label = $label
-        endpoint = $url
-        entries = $entries
+        label    = $label
+        endpoint = "${ep.App}/${ep.Env}"
+        entries  = $entries
     }
 }
 
-# Pro Host den Service-Status abfragen (einmaliger Remote-Aufruf pro Host)
+# Query service status per host (one remote call per host)
 $hostStatusMapping = @{}
 foreach ($hostname in $hostServices.Keys) {
     $servicesArray = $hostServices[$hostname] | Sort-Object
     $serviceStatus = @{}
-
+    
     foreach ($service in $servicesArray) {
         try {
             $svc = Invoke-Command -ComputerName $hostname -ScriptBlock {
                 param($s)
                 Get-Service -Name $s -ErrorAction Stop
             } -ArgumentList $service -ErrorAction Stop
-
+            
             if ($svc.Status -eq 'Running') {
                 $serviceStatus[$service] = "running"
             }
@@ -118,14 +121,18 @@ foreach ($hostname in $hostServices.Keys) {
     $hostStatusMapping[$hostname] = $serviceStatus
 }
 
-# Aktualisiere die Einträge in den Endpunkt-Daten mit den abgefragten Statuswerten
+# Update entries with queried status values
 foreach ($epData in $endpointsData) {
     foreach ($entry in $epData.entries) {
         $hostname = $entry.hostname
         if ($hostStatusMapping.ContainsKey($hostname)) {
             $mapping = $hostStatusMapping[$hostname]
-            $entry.status_service = if ($mapping.ContainsKey($entry.servicename)) { $mapping[$entry.servicename] } else { "unknown" }
-
+            $entry.status_service = if ($mapping.ContainsKey($entry.servicename)) { 
+                $mapping[$entry.servicename] 
+            } 
+            else { 
+                "unknown" 
+            }
         }
         else {
             $entry.status_service = "Error"
@@ -133,6 +140,6 @@ foreach ($epData in $endpointsData) {
     }
 }
 
-# Ausgabe des Ergebnis als JSON (höhere Depth für verschachtelte Strukturen)
+# Output result as JSON
 Write-Output ($endpointsData | ConvertTo-Json -Depth 5 -Compress)
 exit 0
