@@ -18,7 +18,7 @@ class AppConfig:
         'download_logs': PWSH_DIR / 'cmi-download-log-files.ps1',
         'download_config': PWSH_DIR / 'cmi-download-config-files.ps1',
         'metatool': PWSH_DIR / 'cmi-metatool.ps1',
-        'database_backup': PWSH_DIR / 'cmi-database-backup.ps1',
+        'database_backup': PWSH_DIR / 'cmi-databases.ps1',
     }
     
     # Timeouts (in seconds)
