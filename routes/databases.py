@@ -1,32 +1,43 @@
+"""Database backup routes"""
+
 from flask import request, jsonify
-import subprocess
-import os
 from routes import main
+from utils import PowerShellRunner, PowerShellError, PowerShellTimeoutError
+
 
 @main.route('/database-backup')
 def database_backup():
+    """Trigger database backup
+    
+    Query parameters:
+        db: Database name
+        dbhost: Database host
+    
+    Returns:
+        JSON with success/error message
+    """
     db = request.args.get('db')
     dbhost = request.args.get('dbhost')
-    ps_command = [
-        'pwsh', 
-        '-NoProfile',
-        '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-databases.ps1'),
-        '-Job', 'backup',
-        '-Db', db,
-        '-DbHost', dbhost
-    ]
+    
+    if not db or not dbhost:
+        return jsonify({"error": "Missing parameters: db or dbhost"}), 400
+
     try:
-        result = subprocess.run(ps_command, capture_output=True, text=True, encoding='utf-8', errors='replace')
-        print("Return code:", result.returncode)
-        print("STDOUT repr:", repr(result.stdout))
-        print("STDERR repr:", repr(result.stderr))
-
-        output = result.stdout.strip()
-
-        if result.returncode == 0 and "SUCCESS" in output:
+        runner = PowerShellRunner('database_backup', timeout=120)
+        result = runner.run({
+            'Job': 'backup',
+            'Db': db,
+            'DbHost': dbhost
+        })
+        
+        if "SUCCESS" in result:
             return jsonify({"message": "Backup successful"}), 200
         else:
-            return jsonify({"error": output or "Backup failed"}), 500
-
-    except Exception as e:
+            return jsonify({"error": result or "Backup failed"}), 500
+            
+    except PowerShellTimeoutError as e:
+        return jsonify({"error": str(e)}), 504
+    except PowerShellError as e:
         return jsonify({"error": str(e)}), 500
+    except Exception as e:
+        return jsonify({"error": f"Unexpected error: {str(e)}"}), 500
