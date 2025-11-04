@@ -5,7 +5,7 @@
     Job type: "list" or "backup"
 .PARAMETER Env
     Environment: "test" or "prod" (required for list job)
-.PARAMETER Db
+.PARAMETER Database
     Database name (required for backup job)
 .PARAMETER DbHost
     Database host (required for backup job)
@@ -21,7 +21,7 @@ param (
     [string]$Env,
     
     [Parameter()]
-    [string]$Db,
+    [string]$Database,
     
     [Parameter()]
     [string]$DbHost
@@ -93,7 +93,7 @@ function Invoke-DatabaseBackup {
     #>
     param(
         [Parameter(Mandatory)]
-        [string]$Database,
+        [string]$DbName,
         
         [Parameter(Mandatory)]
         [string]$DatabaseHost
@@ -101,15 +101,15 @@ function Invoke-DatabaseBackup {
     
     try {
         $result = Invoke-Command -ComputerName $DatabaseHost -ScriptBlock {
-            param($DbHost, $Db, $currentDate)
+            param($DbHost, $DbName, $currentDate)
             
             $backupPath = "S:\manual-backups-from-webapp\"
-            $backupFilename = "DB-Backup-${Db}_${currentDate}.bak"
+            $backupFilename = "DB-Backup-${DbName}_${currentDate}.bak"
             
             try {
                 Backup-SqlDatabase `
                     -ServerInstance $DbHost `
-                    -Database $Db `
+                    -Database $DbName `
                     -BackupFile "${backupPath}${backupFilename}" `
                     -CopyOnly `
                     -Initialize `
@@ -121,7 +121,7 @@ function Invoke-DatabaseBackup {
             catch {
                 return "ERROR: $_"
             }
-        } -ArgumentList $DatabaseHost, $Database, (Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -ErrorAction Stop
+        } -ArgumentList $DatabaseHost, $DbName, (Get-Date -Format "yyyy-MM-dd_HH-mm-ss") -ErrorAction Stop
         
         Write-Output $result
         
@@ -145,7 +145,7 @@ function Start-StopCMIService {
     #>
     param(
         [Parameter(Mandatory)]
-        [string]$Database,
+        [string]$DbName,
         
         [Parameter(Mandatory)]
         [ValidateSet("start", "stop")]
@@ -154,11 +154,11 @@ function Start-StopCMIService {
     
     try {
         # Get service info from API
-        $filter = "database%2Fname=${Database}&exactmatch=true"
+        $filter = "database%2Fname=${DbName}&exactmatch=true"
         $jsonData = Get-CMIConfigData -Filter $filter
         
         if (($jsonData | Measure-Object).Count -lt 1) {
-            Write-Error "No data found for database: $Database"
+            Write-Error "No data found for database: $DbName"
             return 1
         }
         
@@ -196,7 +196,7 @@ switch ($Job) {
     
     "backup" {
         # Validate parameters
-        if (-not $Db) {
+        if (-not $Database) {
             Write-Output (@{ error = "Database parameter required for backup job" } | ConvertTo-Json -Compress)
             exit 1
         }
@@ -206,17 +206,17 @@ switch ($Job) {
         }
         
         # Stop CMI service
-        $stopResult = Start-StopCMIService -Database $Db -Action "stop"
+        $stopResult = Start-StopCMIService -DbName $Database -Action "stop"
         if ($stopResult -ne 0) {
             Write-Output "ERROR: Failed to stop CMI service"
             exit 1
         }
         
         # Create backup
-        $backupResult = Invoke-DatabaseBackup -Database $Db -DatabaseHost $DbHost
+        $backupResult = Invoke-DatabaseBackup -DbName $Database -DatabaseHost $DbHost
         
         # Start CMI service (always try to start, even if backup failed)
-        $startResult = Start-StopCMIService -Database $Db -Action "start"
+        $startResult = Start-StopCMIService -DbName $Database -Action "start"
         
         # Return backup result
         exit $backupResult
