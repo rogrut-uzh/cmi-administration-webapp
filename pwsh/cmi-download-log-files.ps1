@@ -37,16 +37,30 @@ catch {
 $remoteCommand = {
     param ($logPath, $date, $shortName)
     
+    # Use the Get-FileBytes function from Common module
+    # We need to define it here because the remote session doesn't have access to the module
     function Get-FileBytes {
         param([string]$Path)
-        $fs = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+        $fs = $null
         try {
+            $fs = [System.IO.File]::Open(
+                $Path, 
+                [System.IO.FileMode]::Open, 
+                [System.IO.FileAccess]::Read, 
+                [System.IO.FileShare]::ReadWrite
+            )
+            
             $bytes = New-Object byte[] $fs.Length
             [void]$fs.Read($bytes, 0, $bytes.Length)
+            
             return $bytes
         }
+        catch {
+            Write-Error "Failed to read file bytes from $Path: $_"
+            throw
+        }
         finally {
-            $fs.Close()
+            if ($fs) { $fs.Close() }
         }
     }
     

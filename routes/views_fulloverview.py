@@ -14,7 +14,7 @@ def run_script_fulloverview():
         command = [
             'pwsh', 
             '-NoProfile',
-            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit.ps1').replace('\\', '\\\\'),
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit-old.ps1').replace('\\', '\\\\'),
             '-App', f"{app}",
             '-Env', f"{env}"
         ]

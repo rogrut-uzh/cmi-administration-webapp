@@ -114,10 +114,10 @@ catch {
     exit 1
 }
 
-# Read ZIP and convert to Base64
+# Read ZIP and convert to Base64 using Common module function
 try {
-    $bytes = [System.IO.File]::ReadAllBytes($zipPath)
-    $base64Output = [Convert]::ToBase64String($bytes)
+    $bytes = Get-FileBytes -Path $zipPath
+    $base64Output = ConvertTo-Base64 -Data $bytes
     Write-Output $base64Output
     exit 0
 }

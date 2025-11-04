@@ -35,19 +35,30 @@ if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
     exit 1
 }
 
+# ============================================
+# Configuration - Remote Hosts
+# ============================================
+# Note: These could be moved to Common.psm1 if used in multiple scripts
+
+$script:HostMapping = @{
+    TestHost = "ziaxiomatap02"
+    ProdCMIHost = "ziaxiomapap03"
+    ProdAISHost = "ziaxiomapap04"
+}
+
 # Constants
 $Delay = 2
 
-# Determine remote host
+# Determine remote host based on environment and app
 if ($Env -eq "test") {
-    $RemoteHost = "ziaxiomatap02"
+    $RemoteHost = $script:HostMapping.TestHost
 }
 else {
     if ($App -eq "cmi") {
-        $RemoteHost = "ziaxiomapap03"
+        $RemoteHost = $script:HostMapping.ProdCMIHost
     }
     elseif ($App -eq "ais") {
-        $RemoteHost = "ziaxiomapap04"
+        $RemoteHost = $script:HostMapping.ProdAISHost
     }
 }
 
@@ -56,9 +67,24 @@ else {
 # ============================================
 
 function Stop-ServicesRemote {
+    <#
+    .SYNOPSIS
+        Stop services on remote host
+    .PARAMETER Services
+        Array of service names to stop
+    .PARAMETER RemoteHost
+        Target hostname
+    .PARAMETER Delay
+        Delay in seconds between service operations
+    #>
     param (
+        [Parameter(Mandatory)]
         [string[]]$Services,
+        
+        [Parameter(Mandatory)]
         [string]$RemoteHost,
+        
+        [Parameter()]
         [int]$Delay = 2
     )
     
@@ -84,9 +110,24 @@ function Stop-ServicesRemote {
 }
 
 function Start-ServicesRemote {
+    <#
+    .SYNOPSIS
+        Start services on remote host
+    .PARAMETER Services
+        Array of service names to start
+    .PARAMETER RemoteHost
+        Target hostname
+    .PARAMETER Delay
+        Delay in seconds between service operations
+    #>
     param (
+        [Parameter(Mandatory)]
         [string[]]$Services,
+        
+        [Parameter(Mandatory)]
         [string]$RemoteHost,
+        
+        [Parameter()]
         [int]$Delay = 2
     )
     
