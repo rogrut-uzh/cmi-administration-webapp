@@ -41,7 +41,7 @@ def run_script_fulloverview_jobs():
         data = request.get_json(silent=True) or {} 
         command = [
             'pwsh', '-NoProfile',
-            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit_new202508.ps1').replace('\\', '\\\\')
+            '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-cockpit.ps1').replace('\\', '\\\\')
         ]
         result = subprocess.run(command, capture_output=True)
         stdout = result.stdout.decode('utf-8-sig')
