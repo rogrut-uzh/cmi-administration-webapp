@@ -33,36 +33,3 @@ def run_script_db_stream():
             
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-
-@main.route('/database-backup')
-def database_backup():
-    database = request.args.get('db')
-    dbhost = request.args.get('dbhost')
-    
-    if not database or not dbhost:
-        return jsonify({"error": "Missing database or dbhost parameter"}), 400
-    
-    ps_command = [
-        'pwsh',
-        '-NoProfile',
-        '-File', os.path.join(os.getcwd(), 'pwsh', 'cmi-databases.ps1').replace('\\', '\\\\'),
-        '-Job', 'backup',
-        '-Database', database,
-        '-DbHost', dbhost
-    ]
-    
-    try:
-        result = subprocess.run(ps_command, capture_output=True, text=True, encoding='utf-8', errors='replace', timeout=300)
-        print("Backup Return code:", result.returncode)
-        print("Backup STDOUT:", result.stdout)
-        print("Backup STDERR:", result.stderr)
-        
-        if result.returncode == 0:
-            return jsonify({"message": "SUCCESS"}), 200
-        else:
-            return jsonify({"error": result.stderr.strip() or result.stdout.strip()}), 500
-    except subprocess.TimeoutExpired:
-        return jsonify({"error": "Backup operation timed out (>5 minutes)"}), 500
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500

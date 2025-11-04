@@ -26,7 +26,7 @@ def database_backup():
         runner = PowerShellRunner('database_backup', timeout=120)
         result = runner.run({
             'Job': 'backup',
-            'Db': db,
+            'Database': db,  # Changed from 'Db' to 'Database'
             'DbHost': dbhost
         })
         
