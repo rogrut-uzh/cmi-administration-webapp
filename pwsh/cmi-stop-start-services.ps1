@@ -1,190 +1,241 @@
+<#
+.SYNOPSIS
+    Stop or start all CMI/AIS services for an environment
+.PARAMETER App
+    Application type: cmi or ais
+.PARAMETER Env
+    Environment: test or prod
+.PARAMETER Action
+    Action: start or stop
+#>
+
 param (
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory)]
     [ValidateSet("cmi", "ais")]
     [string]$App,
     
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory)]
     [ValidateSet("test", "prod")]
     [string]$Env,
     
-    [Parameter(Mandatory = $true)]
+    [Parameter(Mandatory)]
     [ValidateSet("start", "stop")]
     [string]$Action
 )
-[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-$env:NO_PROXY = "127.0.0.1,localhost"
-$env:HTTP_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
-$env:HTTPS_PROXY = "http://zoneproxy.zi.uzh.ch:8080"
 
-# Exit, wenn nicht als admin ausgeführt
+# Import common module
+Import-Module "$PSScriptRoot\Common.psm1" -Force
+
+# Initialize environment
+Initialize-CMIEnvironment
+
+# Check admin rights
 if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
-    write-output "run as admin"
+    Write-Output "Run as admin"
     exit 1
 }
 
-# Variablen
+# ============================================
+# Configuration - Remote Hosts
+# ============================================
+# Note: These could be moved to Common.psm1 if used in multiple scripts
+
+$script:HostMapping = @{
+    TestHost = "ziaxiomatap02"
+    ProdCMIHost = "ziaxiomapap03"
+    ProdAISHost = "ziaxiomapap04"
+}
+
+# Constants
 $Delay = 2
-$ApiUrl = "http://localhost:5001/api/data"
-$WindowsServicesList = @()
-if ($Env -like "test") {
-    $RemoteHost = "ziaxiomatap02"
-} else {
-    if ($App -like "cmi") {
-        $RemoteHost = "ziaxiomapap03"
-    } elseif ($App -like "ais") {
-        $RemoteHost = "ziaxiomapap04"
+
+# Determine remote host based on environment and app
+if ($Env -eq "test") {
+    $RemoteHost = $script:HostMapping.TestHost
+}
+else {
+    if ($App -eq "cmi") {
+        $RemoteHost = $script:HostMapping.ProdCMIHost
+    }
+    elseif ($App -eq "ais") {
+        $RemoteHost = $script:HostMapping.ProdAISHost
     }
 }
 
-#Functions
+# ============================================
+# Helper Functions
+# ============================================
+
 function Stop-ServicesRemote {
+    <#
+    .SYNOPSIS
+        Stop services on remote host
+    .PARAMETER Services
+        Array of service names to stop
+    .PARAMETER RemoteHost
+        Target hostname
+    .PARAMETER Delay
+        Delay in seconds between service operations
+    #>
     param (
-        [string[]]$Services,    # Liste der Dienste
-        [string]$RemoteHost,    # Remote-Hostname oder IP-Adresse
-        [int]$Delay = 2         # Verzögerung zwischen Stop-Versuchen
+        [Parameter(Mandatory)]
+        [string[]]$Services,
+        
+        [Parameter(Mandatory)]
+        [string]$RemoteHost,
+        
+        [Parameter()]
+        [int]$Delay = 2
     )
     
-    $Sb = {
-        param (
-            [string[]]$Services,
-            [int]$Delay
-        )
-
+    $scriptBlock = {
+        param ([string[]]$Services, [int]$Delay)
+        
         foreach ($service in $Services) {
             Write-Output ""
-		Write-Output "Trying to stop the service ${service}..."
+            Write-Output "Trying to stop the service ${service}..."
             $output = net stop "$service" 2>&1
+            
             if ($output -match "service was stopped successfully") {
-			Write-Output "${service} stopped."
-            } else {
+                Write-Output "${service} stopped."
+            }
+            else {
                 Write-Output "Stopping service ${service} failed. Error: $output"
             }
             Start-Sleep -Seconds $Delay
         }
     }
-
-    # Remoting auf dem Remote-Host ausführen
-    Invoke-Command -ComputerName $RemoteHost -ScriptBlock $Sb -ArgumentList $Services, $Delay
+    
+    Invoke-Command -ComputerName $RemoteHost -ScriptBlock $scriptBlock -ArgumentList $Services, $Delay
 }
 
 function Start-ServicesRemote {
+    <#
+    .SYNOPSIS
+        Start services on remote host
+    .PARAMETER Services
+        Array of service names to start
+    .PARAMETER RemoteHost
+        Target hostname
+    .PARAMETER Delay
+        Delay in seconds between service operations
+    #>
     param (
-        [string[]]$Services,    # List of services
-        [string]$RemoteHost,    # Remote-Hostname or IP-Adress
-        [int]$Delay = 2         # delay between stop tries
+        [Parameter(Mandatory)]
+        [string[]]$Services,
+        
+        [Parameter(Mandatory)]
+        [string]$RemoteHost,
+        
+        [Parameter()]
+        [int]$Delay = 2
     )
     
-    $Sb = {
-        param (
-            [string[]]$Services,
-            [int]$Delay
-        )
-
-        foreach ($service in $services) {
-            write-output ""
+    $scriptBlock = {
+        param ([string[]]$Services, [int]$Delay)
+        
+        foreach ($service in $Services) {
+            Write-Output ""
             $serviceObj = Get-Service -Name $service -ErrorAction SilentlyContinue
+            
             if ($serviceObj -and $serviceObj.Status -ne 'Running') {
                 Write-Output "Trying to start the service ${service}..."
-                $output = net start "$service" 2>&1  # Capture output and errors
+                $output = net start "$service" 2>&1
+                
                 if ($output -match "service was started successfully") {
-                    Write-Output "Waiting..." 
+                    Write-Output "Waiting..."
                     $isRunning = $false
                     while (-not $isRunning) {
-                        Start-Sleep -Seconds 1 
-                        # Überprüfe den Status des Dienstes
+                        Start-Sleep -Seconds 1
                         $serviceStatus = Get-Service -Name "$service" -ErrorAction SilentlyContinue
+                        
                         if ($serviceStatus.Status -eq 'Running') {
                             $isRunning = $true
                             Write-Output "${service} started."
-                        } else {
+                        }
+                        else {
                             Write-Output "${service} still starting up..."
                         }
                     }
-                } else { 
-                    Write-Output "Starting service ${service} failed. Error: $output" 
                 }
-            } else {
-                 Write-Output "Service ${service} already running." 
+                else {
+                    Write-Output "Starting service ${service} failed. Error: $output"
+                }
+            }
+            else {
+                Write-Output "Service ${service} already running."
             }
             Start-Sleep -Seconds $Delay
         }
     }
-
-    # Remoting auf dem Remote-Host ausführen
-    Invoke-Command -ComputerName $RemoteHost -ScriptBlock $Sb -ArgumentList $Services, $Delay
-}
-
-function Get-CMI-Config-Data {
-    param (
-        [string]$App,
-        [string]$Env
-    )
-    $Url = "${ApiUrl}/${App}/${Env}"
-	write-Output "Calling $Url"
-    $RawJson = (Invoke-WebRequest -Uri $Url -Method Get).Content
-    #$ParsedJson = ($RawJson | ConvertFrom-Json) | ConvertTo-Json -Depth 10 -Compress:$false # nur zu testzwecken für die schöne ausgabe am terminal
-    $ParsedJson = $RawJson | ConvertFrom-Json
-    return $ParsedJson
-}
-
-
-
-
-$elements = Get-CMI-Config-Data -App $App -Env $Env
-
-if (($elements | Measure-Object).count -lt 1) {
-    write-output "nothing found."
-    exit 1
-} else {
-	Write-Output "Answer received. Getting the names of the corresponding services..."
-}
-
-foreach ($ele in $elements) {
-	$WindowsServicesList += $ele.app.servicename._text
-}
-
-write-Output ""
-write-Output "Found Services:"
-
-if ($Action -eq "stop") {
     
+    Invoke-Command -ComputerName $RemoteHost -ScriptBlock $scriptBlock -ArgumentList $Services, $Delay
+}
+
+# ============================================
+# Main Execution
+# ============================================
+
+# Fetch configuration
+try {
+    Write-Output "Calling API for ${App}/${Env}..."
+    $elements = Get-CMIConfigData -App $App -Environment $Env
+}
+catch {
+    Write-Output "Failed to fetch configuration data: $_"
+    exit 1
+}
+
+if (($elements | Measure-Object).Count -lt 1) {
+    Write-Output "Nothing found."
+    exit 1
+}
+
+Write-Output "Answer received. Getting the names of the corresponding services..."
+
+# Extract service names
+$WindowsServicesList = @()
+foreach ($ele in $elements) {
+    $WindowsServicesList += $ele.app.servicename._text
+}
+
+Write-Output ""
+Write-Output "Found Services:"
+
+# Sort services based on action
+if ($Action -eq "stop") {
+    # Lizenzserver must shut down last
     $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
-        if ($_ -like "*Lizenz*") {
-            1 # "Lizenz" must shut down the last
-        } else {
-            0 # All others come first
-        }
+        if ($_ -like "*Lizenz*") { 1 } else { 0 }
     }
-    if ($WindowsServicesListSorted.length -gt 0) {
+    
+    if ($WindowsServicesListSorted.Length -gt 0) {
         foreach ($e in $WindowsServicesListSorted) {
-            write-Output $e
+            Write-Output $e
         }
         Stop-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
-    } else {
-        write-Output "no services found."
+    }
+    else {
+        Write-Output "No services found."
         exit 1
     }
-
 }
-if ($Action -eq "start") {
-    
+elseif ($Action -eq "start") {
+    # Lizenzserver must start first
     $WindowsServicesListSorted = $WindowsServicesList | Sort-Object {
-        if ($_ -like "*Lizenz*") {
-            0 # "Lizenz" must start first
-        } else {
-            1 # All others come later
-        }
+        if ($_ -like "*Lizenz*") { 0 } else { 1 }
     }
-    if ($WindowsServicesListSorted.length -gt 0) {
+    
+    if ($WindowsServicesListSorted.Length -gt 0) {
         foreach ($e in $WindowsServicesListSorted) {
-            write-Output $e
+            Write-Output $e
         }
         Start-ServicesRemote -Services $WindowsServicesListSorted -RemoteHost $RemoteHost -Delay $Delay
-    } else {
-        write-Output "no services found."
+    }
+    else {
+        Write-Output "No services found."
         exit 1
     }
-    
 }
 
 exit 0
