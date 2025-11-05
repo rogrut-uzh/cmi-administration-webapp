@@ -171,6 +171,7 @@ function Start-StopCMIService {
         
         # Get configuration from API
         $jsonData = Get-CMIConfigData -Filter $filter
+        $jsonData
         
         if (-not $jsonData -or ($jsonData | Measure-Object).Count -lt 1) {
             Write-Output "ERROR: No configuration found for database: $DbName"
