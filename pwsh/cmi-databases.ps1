@@ -165,6 +165,8 @@ function Start-StopCMIService {
         [string]$Action
     )
     
+    write-host $DbName
+    
     try {
         # Build API filter for this specific database
         $filter = "database%2Fname=${DbName}&exactmatch=true"
@@ -226,7 +228,7 @@ switch ($Job) {
             Write-Output (@{ error = "Database host parameter required for backup job" } | ConvertTo-Json -Compress)
             exit 1
         }
-        
+        write-host "try backup"
         # Stop CMI service (runs on APP server, not DB server!)
         $stopResult = Start-StopCMIService -DbName $Database -Action "stop"
         if ($stopResult -ne 0) {
