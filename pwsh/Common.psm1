@@ -93,6 +93,7 @@ function Get-CMIConfigData {
         }
     }
     
+    Write-host "Fetching data from: $Url"
     Write-Verbose "Fetching data from: $Url"
     
     try {
