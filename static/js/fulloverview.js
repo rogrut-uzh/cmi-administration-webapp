@@ -3,16 +3,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     runScriptFullOverview('ais', environment);
 });
 
-// Hilfsfunktion für sicheres Escapen von HTML (verhindert XSS)
-function escapeHtml(unsafe) {
-    if (!unsafe) return "";
-    return String(unsafe)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-}
+// escapeHtml is now in utils.js
 
 function getSubLevels(u) {
     if (u) {
@@ -301,27 +292,7 @@ function populateTable(data, app, env) {
     
 }
 
-function cloneTableWithLinebreaks(table) {
-    // Tabelle klonen, damit die Seite unverändert bleibt
-    const clone = table.cloneNode(true);
-    // Alle Zellen durchgehen
-    clone.querySelectorAll('td,th').forEach(cell => {
-        // Ersetze <br> durch \n im Inhalt
-        cell.innerHTML = cell.innerHTML.replace(/<br\s*\/?>/gi, ' | ');
-    });
-    return clone;
-}
-
-function downloadTableAsXlsx(tableId, filename) {
-    const table = document.getElementById(tableId);
-    if (!table) {
-        alert("Tabelle nicht gefunden!");
-        return;
-    }
-    const clone = cloneTableWithLinebreaks(table);
-    const wb = XLSX.utils.table_to_book(clone, {sheet: "Tabelle"});
-    XLSX.writeFile(wb, filename);
-}
+// cloneTableWithLinebreaks and downloadTableAsXlsx are now in utils.js
 
 
 async function runScriptFullOverview(app, env) {

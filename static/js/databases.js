@@ -67,33 +67,48 @@ function getDatabases(job, env) {
 }
 
 function triggerDbBackup(db, dbhost, buttonElement) {
-    const originalText = buttonElement.textContent;
-    buttonElement.disabled = true;
-    buttonElement.textContent = "Running...";
+    const buttonState = setButtonLoading(buttonElement, 'Running...');
+
+    // Timeout after 5 minutes (300000ms) for long-running backups
+    const timeoutId = setTimeout(() => {
+        buttonState.restore();
+        showToast('Backup Timeout', `Backup for ${db} timed out. Please check status manually.`, 'warning');
+    }, 300000);
 
     fetch(`/database-backup?db=${db}&dbhost=${dbhost}`)
-        .then(response => response.json())
+        .then(response => {
+            clearTimeout(timeoutId);
+            return response.json();
+        })
         .then(data => {
             if (data.error) {
-                alert("Backup failed:\n" + data.error);
-                buttonElement.textContent = originalText;
-                buttonElement.disabled = false;
+                // Error: restore button and show error toast
+                buttonState.setError('Failed');
+                showToast('Backup Failed', data.error, 'danger');
+
+                // Restore button after 3 seconds
+                setTimeout(() => buttonState.restore(), 3000);
             } else {
-                //alert("DB " + db + " on " + dbhost + " saved to " + data.message + ".");
-                buttonElement.textContent = data.message;
+                // Success: show success state
+                buttonState.setSuccess('Completed');
+                showToast('Backup Successful', `Database ${db} on ${dbhost} backed up successfully.`, 'success');
+
+                // Restore button after 10 seconds
+                setTimeout(() => buttonState.restore(), 10000);
             }
         })
         .catch(error => {
-            alert("Netzwerkfehler:\n" + error);
-            buttonElement.textContent = originalText;
-            buttonElement.disabled = false;
+            clearTimeout(timeoutId);
+            buttonState.setError('Error');
+            showToast('Network Error', error.message || 'Failed to connect to server', 'danger');
+
+            // Restore button after 3 seconds
+            setTimeout(() => buttonState.restore(), 3000);
         });
 }
 
 
-function removeAllWhitespace(str) {
-    return str ? str.replace(/\s+/g, '') : '';
-}
+// removeAllWhitespace is now in utils.js
 
 document.addEventListener("DOMContentLoaded", function(event) {
     getDatabases("list", "Test");

@@ -127,18 +127,16 @@ function controlService(hostname, service, action) {
                 }
             }
         } else {
-            alert("Fehler: " + (data.error || "Unbekannter Fehler"));
+            showToast("Service Control Error", data.error || "Unknown error occurred", "danger");
         }
     })
     .catch(err => {
         console.error(err);
-        alert("Netzwerkfehler oder Server nicht erreichbar");
+        showToast("Network Error", "Network error or server not reachable", "danger");
     });
 }
 
-function removeAllWhitespace(str) {
-    return str.replace(/\s+/g, '');
-}
+// removeAllWhitespace is now in utils.js
 
 document.addEventListener("DOMContentLoaded", function(event) {
     getServicesStatus();
