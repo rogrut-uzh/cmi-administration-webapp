@@ -1,6 +1,10 @@
 <#
 .SYNOPSIS
-    CMI Database operations (list databases or create backups)
+    CMI Database operations (list databases or create backups with service stop)
+.DESCRIPTION
+    List databases or create CopyOnly backups.
+    For backup operations, the corresponding CMI/AIS service is stopped before backup
+    and restarted afterwards to ensure application consistency.
 .PARAMETER Job
     Job type: "list" or "backup"
 .PARAMETER Env
@@ -9,6 +13,10 @@
     Database name (required for backup job)
 .PARAMETER DbHost
     Database host (required for backup job)
+.EXAMPLE
+    .\cmi-databases.ps1 -Job list -Env test
+.EXAMPLE
+    .\cmi-databases.ps1 -Job backup -Database axioma_zzm_TEST -DbHost ziaxiomatsql02
 #>
 
 param (
@@ -86,6 +94,96 @@ function Get-DatabaseList {
     return ($databases | ConvertTo-Json -Depth 5 -Compress)
 }
 
+function Start-StopCMIService {
+    <#
+    .SYNOPSIS
+        Start or stop CMI service for a database
+    .DESCRIPTION
+        Finds the corresponding CMI service for a database and starts/stops it
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [string]$DbName,
+        
+        [Parameter(Mandatory)]
+        [ValidateSet("start", "stop")]
+        [string]$Action
+    )
+    
+    try {
+        Write-Output "DEBUG: Searching for CMI service for database: $DbName"
+        
+        # Try to find the service by database name
+        # First, get all CMI/AIS configurations
+        $allData = @()
+        $allData += Get-CMIConfigData -App "cmi" -Environment "test"
+        $allData += Get-CMIConfigData -App "cmi" -Environment "prod"
+        $allData += Get-CMIConfigData -App "ais" -Environment "test"
+        $allData += Get-CMIConfigData -App "ais" -Environment "prod"
+        
+        if ($allData -isnot [System.Collections.IEnumerable]) {
+            $allData = @($allData)
+        }
+        
+        Write-Output "DEBUG: Found $($allData.Count) total configurations"
+        
+        # Find matching database
+        $matchedConfig = $null
+        foreach ($config in $allData) {
+            $configDbName = $config.database.name._text
+            Write-Output "DEBUG: Checking config with DB: $configDbName"
+            
+            if ($configDbName -eq $DbName) {
+                $matchedConfig = $config
+                Write-Output "DEBUG: MATCH FOUND!"
+                break
+            }
+        }
+        
+        if (-not $matchedConfig) {
+            Write-Output "ERROR: No configuration found for database: $DbName"
+            Write-Output "ERROR: Available databases:"
+            foreach ($config in $allData) {
+                Write-Output "  - $($config.database.name._text)"
+            }
+            return 1
+        }
+        
+        # Extract service information
+        $serviceName = $matchedConfig.app.servicename._text
+        $hostname = $matchedConfig.app.host._text
+        
+        if ([string]::IsNullOrEmpty($serviceName)) {
+            Write-Output "ERROR: Service name is empty for database: $DbName"
+            return 1
+        }
+        
+        if ([string]::IsNullOrEmpty($hostname)) {
+            Write-Output "ERROR: Hostname is empty for database: $DbName"
+            return 1
+        }
+        
+        Write-Output "DEBUG: Found service '$serviceName' on host '$hostname'"
+        Write-Output "DEBUG: Calling cmi-control-single-service.ps1"
+        
+        # Call service control script
+        & "$PSScriptRoot\cmi-control-single-service.ps1" `
+            -Service $serviceName `
+            -Action $Action `
+            -Hostname $hostname
+        
+        $exitCode = $LASTEXITCODE
+        Write-Output "DEBUG: cmi-control-single-service.ps1 returned exit code: $exitCode"
+        
+        return $exitCode
+    }
+    catch {
+        Write-Output "ERROR: Exception in Start-StopCMIService: $_"
+        Write-Output "ERROR: Stack trace: $($_.ScriptStackTrace)"
+        return 1
+    }
+}
+
 function Invoke-DatabaseBackup {
     <#
     .SYNOPSIS
@@ -138,47 +236,6 @@ function Invoke-DatabaseBackup {
     }
 }
 
-function Start-StopCMIService {
-    <#
-    .SYNOPSIS
-        Start or stop CMI service for a database
-    #>
-    param(
-        [Parameter(Mandatory)]
-        [string]$DbName,
-        
-        [Parameter(Mandatory)]
-        [ValidateSet("start", "stop")]
-        [string]$Action
-    )
-    
-    try {
-        # Get service info from API
-        $filter = "database%2Fname=${DbName}&exactmatch=true"
-        $jsonData = Get-CMIConfigData -Filter $filter
-        
-        if (($jsonData | Measure-Object).Count -lt 1) {
-            Write-Error "No data found for database: $DbName"
-            return 1
-        }
-        
-        $serviceName = $jsonData.app.servicename._text
-        $hostname = $jsonData.app.host._text
-        
-        # Call service control script
-        & "$PSScriptRoot\cmi-control-single-service.ps1" `
-            -Service $serviceName `
-            -Action $Action `
-            -Hostname $hostname
-        
-        return $LASTEXITCODE
-    }
-    catch {
-        Write-Error "Failed to control CMI service: $_"
-        return 1
-    }
-}
-
 # ============================================
 # Main Execution
 # ============================================
@@ -205,20 +262,35 @@ switch ($Job) {
             exit 1
         }
         
+        Write-Output "INFO: Starting backup for ${Database} on ${DbHost}"
+        
         # Stop CMI service
+        Write-Output "INFO: Stopping CMI service..."
         $stopResult = Start-StopCMIService -DbName $Database -Action "stop"
         if ($stopResult -ne 0) {
-            Write-Output "ERROR: Failed to stop CMI service"
+            Write-Output "ERROR: Failed to stop CMI service (exit code: $stopResult)"
             exit 1
         }
+        Write-Output "INFO: CMI service stopped successfully"
         
         # Create backup
+        Write-Output "INFO: Creating backup..."
         $backupResult = Invoke-DatabaseBackup -DbName $Database -DatabaseHost $DbHost
         
         # Start CMI service (always try to start, even if backup failed)
+        Write-Output "INFO: Starting CMI service..."
         $startResult = Start-StopCMIService -DbName $Database -Action "start"
+        if ($startResult -ne 0) {
+            Write-Output "WARNING: Failed to start CMI service (exit code: $startResult)"
+        }
+        else {
+            Write-Output "INFO: CMI service started successfully"
+        }
         
         # Return backup result
+        if ($backupResult -eq 0) {
+            Write-Output "SUCCESS: Backup completed"
+        }
         exit $backupResult
     }
     
